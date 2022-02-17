@@ -2,7 +2,7 @@
 
 This repository will contain the write-up and toolchain of a wireless vulnerability that can jailbreak some of the latest smart devices built under various brand names by Tuya, after a responsible disclosure period of 45 days since reporting it has passed or the vulnerability has been patched in Tuya's SDK.
 
-Our tool disconnects Tuya devices from the cloud, allowing it to run completely locally. Additionally, it can be used to flash custom firmware to devices over-the-air.
+Our tool disconnects Tuya devices from the cloud, allowing them to run completely locally. Additionally, it can be used to flash custom firmware to devices over-the-air.
 
 
 ## Supported devices
