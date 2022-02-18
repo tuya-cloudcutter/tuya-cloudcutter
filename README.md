@@ -36,3 +36,4 @@ Our tool disconnects Tuya devices from the cloud, allowing them to run completel
 | Brand | Picture | Device description | Article number | Flash dump / firmware acquired? | Exploitable? |
 |:---:|:---:|:---:|:---:|:---:|:---:|
 | LSC | ![](DevicePictures/3006033.jpeg) | Smart Dimmer Switch | 3006033<br />970806 | Yes | No |
+|  | ![](DevicePictures/970772v2.jpg) | Smart Siren | 970772 v2.0 | No - not a BK7231 chip | No |
