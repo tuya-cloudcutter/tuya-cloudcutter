@@ -1,6 +1,6 @@
 # Tuya Cloudcutter
 
-This repository will contain the write-up and toolchain of a wireless vulnerability that can jailbreak some of the latest smart devices built under various brand names by Tuya, after a responsible disclosure period of 45 days since reporting it has passed or the vulnerability has been patched in Tuya's SDK.
+This repository will contain the write-up and toolchain of a wireless vulnerability that can jailbreak some of the latest smart devices built under various brand names by Tuya, after a disclosure period of 45 days since reporting it has passed or the vulnerability has been patched in Tuya's SDK.
 
 Our tool disconnects Tuya devices from the cloud, allowing them to run completely locally. Additionally, it can be used to flash custom firmware to devices over-the-air.
 
@@ -18,7 +18,7 @@ Our tool disconnects Tuya devices from the cloud, allowing them to run completel
 |  | ![](DevicePictures/3004154.jpeg) | Smart LED Mood Light White and Color Ambiance 210 Lumen | 3004154<br />970743 | Yes | Yes |
 |  |  |  | 3004154<br />970742 | Yes | Yes |
 |  | ![](DevicePictures/3005364.jpeg) | WiFi Smart Outdoor Garden Lamp | 3005364<br />970796 v1.0 | Yes | Yes |
-|  |  | Smart LED RGB + Tunable White GU10 380 Lumen | 3004919<br />970710 | Yes | Yes |
+|  | ![](DevicePictures/970710.jpeg) | Smart LED RGB + Tunable White GU10 380 Lumen | 3004919<br />970710 | Yes | Yes |
 |  | ![](DevicePictures/3000267.jpeg) | Smart LED Tunable White GU10 345 Lumen | 3000267<br />970700 | Yes | Yes |
 |  | ![](DevicePictures/3006767.jpeg) | Smart LED Downlight Tunable White 360 Lumen | 3006767<br />970820 | Yes | Yes |
 
@@ -26,8 +26,8 @@ Our tool disconnects Tuya devices from the cloud, allowing them to run completel
 ## Support verification TBD
 | Brand | Picture | Device description | Article number | Flash dump / firmware acquired? | Exploitable? |
 |:---:|:---:|:---:|:---:|:---:|:---:|
-| LSC | ![](DevicePictures/3000267.jpeg) | Smart LED Warm and Cool White Ambiance GU10 345 Lumen | 3000267<br />970703.1 v1.1 | In progress | Unknown |
-|  |  | Smart Filament Warm White Ambiance E27 806 Lumen | 3001700<br />970739 | Yes | Unknown |
+| LSC | ![](DevicePictures/970703.1.jpg) | Smart LED Warm and Cool White Ambiance GU10 345 Lumen | 3000267<br />970703.1 v1.1 | In progress | Unknown |
+|  | ![](DevicePictures/3001700.jpeg) | Smart Filament Warm White Ambiance E27 806 Lumen | 3001700<br />970739 | Yes | Unknown |
 |  | ![](DevicePictures/3004200.jpeg) | WiFi Outdoor Dual Socket | 3004200<br />05/21 | Yes | Unknown |
 |  | ![](DevicePictures/3007257.jpeg) | Smart Filament Extra Warm White Ambiance E27 350 Lumen | 3007257<br />970729 | Yes | Unknown |
 
