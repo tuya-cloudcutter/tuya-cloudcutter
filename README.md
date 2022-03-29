@@ -11,9 +11,16 @@ Please be aware that this software is experimental and provided without any guar
 2. You choose to use it at your own risk
 3. The authors cannot be held accountable for any damages that arise
 
+## How does it work?
+If you're curious about the vulnerability and how the exploit chain works, here's the [detailed writeup](https://rb9.nl/posts/2022-03-29-light-jailbreaking-exploiting-tuya-iot-devices/).
+
 ## Usage
 Check out [INSTRUCTIONS](./INSTRUCTIONS.md)
 
+## Contribution
+We'd be happy to receive your contributions! One way to contribute if you already know your way around some binary exploitation or would like to get your hands into it is by building device profiles to support more exploitable devices. Check out the [detailed writeup](https://rb9.nl/posts/2022-03-29-light-jailbreaking-exploiting-tuya-iot-devices/) for the information about the vulnerability and exploit chain. Example device profiles can also be found at `src/cloudcutter/device-profiles`.
+
+These are currently done manually, but there are some plans in the future to simplify the building process. Additionally, we'd love to see a device-agnostic exploit chain!
 
 ## Device support
 Check out the initial list of [supported devices](./SUPPORTED.md).
