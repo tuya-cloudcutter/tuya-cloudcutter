@@ -12,7 +12,7 @@ Please be aware that this software is experimental and provided without any guar
 3. The authors cannot be held accountable for any damages that arise
 
 ## How does it work?
-If you're curious about the vulnerability and how the exploit chain works, here's the [detailed writeup](https://rb9.nl/posts/2022-03-29-light-jailbreaking-exploiting-tuya-iot-devices/).
+If you're curious about the vulnerability and how the exploit chain works, here's the [detailed writeup](https://rb9.nl/posts/2022-03-29-light-jailbreaking-exploiting-tuya-iot-devices/) and the [proof of concept script](./proof-of-concept/poc.py).
 
 ## Usage
 Check out [INSTRUCTIONS](./INSTRUCTIONS.md)
