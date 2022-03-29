@@ -10,12 +10,12 @@ Here we describe how to use tuya-cloudcutter to jailbreak Tuya IoT devices by re
 * Download or git clone this repository
 * Open a terminal and `cd` into the repository to make it your working directory
 * Run `./run_detach.sh <SSID> <SSID password> [wifi adapter name]`, where SSID/password is the name of the access point you want the Tuya device to join, and wifi adapter is optional (if not set, it will use the first detected adapter in your computer)
-* When instructed, put your Tuya device in _AP Mode_ by toggling it off and on again 6 times, with around 1 second in between each toggle
+* When instructed, put your Tuya device in _AP Mode_ by toggling it off and on again 6 times, with around 1 second in between each toggle. If it's a light bulb, it will blink _slowly_. If it blinks _quickly_, power cycle it 3 more times.
 * The script will automatically connect to your light (assuming it creates a "SmarLife-*" SSID. If not, let us know.) and run the exploit that replaces the security keys (now it can't connect to the cloud anymore)
 * The exploit freezes the light. It will reboot back into AP mode if left alone, and you can speed this up by power cycling it yourself one time
 * The script will start up an access point of its own called "cloudcutter-flash", using your WiFi adapter
-* Use the phone app to make the Tuya device connect to "cloudcutter-flash" (we're automating this step at the moment, so you won't need an app anymore soon)
-* Once the device connects, the script will set up your device's local access keys, and configure it to join the SSID you passed as an argument to `run_detach.sh`
+* Turn the device off and on again once. It will enter AP mode again. If it doesn't, power cycle it 6 times to enter AP mode. The script will now make the device connect to our "cloudcutter-flash" AP.
+* Once the device connects (can take up to half a minute), the script will set up your device's local access keys, and configure it to join the SSID you passed as an argument to `run_detach.sh`
 * Your Tuya device should now be completely cut off from the cloud, and be locally controllable on your network using e.g. `tinytuya`
 * The randomly generated keys you need to connect to your device can be found in the `configured-devices` folder
 * Enjoy!

@@ -11,7 +11,7 @@ import tornado.web
 
 from .crypto.pskcontext import PSKContext
 from .device import DEFAULT_AUTH_KEY, DEVICE_PROFILE_FILE_NAME, DeviceConfig
-from .exploit import exploit_device_with_config
+from .exploit import exploit_device_with_config, build_network_config_packet, send_network_config_datagram
 from .protocol.handlers import DetachHandler, GetURLHandler
 from .protocol.transformers import ResponseTransformer
 
@@ -136,6 +136,18 @@ def __exploit_device(args):
     print(f"output={output_path}")
 
 
+def __configure_wifi(args):
+    SSID = args.SSID
+    password = args.password
+    payload = '{"ssid":"' + SSID + '","passwd":"' + password + '","token":"AAAAAAAA"}'
+
+    print(f"{payload=}")
+
+    datagram = build_network_config_packet(payload.encode('ascii'))
+    send_network_config_datagram(datagram)
+    print(f"Configured device to connect to '{SSID}'")
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
         prog="cloudcutter",
@@ -190,6 +202,14 @@ def parse_args():
         help="A directory to which the modified device parameters file will be written (default: <workdir>/configured-devices)"
     )
     parser_exploit_device.set_defaults(handler=__exploit_device)
+
+    parser_configure_wifi = subparsers.add_parser(
+        "configure_wifi",
+        help="Makes a device to which you're connected via its AP mode join a given WiFi network"
+    )
+    parser_configure_wifi.add_argument("SSID", help="WiFi access point name to make the device join")
+    parser_configure_wifi.add_argument("password", help="WiFi access point password")
+    parser_configure_wifi.set_defaults(handler=__configure_wifi)
 
     return parser.parse_args()
 
