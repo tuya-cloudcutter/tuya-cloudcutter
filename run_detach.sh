@@ -29,7 +29,7 @@ wifi_connect () {
         while [ "${AP_MATCHED_NAME}" == "" ]
         do
             echo "Scanning for "${AP_SEARCH_STRING}" SSID..."
-            AP_MATCHED_NAME=$(nmcli dev wifi list --rescan yes | grep -E "${AP_SEARCH_STRING}" | cut -c 2- | awk -F ' ' '{print $2}')
+            AP_MATCHED_NAME=$(nmcli -t dev wifi list --rescan yes | grep -E "${AP_SEARCH_STRING}" | cut -d":" -f2)
         done
 
         echo "Found access point name: ${AP_MATCHED_NAME}, trying to connect.."
@@ -54,7 +54,7 @@ wifi_connect () {
 }
 
 build_docker () {
-    docker build -q -t cloudcutter .
+    docker build -t cloudcutter .
     if [ ! $? -eq 0 ]; then
         echo "Failed to build Docker image, stopping script"
         exit 1
