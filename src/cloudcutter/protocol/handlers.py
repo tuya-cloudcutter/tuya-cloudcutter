@@ -89,18 +89,18 @@ class DetachHandler(TuyaServerHandler):
             if endpoint_hook is not None:
                 endpoint_hook_response = endpoint_hook(self, endpoint, request_body)
 
-        # Default process, read the response from the profile directory and return None if it doesn't exist
-        endpoint_response_path = os.path.join(self.profile_directory, f"{endpoint}.json")
-        if not os.path.exists(endpoint_response_path):
-            return None
-
-        response = None
-        if endpoint_hook_response is None:
-            with open(endpoint_response_path, "r") as responsefs:
-                response = json.load(responsefs)
-        else:
+        if endpoint_hook_response is not None:
             response = endpoint_hook_response
+        else:
+            # Default process, read the response from the profile directory and return None if it doesn't exist
+            endpoint_response_path = os.path.join(self.profile_directory, f"{endpoint}.json")
+            if os.path.exists(endpoint_response_path):
+                with open(endpoint_response_path, "r") as responsefs:
+                    response = json.load(responsefs)
 
+        if response is None:
+            return None
+            
         for transformer in self.response_transformers:
             response = transformer.apply(response)
 
