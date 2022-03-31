@@ -29,7 +29,7 @@ wifi_connect () {
         while [ "${AP_MATCHED_NAME}" == "" ]
         do
             echo "Scanning for "${AP_SEARCH_STRING}" SSID..."
-            AP_MATCHED_NAME=$(nmcli -t -f SSID dev wifi list --rescan yes | grep -E "${AP_SEARCH_STRING}"
+            AP_MATCHED_NAME=$(nmcli -t -f SSID dev wifi list --rescan yes | grep -E "${AP_SEARCH_STRING}")
         done
 
         echo "Found access point name: ${AP_MATCHED_NAME}, trying to connect.."
