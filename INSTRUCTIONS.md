@@ -9,7 +9,7 @@ Here we describe how to use tuya-cloudcutter to jailbreak Tuya IoT devices by re
 ### Running the toolchain
 * Download or git clone this repository
 * Open a terminal and `cd` into the repository to make it your working directory
-* Run `./run_detach.sh <SSID> <SSID password> [wifi adapter name]`, where SSID/password is the name of the access point you want the Tuya device to join, and wifi adapter is optional (if not set, it will use the first detected adapter in your computer)
+* Run `./run_detach.sh <SSID> <SSID password> [wifi adapter name]`, where SSID/password is the name of the access point you want the Tuya device to join, and wifi adapter is optional (if not set, it will use the first detected adapter in your computer). **If your SSID and/or password have special characters like $ ! or @, make sure to pass them with ' characters, e.g. 'P@$$W0rD!'. If it has the ' character then also make sure to escape that, with bash that'd be 'P@$$W0rD!'"'"' 1234' to use the password `P@$$W0rD!' 1234`**
 * When instructed, put your Tuya device in _AP Mode_ by toggling it off and on again 6 times, with around 1 second in between each toggle. If it's a light bulb, it will blink _slowly_. If it blinks _quickly_, power cycle it 3 more times.
 * The script will automatically connect to your light (assuming it creates a "SmartLife-*" SSID. If not, let us know.) and run the exploit that replaces the security keys (now it can't connect to the cloud anymore)
 * The exploit freezes the light. It will reboot back into AP mode if left alone, and you can speed this up by power cycling it yourself one time
