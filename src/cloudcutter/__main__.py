@@ -6,6 +6,7 @@ import os
 import sys
 import time
 from hashlib import sha256
+from traceback import print_exc
 
 import tinytuya.tinytuya as tinytuya
 import tornado.httpserver
@@ -44,11 +45,11 @@ def __configure_ssid_on_device(ip: str, config: DeviceConfig, ssid: str, passwor
             payload["passwd"] = password
 
         device.version = 3.3
-        parsed_data = device.updatedps()
+        parsed_data = device.updatedps() or {}
         device.set_version(3.3)
 
         trials = 0
-        while ("Err" not in parsed_data and trials < 5):
+        while parsed_data is not None and "Err" not in parsed_data and trials < 5:
             # Once device joins SSID, we get a timeout / connection error, which adds "Err" attribute. We'll wait for that to happen.
             parsed_data = device._send_receive(device.generate_payload_raw(command=0x0f, retcode=0x0, data=payload, skip_header=False), minresponse=0)
             trials += 1
@@ -61,8 +62,8 @@ def __configure_ssid_on_device(ip: str, config: DeviceConfig, ssid: str, passwor
 
         print(f"Device should be successfully onboarded on WiFi AP!")
         sys.exit(0)
-    except Exception as e:
-        print(f"Exeception: {repr(e)}")
+    except Exception:
+        print_exc()
         sys.exit(90)
 
 
