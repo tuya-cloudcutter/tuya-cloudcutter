@@ -80,6 +80,7 @@ class DetachHandler(TuyaServerHandler):
         self.reply(key_choice, response)
         
     def __rework_endpoint_response(self, endpoint, request_body):
+        response = None
         endpoint_hook_response = None
         if self.endpoint_hooks is not None:
             # Check if any endpoint hook has a response and if so, use it as a response
