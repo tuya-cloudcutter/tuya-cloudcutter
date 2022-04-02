@@ -1,4 +1,5 @@
 import argparse
+from fileinput import filename
 import hmac
 import json
 import os
@@ -134,11 +135,11 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
             "tuya.device.upgrade.get": upgrade_endpoint_hook
         })
 
-    # TODO: Add a StaticFileHandler under /files/* for firmware update files
     application = tornado.web.Application([
         (r'/v1/url_config', GetURLHandler, dict(ipaddr=args.ip)),
         (r'/v2/url_config', GetURLHandler, dict(ipaddr=args.ip)),
         (r'/d.json', DetachHandler, dict(profile_directory=args.profile, response_transformers=response_transformers, config=config, endpoint_hooks=endpoint_hooks)),
+        (f'/files/(.*)', tornado.web.StaticFileHandler, dict(path="/work/custom-firmware/")),
     ])
 
     http_server = tornado.httpserver.HTTPServer(application)
@@ -223,6 +224,7 @@ def parse_args():
     parser_configure.set_defaults(handler=__configure_local_device_or_update_firmware)
 
     parser_update_firmware = subparsers.add_parser("update_firmware", help="Update the device's firmware")
+    parser_update_firmware.add_argument("profile", help="Device profile directory to use for updating")
     parser_update_firmware.add_argument("config", help="Device configuration file")
     parser_update_firmware.add_argument("firmware", help="OTA firmware image to update the device to")
     parser_update_firmware.add_argument(
