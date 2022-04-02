@@ -24,11 +24,12 @@ class PSKContext(ssl.SSLContext):
         return sslpsk.wrap_socket(sock, **kwargs)
 
     def _psk_and_pskid(self, identity_or_hint: bytes, server_side: bool):
-        if not self.psk or identity_or_hint[0] == 1:
-            print("Using PSK v1")
+        psk_id_version = identity_or_hint[0]
+        if not self.psk or psk_id_version == 1:
+            print(f"Using PSK v1 - Received PSK ID version {psk_id_version:02x}")
             psk, psk_id = self._psk_id_v1(identity_or_hint, server_side)
         else:
-            print("Using PSK v2")
+            print(f"Using PSK v2 - Received PSK ID version {psk_id_version:02x}")
             psk, psk_id = self._psk_id_v2(identity_or_hint, server_side)
         return psk if server_side else (psk, psk_id)
 

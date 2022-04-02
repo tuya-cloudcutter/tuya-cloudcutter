@@ -184,7 +184,12 @@ def __exploit_device(args):
 def __configure_wifi(args):
     SSID = args.SSID
     password = args.password
-    payload = '{"ssid":"' + SSID + '","passwd":"' + password + '","token":"AAAAAAAA"}'
+    
+    # Pass the payload through the json module specifically
+    # to avoid issues with special chars (e.g. ") in either
+    # SSIDs or passwords.
+    payload = {"ssid": SSID, "passwd": password, "token": "AAAAAAAA"}
+    payload = json.dumps(payload)
 
     print(f"{payload=}")
 

@@ -1,7 +1,8 @@
 # Supported devices
 | Brand | Picture | Device description | Article numbers | Flash dump / firmware acquired? | Exploitable? |
 |:---:|:---:|:---:|:---:|:---:|:---:|
-| iHome | ![](device-pictures/IH-BW948-999.jpeg) | iHome Spectra Smart Spiral ST19/E26 Edison Multicolor | IH-BW948-999 | Yes | Yes |
+| iHome | ![](Ddevice-pictures/IH-BW948-999.jpeg) | iHome Spectra Smart Spiral ST19/E26 Edison Multicolor | IH-BW948-999 | Yes | Yes |
+|  | ![](device-pictures/IH-BW949-999.jpeg) | iHome Spectra Smart Spiral G25 Edison Multicolor | IH-BW949-999 | Yes | Yes |
 | LSC | ![](device-pictures/2578539.jpeg) | Smart LED RGB + Tunable White E27 806 Lumen | 2578539<br />970724 | Yes | Yes |
 |  |  |  | 2578539<br />970719.1 v1.0 | Yes | Yes |
 |  | ![](device-pictures/970716.jpeg) | Smart LED Tunable White E27 806 Lumen | 3000272<br />970716 | Yes | Yes |
@@ -30,4 +31,4 @@
 | Brand | Picture | Device description | Article number | Flash dump / firmware acquired? | Exploitable? |
 |:---:|:---:|:---:|:---:|:---:|:---:|
 | LSC | ![](device-pictures/3006033.jpeg) | Smart Dimmer Switch | 3006033<br />970806 | Yes | No |
-|  | ![](device-pictures/970772v2.jpg) | Smart Siren | 970772 v2.0 | No - not a BK7231 chip | No |
+|  | ![](device-pictures/970772v2.jpg) | Smart Siren | 970772 v2.0 | No - not a BK7231 chip | Unknown - verification needed |
