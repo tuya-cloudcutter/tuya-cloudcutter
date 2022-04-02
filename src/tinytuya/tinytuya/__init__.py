@@ -952,9 +952,10 @@ class XenonDevice(object):
             skip_header(bool): For Protocol 3.3, does not add the protocol header if True
         """
         # Create byte buffer from hex data
-        payload = json.dumps(data)
-        # if spaces are not removed device does not respond!
-        payload = payload.replace(" ", "")
+        # Make sure to dump it with no spaces after : chars,
+        # otherwise device does not respond.
+        # This was done incorrectly before by removing all spaces!
+        payload = json.dumps(data, separators=(',', ':'))
         payload = payload.encode("utf-8")
         log.debug("building payload=%r", payload)
 
