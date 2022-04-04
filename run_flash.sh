@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+PROFILE=${1:-}
+FIRMWARE=${2:-}
+WIFI_ADAPTER=${3:-}
 source common.sh
 
 # Select the right device

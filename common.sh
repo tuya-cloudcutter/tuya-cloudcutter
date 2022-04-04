@@ -8,12 +8,9 @@ COMBINED_AP_PREAMBLE="(${CLOUDCUTTER_AP_PREAMBLE})|(${TUYA_AP_PREAMBLE})|(${IHOM
 AP_MATCHED_NAME=""
 FIRST_WIFI=$(nmcli device status | grep " wifi " | head -n1 | awk -F ' ' '{print $1}')
 
-SSID=${1:-$SSID}
-SSID_PASS=${2:-$SSID_PASS}
-WIFI_ADAPTER=${3:-$FIRST_WIFI}
-
-PROFILE=${4:-}
-CUSTOM_FIRMWARE=${5:-}
+if [ "${WIFI_ADAPTER}" == "" ]; then
+  WIFI_ADAPTER="${FIRST_WIFI}"
+fi
 
 wifi_connect () {
     AP_SEARCH_STRING=${1:-$COMBINED_AP_PREAMBLE}
