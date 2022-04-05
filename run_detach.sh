@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+SSID=${1:-$SSID}
+SSID_PASS=${2:-$SSID_PASS}
+WIFI_ADAPTER=${3:-}
+PROFILE=${4:-}
+
 source common.sh
 source common_run.sh
 
