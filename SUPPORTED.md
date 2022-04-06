@@ -1,7 +1,7 @@
 # Supported devices
 | Brand | Picture | Device description | Article numbers | Flash dump / firmware acquired? | Exploitable? |
 |:---:|:---:|:---:|:---:|:---:|:---:|
-| iHome | ![](Ddevice-pictures/IH-BW948-999.jpeg) | iHome Spectra Smart Spiral ST19/E26 Edison Multicolor | IH-BW948-999 | Yes | Yes |
+| iHome | ![](device-pictures/IH-BW948-999.jpeg) | iHome Spectra Smart Spiral ST19/E26 Edison Multicolor | IH-BW948-999 | Yes | Yes |
 |  | ![](device-pictures/IH-BW949-999.jpeg) | iHome Spectra Smart Spiral G25 Edison Multicolor | IH-BW949-999 | Yes | Yes |
 | LSC | ![](device-pictures/2578539.jpeg) | Smart LED RGB + Tunable White E27 806 Lumen | 2578539<br />970724 | Yes | Yes |
 |  |  |  | 2578539<br />970719.1 v1.0 | Yes | Yes |
