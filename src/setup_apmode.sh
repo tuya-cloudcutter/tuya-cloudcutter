@@ -20,4 +20,8 @@ chown mosquitto /run/mosquitto
 echo -e "listener 1883 0.0.0.0\nallow_anonymous true\n" >> /etc/mosquitto/mosquitto.conf
 /usr/sbin/mosquitto -d -c /etc/mosquitto/mosquitto.conf
 
-printf "ssid=cloudcutter-flash\nchannel=1\nlogger_stdout_level=4\ninterface=$WLAN" | hostapd /dev/stdin -P $(pwd)/hostapd.pid -B
+# Fixes WiFi softblock issues
+rfkill unblock wifi
+
+# Run in 802.11g on fixed chan 1 for consistency across setups
+printf "ssid=cloudcutter-flash\nchannel=1\nhw_mode=g\nlogger_stdout_level=4\ninterface=$WLAN" | hostapd /dev/stdin -P $(pwd)/hostapd.pid -B
