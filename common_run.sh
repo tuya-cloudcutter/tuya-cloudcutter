@@ -38,6 +38,8 @@ if [ ! $? -eq 0 ]; then
     echo "Failed to connect, please run this script again"
     exit 1
 fi
+# Add a minor delay to stabilize after connection
+sleep 1
 OUTPUT=$(run_in_docker pipenv run python3 -m cloudcutter configure_wifi "cloudcutter-flash" "")
 RESULT=$?
 echo "${OUTPUT}"
