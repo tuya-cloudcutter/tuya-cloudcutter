@@ -192,10 +192,12 @@ def __configure_wifi(args):
     payload = {"ssid": SSID, "passwd": password, "token": "AAAAAAAA"}
     payload = json.dumps(payload)
 
-    print(f"{payload=}")
-
     datagram = build_network_config_packet(payload.encode('ascii'))
-    send_network_config_datagram(datagram)
+    # Send the configuration diagram a few times with minor delay
+    # May improve reliability in some setups
+    for _ in range(5):
+        send_network_config_datagram(datagram)
+        time.sleep(0.300)
     print(f"Configured device to connect to '{SSID}'")
 
 
