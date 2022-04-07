@@ -1,0 +1,13 @@
+# List of SSID preambles/prefixes that the devices use, checked while autoconnecting for
+# exploit. All lines with a # character are treated as a comment.
+#
+# Cloud cutter post-exploit AP preamble
+A-
+# Tuya generic
+SmartLife-
+# Brand specific
+iHome-
+Merkury-
+Geeni-
+TreatLife-SL-
+SL-CreeLighting

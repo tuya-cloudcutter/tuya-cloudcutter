@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 
-CLOUDCUTTER_AP_PREAMBLE="A-"
-TUYA_AP_PREAMBLE="SmartLife-"
-IHOME_AP_PREAMBLE="iHome-"
-COMBINED_AP_PREAMBLE="(${CLOUDCUTTER_AP_PREAMBLE})|(${TUYA_AP_PREAMBLE})|(${IHOME_AP_PREAMBLE})"
+COMBINED_AP_PREAMBLE=$(cat ap_preambles.txt | grep -v '#' | awk '{ print "("$1")" }' | xargs | tr ' ' '|')
 
 AP_MATCHED_NAME=""
 FIRST_WIFI=$(nmcli device status | grep " wifi " | head -n1 | awk -F ' ' '{print $1}')
