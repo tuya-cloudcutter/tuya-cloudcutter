@@ -12,6 +12,9 @@ ip link set dev $WLAN up
 
 dnsmasq --no-resolv --interface=$WLAN --bind-interfaces \
 	--listen-address=$GATEWAY --except-interface=lo \
+	--log-dhcp \
+	--log-queries \
+	--log-facility=/work/logs/dnsmasq.log \
 	--dhcp-range=10.42.42.10,10.42.42.40,12h \
 	--address=/#/${GATEWAY} -x $(pwd)/dnsmasq.pid
 
