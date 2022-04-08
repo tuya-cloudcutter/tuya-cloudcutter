@@ -10,7 +10,7 @@ source common_run.sh
 
 # Cutting device from cloud, allowing local-tuya access still
 echo "Cutting device off from cloud.."
-echo "==> Wait for 20-30 seconds for the device to connect to 'cloudcutter-flash'. This script will then show the activation requests sent by the device, and tell you whether local activation was successful."
+echo "==> Wait for 20-30 seconds for the device to connect to 'cloudcutterflash'. This script will then show the activation requests sent by the device, and tell you whether local activation was successful."
 nmcli device set ${WIFI_ADAPTER} managed no
 trap "nmcli device set ${WIFI_ADAPTER} managed yes" EXIT  # Set WiFi adapter back to managed when the script exits
 INNER_SCRIPT=$(xargs -0 <<- EOF

@@ -40,11 +40,11 @@ if [ ! $? -eq 0 ]; then
 fi
 # Add a minor delay to stabilize after connection
 sleep 1
-OUTPUT=$(run_in_docker pipenv run python3 -m cloudcutter configure_wifi "cloudcutter-flash" "")
+OUTPUT=$(run_in_docker pipenv run python3 -m cloudcutter configure_wifi "cloudcutterflash" "")
 RESULT=$?
 echo "${OUTPUT}"
 if [ ! $RESULT -eq 0 ]; then
     echo "Oh no, something went wrong with making the device connect to our hostapd AP! Try again I guess.."
     exit 1
 fi
-echo "Device is connecting to 'cloudcutter-flash' access point"
+echo "Device is connecting to 'cloudcutterflash' access point"

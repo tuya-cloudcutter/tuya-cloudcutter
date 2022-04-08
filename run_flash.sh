@@ -16,7 +16,7 @@ source common_run.sh
 
 # Flash custom firmware to device
 echo "Flashing custom firmware .."
-echo "==> Wait for 20-30 seconds for the device to connect to 'cloudcutter-flash'. This script will then show the firmware upgrade requests sent by the device."
+echo "==> Wait for 20-30 seconds for the device to connect to 'cloudcutterflash'. This script will then show the firmware upgrade requests sent by the device."
 nmcli device set "${WIFI_ADAPTER}" managed no
 trap "nmcli device set ${WIFI_ADAPTER} managed yes" EXIT  # Set WiFi adapter back to managed when the script exits
 run_in_docker bash -c "bash /src/setup_apmode.sh ${WIFI_ADAPTER} && pipenv run python3 -m cloudcutter update_firmware \"/work/device-profiles/${PROFILE}\" \"${CONFIG_DIR}\" \"${FIRMWARE}\""
