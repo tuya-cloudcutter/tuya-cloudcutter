@@ -24,4 +24,4 @@ echo -e "listener 1883 0.0.0.0\nallow_anonymous true\n" >> /etc/mosquitto/mosqui
 rfkill unblock all
 
 # Run in 802.11g on fixed chan 1 for consistency across setups
-printf "ssid=cloudcutter-flash\nchannel=1\nhw_mode=g\nlogger_stdout=-1\nlogger_stdout_level=4\ninterface=$WLAN" | hostapd /dev/stdin -P $(pwd)/hostapd.pid -B
+printf "ssid=cloudcutter-flash\nchannel=1\nhw_mode=g\nlogger_stdout=-1\nlogger_stdout_level=4\ninterface=$WLAN" | hostapd /dev/stdin -P $(pwd)/hostapd.pid -B -dd -t -f /work/logs/hostapd.log
