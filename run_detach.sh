@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 
-SSID=${1:-$SSID}
-SSID_PASS=${2:-$SSID_PASS}
-WIFI_ADAPTER=${3:-}
-PROFILE=${4:-}
+while getopts "r" flag; do
+case "$flag" in
+    r) RESETNM="true";;
+esac
+done
+
+SSID=${@:$OPTIND:1}
+SSID_PASS=${@:$OPTIND+1:1}
+WIFI_ADAPTER=${@:$OPTIND+2:1}
+PROFILE=${@:$OPTIND+3:1}
 
 source common.sh
 source common_run.sh
