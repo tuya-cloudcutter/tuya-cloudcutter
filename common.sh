@@ -9,6 +9,19 @@ if [ "${WIFI_ADAPTER}" == "" ]; then
   WIFI_ADAPTER="${FIRST_WIFI}"
 fi
 
+reset_nm () {
+
+if [ -z ${RESETNM+x} ]; then
+    return 0
+else
+    echo "Wiping NetworkManager configs"
+    rm /etc/NetworkManager/system-connections/*.nmconnection*
+    service NetworkManager restart
+    return 0
+fi
+
+}
+
 wifi_connect () {
     AP_SEARCH_STRING=${1:-$COMBINED_AP_PREAMBLE}
     AP_PASS=${2:-""}
@@ -19,6 +32,9 @@ wifi_connect () {
         AP_MATCHED_NAME=""
 
         # Turn on WiFi, and wait for SSID to show up
+        reset_nm
+        sleep 1
+
         nmcli device set ${WIFI_ADAPTER} managed yes  # Make sure we turn on managed mode again in case we didn't recover it in the trap below
         nmcli radio wifi off
         sleep 1

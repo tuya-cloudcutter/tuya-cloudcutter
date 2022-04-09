@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 
-WIFI_ADAPTER=${1:-}
-PROFILE=${2:-}
-FIRMWARE=${3:-}
+while getopts "r" flag; do
+case "$flag" in
+    r) RESETNM="true";;
+esac
+done
+
+WIFI_ADAPTER=${@:$OPTIND:1}
+PROFILE=${@:$OPTIND+1:1}
+FIRMWARE=${@:$OPTIND+2:1}
 source common.sh
 
 # Select the right device
