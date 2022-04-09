@@ -140,7 +140,7 @@ if __name__ == '__main__':
     authkey = sys.argv[2]
 
     token = sys.argv[3]
-    prodkey = sys.argv[4] if len(sys.argv) >= 4 else 'keytg5kq8gvkv9dh'
+    prodkey = sys.argv[4] if len(sys.argv) > 4 else 'keytg5kq8gvkv9dh'
 
     if len(token) != 14:
         print('Token must be 14 chars')
