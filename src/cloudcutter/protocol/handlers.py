@@ -49,6 +49,17 @@ class GetURLHandler(TuyaHeadersHandler):
         self.finish(response)
 
 
+class OldSDKGetURLHandler(TuyaHeadersHandler):
+    def initialize(self, ipaddr: str):
+        self.ipaddr = ipaddr
+
+    def post(self):
+        response = {"caArr":None,"httpUrl":f"http://{self.ipaddr}/d.json","mqttUrl":f"{self.ipaddr}:1883"}
+        response = object_to_json(response)
+
+        self.finish(response)
+
+
 class FilesHandler(tornado.web.StaticFileHandler):
     def parse_url_path(self, url_path):
         if not url_path or url_path.endswith('/'):
