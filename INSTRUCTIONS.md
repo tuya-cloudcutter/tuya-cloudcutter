@@ -17,6 +17,8 @@ Here we describe how to use tuya-cloudcutter to jailbreak Tuya IoT devices by re
 * The script will start up an access point of its own called "cloudcutterflash", using your WiFi adapter
 * Turn the device off and on again once. It will enter AP mode again. If it doesn't, power cycle it 6 times to enter AP mode. The script will now make the device connect to our "cloudcutterflash" AP.
 * Once the device connects (can take up to half a minute), the script will set up your device's local access keys, and configure it to join the SSID you passed as an argument to `run_detach.sh`
+* You should see the activation requests show up in the terminal as cloudcutter configures the device
+* **Note:** If you don't see anything show up for longer than 2 minutes, power cycle the device to enter AP mode again and use one of the "SmartLife" compatible apps to instruct the device to connnect to the "cloudcutterflash" AP. The password for that AP is "abcdabcd" (without the " characters).
 * Your Tuya device should now be completely cut off from the cloud, and be locally controllable on your network using e.g. `tinytuya`
 * The randomly generated keys you need to connect to your device can be found in the `configured-devices` folder
 * Enjoy!
