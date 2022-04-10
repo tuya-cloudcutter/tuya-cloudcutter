@@ -67,7 +67,7 @@ wifi_connect () {
 }
 
 build_docker () {
-    docker build -q -t cloudcutter .
+    docker build --network=host -t cloudcutter .
     if [ ! $? -eq 0 ]; then
         echo "Failed to build Docker image, stopping script"
         exit 1
