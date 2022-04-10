@@ -19,7 +19,7 @@ fi
 echo "Waiting 1 sec to allow device to set itself up.."
 sleep 1
 echo "Running initial exploit toolchain.."
-OUTPUT=$(run_in_docker pipenv run python3 -m cloudcutter exploit_device /work/device-profiles/${PROFILE})
+OUTPUT=$(run_in_docker pipenv run python3 -m cloudcutter exploit_device /work/device-profiles/${PROFILE} --deviceid "${DEVICEID}" --localkey "${LOCALKEY}")
 RESULT=$?
 echo "${OUTPUT}"
 if [ ! $RESULT -eq 0 ]; then

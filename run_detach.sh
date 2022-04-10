@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
-while getopts "r" flag; do
+while getopts "rd:l:" flag; do
 case "$flag" in
     r) RESETNM="true";;
+    d) DEVICEID=${OPTARG};;
+    l) LOCALKEY=${OPTARG};;
 esac
 done
 
