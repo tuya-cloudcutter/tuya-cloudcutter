@@ -139,6 +139,8 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
     application = tornado.web.Application([
         (r'/v1/url_config', GetURLHandler, dict(ipaddr=args.ip)),
         (r'/v2/url_config', GetURLHandler, dict(ipaddr=args.ip)),
+        # 2018 SDK specific endpoint
+        (r'/device/url_config', GetURLHandler, dict(ipaddr=args.ip)),
         (r'/d.json', DetachHandler, dict(profile_directory=args.profile, response_transformers=response_transformers, config=config, endpoint_hooks=endpoint_hooks)),
         (f'/files/(.*)', tornado.web.StaticFileHandler, dict(path="/work/custom-firmware/")),
     ])
@@ -148,6 +150,10 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
 
     https_server = tornado.httpserver.HTTPServer(application, ssl_options=context)
     https_server.listen(443)
+
+    # 2018 SDK seems to request that port for some reason
+    dns_https_server = tornado.httpserver.HTTPServer(application, ssl_options=context)
+    dns_https_server.listen(4433)
 
     tornado.ioloop.IOLoop.current().start()
 
