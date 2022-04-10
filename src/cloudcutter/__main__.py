@@ -172,9 +172,9 @@ def __exploit_device(args):
         sys.exit(65)
 
     device_config = exploit_device_with_config(args, exploit_profile)
-    device_id = device_config.get(DeviceConfig.DEVICE_ID)
+    device_uuid = device_config.get(DeviceConfig.UUID)
 
-    output_path = os.path.join(output_dir, f"{device_id}.deviceconfig")
+    output_path = os.path.join(output_dir, f"{device_uuid}.deviceconfig")
     device_config.write(output_path)
 
     print(f"Exploit run, saved device config to!")
