@@ -35,7 +35,7 @@ wifi_connect () {
         reset_nm
         sleep 1
 
-        nmcli device set ${WIFI_ADAPTER} managed yes  # Make sure we turn on managed mode again in case we didn't recover it in the trap below
+        service network-manager start; nmcli device set ${WIFI_ADAPTER} managed yes  # Make sure we turn on managed mode again in case we didn't recover it in the trap below
         nmcli radio wifi off
         sleep 1
         nmcli radio wifi on

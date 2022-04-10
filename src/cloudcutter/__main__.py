@@ -3,6 +3,7 @@ from fileinput import filename
 import hmac
 import json
 import os
+import re
 import sys
 import time
 from hashlib import sha256
@@ -176,10 +177,10 @@ def __exploit_device(args):
         print(f"Could not load profile {profile_path}. Are you sure the profile directory and file exist?", file=sys.stderr)
         sys.exit(65)
 
-    device_config = exploit_device_with_config(exploit_profile)
-    device_id = device_config.get(DeviceConfig.DEVICE_ID)
+    device_config = exploit_device_with_config(args, exploit_profile)
+    device_uuid = device_config.get(DeviceConfig.UUID)
 
-    output_path = os.path.join(output_dir, f"{device_id}.deviceconfig")
+    output_path = os.path.join(output_dir, f"{device_uuid}.deviceconfig")
     device_config.write(output_path)
 
     print(f"Exploit run, saved device config to!")
@@ -206,6 +207,16 @@ def __configure_wifi(args):
         time.sleep(0.300)
     print(f"Configured device to connect to '{SSID}'")
 
+def __validate_localapicredential_arg(length):
+    def check_arg(value):
+        if (len(value) == 0):
+            return value
+        elif (len(value) != length):
+            raise argparse.ArgumentTypeError("%s length is invalid, it must be %s characters long" % value, length)
+        elif (not re.compile('[a-zA-Z0-9]').match(value)):
+            raise argparse.ArgumentTypeError("%s value is invalid, it must contain only letters or numbers" % value)
+        return value
+    return check_arg
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -260,6 +271,22 @@ def parse_args():
         required=False,
         default="/work/configured-devices",
         help="A directory to which the modified device parameters file will be written (default: <workdir>/configured-devices)"
+    )
+    parser_exploit_device.add_argument(
+        "--deviceid",
+        dest="device_id",
+        required=False,
+        default="",
+        help="deviceid assigned to the device (default: Random)",
+        type=__validate_localapicredential_arg(20),
+    )
+    parser_exploit_device.add_argument(
+        "--localkey",
+        dest="local_key",
+        required=False,
+        default="",
+        help="localkey assigned to the device (default: Random)",
+        type=__validate_localapicredential_arg(16),
     )
     parser_exploit_device.set_defaults(handler=__exploit_device)
 
