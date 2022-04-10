@@ -196,7 +196,13 @@ def __configure_wifi(args):
     # Pass the payload through the json module specifically
     # to avoid issues with special chars (e.g. ") in either
     # SSIDs or passwords.
-    payload = {"ssid": SSID, "passwd": password, "token": "AAAAAAAA"}
+    payload = {"ssid": SSID, "token": "AAAAAAAA"}
+
+    # Configure the password ONLY if it's present
+    # Some devices may parse incorrectly otherwise
+    if password:
+        payload["passwd"] = password
+
     payload = json.dumps(payload)
 
     datagram = build_network_config_packet(payload.encode('ascii'))
