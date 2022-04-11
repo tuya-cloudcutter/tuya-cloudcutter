@@ -160,6 +160,34 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
 
 
 def __update_firmware(args):
+    if not (os.path.exists(args.firmware) and os.path.isfile(args.firmware)):
+        print(f"Firmware {args.firmware} does not exist or not a file.", file=sys.stderr)
+        sys.exit(50)
+
+    UG_FILE_MAGIC = b"\x55\xAA\x55\xAA"
+    FILE_MAGIC_DICT = {
+        b"RBL\x00": "RBL",
+        b"\x43\x09\xb5\x96": "QIO",
+        b"\x2f\x07\xb5\x94": "UA"
+    }
+    
+    with open(args.firmware, "rb") as fs:
+        magic = fs.read(4)
+        error_code = 0
+        if magic in FILE_MAGIC_DICT:
+            print(f"Firmware {args.firmware} is an {FILE_MAGIC_DICT[magic]} file! Please provide a UG file.", file=sys.stderr)
+            error_code = 51
+        elif magic != UG_FILE_MAGIC:
+            print(f"Firmware {args.firmware} is not a UG file.", file=sys.stderr)
+            error_code = 52
+        else:
+            # File is a UG file
+            error_code = 0
+            pass
+
+        if error_code != 0:
+            sys.exit(error_code)
+    
     __configure_local_device_or_update_firmware(args, update_firmare=True)
 
 

@@ -23,6 +23,33 @@ def ask_custom_firmware():
     return f"{firmware_dir}/{ask_files('Select your custom firmware file', firmware_dir)}"
 
 
+def validate_firmware_file(firmware):
+    UG_FILE_MAGIC = b"\x55\xAA\x55\xAA"
+    FILE_MAGIC_DICT = {
+        b"RBL\x00": "RBL",
+        b"\x43\x09\xb5\x96": "QIO",
+        b"\x2f\x07\xb5\x94": "UA"
+    }
+    
+    with open(firmware, "rb") as fs:
+        magic = fs.read(4)
+        error_code = 0
+        if magic in FILE_MAGIC_DICT:
+            print(f"Firmware {firmware} is an {FILE_MAGIC_DICT[magic]} file! Please provide a UG file.", file=sys.stderr)
+            error_code = 51
+        elif magic != UG_FILE_MAGIC:
+            print(f"Firmware {firmware} is not a UG file.", file=sys.stderr)
+            error_code = 52
+        else:
+            # File is a UG file
+            error_code = 0
+            pass
+
+        if error_code != 0:
+            sys.exit(error_code)
+    return firmware
+
+
 if __name__ == "__main__":
     input_type = sys.argv[1]
     output_file = open(sys.argv[2], "wt")
@@ -31,4 +58,5 @@ if __name__ == "__main__":
         print(f"{manufacturer}/{device}", file=output_file)
     elif input_type == "firmware":
         firmware = ask_custom_firmware()
+        firmware = validate_firmware_file(firmware)
         print(f"{firmware}", file=output_file)

@@ -14,6 +14,9 @@ source common.sh
 # Select the right device
 if [ "${FIRMWARE}" == "" ]; then
   run_in_docker pipenv run python3 get_input.py firmware /work/firmware.txt
+  if [ ! $? -eq 0 ]; then
+    exit 1
+  fi
   FIRMWARE=$(cat firmware.txt)
   rm -f firmware.txt
 fi
