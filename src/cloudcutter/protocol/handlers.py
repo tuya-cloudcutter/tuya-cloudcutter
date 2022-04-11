@@ -60,12 +60,11 @@ class OldSDKGetURLHandler(TuyaHeadersHandler):
         self.finish(response)
 
 
-class FilesHandler(tornado.web.StaticFileHandler):
-    def parse_url_path(self, url_path):
-        if not url_path or url_path.endswith('/'):
-            url_path = url_path + str('index.html')
-        return url_path
-
+class OTAFilesHandler(tornado.web.StaticFileHandler):
+    def on_finish(self):
+        range_value = self.request.headers.get("Range", "bytes 0-0")
+        total = self.get_content_size()
+        print(f"[DEVICE OTA] Responding to device OTA HTTP request range: {range_value}/{total}")
 
 class DetachHandler(TuyaServerHandler):
     AUTHKEY_ENDPOINTS = ["tuya.device.active", "tuya.device.uuid.pskkey.get"]
