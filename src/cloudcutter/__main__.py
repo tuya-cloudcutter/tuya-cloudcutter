@@ -19,7 +19,7 @@ from .device import DEFAULT_AUTH_KEY, DEVICE_PROFILE_FILE_NAME, DeviceConfig
 from .exploit import (build_network_config_packet, exploit_device_with_config,
                       send_network_config_datagram)
 from .protocol import mqtt
-from .protocol.handlers import DetachHandler, GetURLHandler, OldSDKGetURLHandler
+from .protocol.handlers import DetachHandler, GetURLHandler, OldSDKGetURLHandler, OTAFilesHandler
 from .protocol.transformers import ResponseTransformer
 
 
@@ -73,7 +73,8 @@ def __trigger_firmware_update(config: DeviceConfig):
     local_key = config.get(DeviceConfig.LOCAL_KEY)
 
     mqtt.trigger_firmware_update(device_id=device_id, local_key=local_key, protocol="2.2", broker="127.0.0.1")
-    print("Firmware update messages triggered. Wait for callack from device")
+    print("Firmware update messages triggered. Device will download and reset. Exiting in 30 seconds.")
+    tornado.ioloop.IOLoop.current().call_later(30.0, lambda : sys.exit(0))
 
 
 def __configure_local_device_or_update_firmware(args, update_firmare: bool = False):
@@ -143,7 +144,7 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
         # 2018 SDK specific endpoint
         (r'/device/url_config', OldSDKGetURLHandler, dict(ipaddr=args.ip)),
         (r'/d.json', DetachHandler, dict(profile_directory=args.profile, response_transformers=response_transformers, config=config, endpoint_hooks=endpoint_hooks)),
-        (f'/files/(.*)', tornado.web.StaticFileHandler, dict(path="/work/custom-firmware/")),
+        (f'/files/(.*)', OTAFilesHandler, dict(path="/work/custom-firmware/")),
     ])
 
     http_server = tornado.httpserver.HTTPServer(application)
