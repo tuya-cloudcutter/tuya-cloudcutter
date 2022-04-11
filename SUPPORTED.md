@@ -16,6 +16,7 @@
 |  | ![](device-pictures/970710.jpeg) | Smart LED RGB + Tunable White GU10 380 Lumen | 3004919<br />970710 | Yes | Yes |
 |  | ![](device-pictures/3000267.jpeg) | Smart LED Tunable White GU10 345 Lumen | 3000267<br />970700 | Yes | Yes |
 |  | ![](device-pictures/3006767.jpeg) | Smart LED Downlight Tunable White 360 Lumen | 3006767<br />970820 | Yes | Yes |
+|  | ![](device-pictures/970766.jpg) | Smart Power Plug | 2578685<br />970766 | Yes | Yes |
 
 
 # Support verification TBD
@@ -30,5 +31,6 @@
 # Unsupported devices
 | Brand | Picture | Device description | Article number | Flash dump / firmware acquired? | Exploitable? |
 |:---:|:---:|:---:|:---:|:---:|:---:|
-| LSC | ![](device-pictures/3006033.jpeg) | Smart Dimmer Switch | 3006033<br />970806 | Yes | No |
-|  | ![](device-pictures/970772v2.jpg) | Smart Siren | 970772 v2.0 | No - not a BK7231 chip | Unknown - verification needed |
+| LSC | ![](device-pictures/3006033.jpeg) | Smart Dimmer Switch | 3006033<br />970806 | Yes | No - does not support AP mode configuration |
+|  | ![](device-pictures/970802.jpg) | Smart Chime | 3006832<br />970802 | No - not a WiFi device | No |
+|  | ![](device-pictures/970772v2.jpg) | Smart Siren | 970772 v2.0 | No - RTL chip | Unknown - verification needed |
