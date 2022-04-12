@@ -141,6 +141,7 @@ if __name__ == '__main__':
 
     token = sys.argv[3]
     prodkey = sys.argv[4] if len(sys.argv) > 4 else 'keytg5kq8gvkv9dh'
+    request_type = int(sys.argv[5]) if len(sys.argv) > 5 else 1
 
     if len(token) != 14:
         print('Token must be 14 chars')
@@ -158,5 +159,11 @@ if __name__ == '__main__':
             "t": t,
             "v": "4.4"
     }
-    data = {'token': token, 'softVer': '2.9.16', 'productKey': prodkey, 'protocolVer': '2.2', 'baselineVer': '40.00', 'productKeyStr': prodkey, 'devId': 'bf27a86f49bf35f70c7ign', 'hid': '508a06b10603', 'modules': '[{"type":9,"softVer":"2.9.16","online":true}]', 'devAttribute': 515, 'cadVer': '1.0.2', 'cdVer': '1.0.0', 'options': '{"isFK":true}', 't': t}
+    if request_type == 1:
+        data = {'token': token, 'softVer': '2.9.16', 'productKey': prodkey, 'protocolVer': '2.2', 'baselineVer': '40.00', 'productKeyStr': prodkey, 'devId': 'bf27a86f49bf35f70c7ign', 'hid': '508a06b10603', 'modules': '[{"type":9,"softVer":"2.9.16","online":true}]', 'devAttribute': 515, 'cadVer': '1.0.2', 'cdVer': '1.0.0', 'options': '{"isFK":true}', 't': t}
+    elif request_type == 2:
+        data = {'token': token, 'softVer': '1.1.5', 'productKey': prodkey, 'protocolVer': '2.2', 'baselineVer': '40.00', 'productKeyStr': prodkey, 'devId': 'bx26189fa49d18626bchza', 'hid': '508a06fe73ed', 'modules': '[{"otaChannel":9,"softVer":"1.1.5","online":true}]', 'devAttribute': 579, 'cadVer': '1.0.2', 'cdVer': '1.0.0', 'options': '{"isFK":true,"otaChannel":0}', 't': t}
+    else:
+        print("Unknown request type", file=sys.stderr)
+        sys.exit(1)
     print(json.dumps(connection.request(url, params, data, "POST"), separators=(',',':')))
