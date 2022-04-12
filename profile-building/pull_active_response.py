@@ -163,6 +163,8 @@ if __name__ == '__main__':
         data = {'token': token, 'softVer': '2.9.16', 'productKey': prodkey, 'protocolVer': '2.2', 'baselineVer': '40.00', 'productKeyStr': prodkey, 'devId': 'bf27a86f49bf35f70c7ign', 'hid': '508a06b10603', 'modules': '[{"type":9,"softVer":"2.9.16","online":true}]', 'devAttribute': 515, 'cadVer': '1.0.2', 'cdVer': '1.0.0', 'options': '{"isFK":true}', 't': t}
     elif request_type == 2:
         data = {'token': token, 'softVer': '1.1.5', 'productKey': prodkey, 'protocolVer': '2.2', 'baselineVer': '40.00', 'productKeyStr': prodkey, 'devId': 'bx26189fa49d18626bchza', 'hid': '508a06fe73ed', 'modules': '[{"otaChannel":9,"softVer":"1.1.5","online":true}]', 'devAttribute': 579, 'cadVer': '1.0.2', 'cdVer': '1.0.0', 'options': '{"isFK":true,"otaChannel":0}', 't': t}
+    elif request_type == 3:
+        data = {'token': token, 'softVer': '2.0.6', 'productKey': prodkey, 'protocolVer': '2.2', 'baselineVer': '30.06', 'productKeyStr': prodkey, 'hid': '508a06b10603', 'modules': '[{"type":9,"softVer":"2.0.6","online":true}]', 'devAttribute': 3, 'cadVer': '1.0.2', 'cdVer': '1.0.0', 'options': '{"isFK":false}', 't': t}
     else:
         print("Unknown request type", file=sys.stderr)
         sys.exit(1)
