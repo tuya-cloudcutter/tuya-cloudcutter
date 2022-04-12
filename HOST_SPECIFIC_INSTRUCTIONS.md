@@ -37,4 +37,4 @@ unmanaged-devices=interface-name:usb*
 9. Install git `sudo apt install git`
 10. Clone tuya-cloudcutter repo `git clone https://github.com/tuya-cloudcutter/tuya-cloudcutter`
 11. In the cloudcutter directory, build the docker image `sudo docker build --network=host -t cloudcutter .`
-12. Run cloudcutter with `sudo ./run_detach -r ...`
+12. Run cloudcutter with `sudo ./run_detach.sh -r ...`
