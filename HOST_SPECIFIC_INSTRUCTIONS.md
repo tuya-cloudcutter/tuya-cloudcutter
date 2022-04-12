@@ -1,6 +1,6 @@
 # Raspberry Pi
 
-## Generic (2W, 3, or 4)
+## Generic (Zero 2W, 3, or 4)
 
 Use these instruction if:
 
@@ -30,13 +30,13 @@ managed=true
 6. Install git `sudo apt install git`
 7. Clone tuya-cloudcutter repo `git clone https://github.com/tuya-cloudcutter/tuya-cloudcutter`
 8. (Optional as independent step) In the cloudcutter directory, build the docker image `sudo docker build --network=host -t cloudcutter .`
-9. Run cloudcutter with `sudo ./run_detach.sh -r ...`
+9. Run cloudcutter with `sudo ./run_detach.sh -r ...` (refer to [usage instructions](./INSTRUCTIONS.md))
 
-## Pi Zero W2 with SSH over USB
+## Pi Zero 2W with SSH over USB
 
 Use these instructions if:
 
-- You would like to SSH to the Pi Zero W2 using USB
+- You would like to SSH to the Pi Zero 2W using USB
 
 Steps:
 
@@ -73,4 +73,4 @@ unmanaged-devices=interface-name:usb*
 9. Install git `sudo apt install git`
 10. Clone tuya-cloudcutter repo `git clone https://github.com/tuya-cloudcutter/tuya-cloudcutter`
 11. (Optional as independent step) In the cloudcutter directory, build the docker image `sudo docker build --network=host -t cloudcutter .`
-12. Run cloudcutter with `sudo ./run_detach.sh -r ...`
+12. Run cloudcutter with `sudo ./run_detach.sh -r ...` (refer to [usage instructions](./INSTRUCTIONS.md))
