@@ -1,9 +1,44 @@
 # Raspberry Pi
 
+## Generic (Zero 2W, 3, or 4)
 
-## Pi Zero W2 with SSH over USB
+Use these instruction if:
 
-If you have a monitor and keyboard to connect to the pi, you do not need the steps to access SSH over USB.
+- You plan on plugging your pi into a monitor and using a keyboard
+- Or, you plan on plugging you pi in with ethernet and using SSH over that ethernet connection
+
+Steps:
+
+1. Use Raspberry Pi Imager to burn "Raspberry Pi OS Lite (32 Bit)" to an SD card
+	- As of this note, 2022-04-04 build of Bullseye
+	- If using SSH, enable it (using the installer or making an empty file `ssh` on the boot partition)
+2. Access the pi (SSH or keyboard + monitor)
+3. Install Network Manager (only reboot once all files are in place)
+	- `sudo apt update && sudo apt install network-manager`
+	- `sudo nano /etc/dhcpcd.conf` then add line `denyinterfaces wlan0`
+	- `sudo nano /etc/NetworkManager/NetworkManager.conf` and make it look exactly like
+```
+[main]
+plugins=ifupdown,keyfile
+dhcp=internal
+
+[ifupdown]
+managed=true
+```
+4. Reboot the pi `sudo reboot` then reaccess.
+5. Install Docker with `curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh`
+6. Install git `sudo apt install git`
+7. Clone tuya-cloudcutter repo `git clone https://github.com/tuya-cloudcutter/tuya-cloudcutter`
+8. (Optional as independent step) In the cloudcutter directory, build the docker image `sudo docker build --network=host -t cloudcutter .`
+9. Run cloudcutter with `sudo ./run_detach.sh -r ...` (refer to [usage instructions](./INSTRUCTIONS.md))
+
+## Pi Zero 2W with SSH over USB
+
+Use these instructions if:
+
+- You would like to SSH to the Pi Zero 2W using USB
+
+Steps:
 
 1. Use Raspberry Pi Imager to burn "Raspberry Pi OS Lite (32 Bit)" to an SD card
 	- As of this note, 2022-04-04 build of Bullseye
@@ -22,7 +57,8 @@ If you have a monitor and keyboard to connect to the pi, you do not need the ste
 	- `sudo apt update && sudo apt install network-manager`
 	- `sudo nano /etc/dhcpcd.conf` then add line `denyinterfaces wlan0`
 	- `sudo nano /etc/NetworkManager/NetworkManager.conf` and make it look exactly like
- ```[main]
+```
+[main]
 plugins=ifupdown,keyfile
 dhcp=internal
 
@@ -36,5 +72,5 @@ unmanaged-devices=interface-name:usb*
 8. Install Docker with `curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh`
 9. Install git `sudo apt install git`
 10. Clone tuya-cloudcutter repo `git clone https://github.com/tuya-cloudcutter/tuya-cloudcutter`
-11. In the cloudcutter directory, build the docker image `sudo docker build --network=host -t cloudcutter .`
-12. Run cloudcutter with `sudo ./run_detach.sh -r ...`
+11. (Optional as independent step) In the cloudcutter directory, build the docker image `sudo docker build --network=host -t cloudcutter .`
+12. Run cloudcutter with `sudo ./run_detach.sh -r ...` (refer to [usage instructions](./INSTRUCTIONS.md))

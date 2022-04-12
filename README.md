@@ -15,7 +15,7 @@ Please be aware that this software is experimental and provided without any guar
 If you're curious about the vulnerability and how the exploit chain works, here's the [detailed writeup](https://rb9.nl/posts/2022-03-29-light-jailbreaking-exploiting-tuya-iot-devices/) and the [proof of concept script](./proof-of-concept/poc.py).
 
 ## Usage
-Check out [usage instructions](./INSTRUCTIONS.md) and [some host specific instructions for setups on devices like the RPi Zero 2W](./HOST_SPECIFIC_INSTRUCTIONS.md)
+Check out [usage instructions](./INSTRUCTIONS.md) and [some host specific instructions for setups on devices like a Raspberry Pi](./HOST_SPECIFIC_INSTRUCTIONS.md)
 
 ## Contribution
 We'd be happy to receive your contributions! One way to contribute if you already know your way around some binary exploitation or would like to get your hands into it is by building device profiles to support more exploitable devices. Check out the [detailed writeup](https://rb9.nl/posts/2022-03-29-light-jailbreaking-exploiting-tuya-iot-devices/) for the information about the vulnerability and exploit chain. Example device profiles can also be found in the `device-profiles` directory.
