@@ -36,3 +36,8 @@ If you'd like to check if a device is exploitable, one way to lower the chance o
 
 ## Device support
 Check out the initial list of [supported devices](./SUPPORTED.md).
+
+## Previous work
+- [Smart Home - Smart Hack (35c3 talk)](https://media.ccc.de/v/35c3-9723-smart_home_-_smart_hack) by Michael Steigerwald from [VRUST](https://www.vtrust.de/).
+- [tuya-convert](https://github.com/ct-Open-Source/tuya-convert) - MQTT code for triggering firmware updates inspired by their work.
+- [tinytuya](https://github.com/jasonacox/tinytuya) - modified version of the library is used to communicate with devices after exploitation.
