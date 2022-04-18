@@ -1,6 +1,9 @@
 ## Disabling cloud connection & running locally
 Here we describe how to use tuya-cloudcutter to jailbreak Tuya IoT devices by replacing their security keys. This prevents them from communicating with Tuya cloud servers, and allows you to control them via your local network instead.
 
+### 🚨 ⚠️ WARNING⚠️ 🚨
+**Using cloudcutter means that you will NO LONGER be able to use Tuya's apps and servers. Be absolutely sure that you are never going to use them again!**
+
 ### Prerequisites
 * A laptop or computer with a WiFi adapter
 * Running (non-virtualized) Ubuntu (other distros with NetworkManager might also work, untested. VMs might work if you passthrough WiFi adapter.)
