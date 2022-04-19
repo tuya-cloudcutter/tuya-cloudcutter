@@ -9,5 +9,6 @@ SmartLife-
 iHome-
 Merkury-
 Geeni-
+GRID-
 TreatLife-SL-
 SL-CreeLighting
