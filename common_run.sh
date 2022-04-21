@@ -9,7 +9,7 @@ fi
 
 # Connect to Tuya device's WiFi
 echo "==> Toggle Tuya device's power off and on again 6 times, with ~1 sec pauses in between, to enable AP mode. Repeat if your device's SSID doesn't show up within ~30 seconds."
-wifi_connect ${COMBINED_AP_PREAMBLE}
+wifi_connect
 if [ ! $? -eq 0 ]; then
     echo "Failed to connect, please run this script again"
     exit 1
@@ -33,7 +33,7 @@ echo "Saved device config in ${CONFIG_DIR}"
 # Connect to Tuya device's WiFi again, to make it connect to our hostapd AP later
 echo "==> Turn the device off and on again once. Repeat 6 more times if your device's SSID doesn't show up within ~5 seconds."
 sleep 1
-wifi_connect ${COMBINED_AP_PREAMBLE}
+wifi_connect
 if [ ! $? -eq 0 ]; then
     echo "Failed to connect, please run this script again"
     exit 1
