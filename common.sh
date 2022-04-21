@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-AP_SEARCH_STRING=$(cat ap_preambles.txt | grep -v '#' | awk '{print "-e \""$0"\"" }' | tr '\n' ' ')
+COMBINED_AP_PREAMBLE=$(cat ap_preambles.txt | grep -v '#' | awk '{print "-e \""$0"\"" }' | tr '\n' ' ')
 
 AP_MATCHED_NAME=""
 FIRST_WIFI=$(nmcli device status | grep " wifi " | head -n1 | awk -F ' ' '{print $1}')
@@ -23,6 +23,7 @@ fi
 }
 
 wifi_connect () {
+    AP_SEARCH_STRING=${1:-$COMBINED_AP_PREAMBLE}
     AP_PASS=${2:-""}
 
 
