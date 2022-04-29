@@ -1,6 +1,6 @@
 # Tuya Cloudcutter
 
-This repository contains the toolchain to exploit a wireless vulnerability that can jailbreak some of the latest smart devices built under various brand names by Tuya. The vulnerability as well as the exploitation tooling were identified and created by [Khaled Nassar](https://twitter.com/kmhnassar) and [Tom Clement](https://twitter.com/Tom_Clement) with support from [Jilles Groenendijk](https://twitter.com/jilles_com).
+This repository contains the toolchain to exploit a wireless vulnerability that can jailbreak some of the latest smart devices built with the bk7231 chipset under various brand names by Tuya. The vulnerability as well as the exploitation tooling were identified and created by [Khaled Nassar](https://twitter.com/kmhnassar) and [Tom Clement](https://twitter.com/Tom_Clement) with support from [Jilles Groenendijk](https://twitter.com/jilles_com).
 
 Our tool disconnects Tuya devices from the cloud, allowing them to run completely locally. Additionally, it can be used to flash custom firmware to devices over-the-air.
 
