@@ -7,6 +7,7 @@ import re
 import sys
 import time
 from hashlib import sha256
+from tornado.log import enable_pretty_logging
 from traceback import print_exc
 
 import tinytuya.tinytuya as tinytuya
@@ -21,6 +22,9 @@ from .exploit import (build_network_config_packet, exploit_device_with_config,
 from .protocol import mqtt
 from .protocol.handlers import DetachHandler, GetURLHandler, OldSDKGetURLHandler, OTAFilesHandler
 from .protocol.transformers import ResponseTransformer
+
+# Enable tornado pretty logging for more verbose output by default
+enable_pretty_logging()
 
 
 def __configure_local_device_response_transformers(config):
