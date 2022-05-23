@@ -26,7 +26,7 @@ These are currently done manually, but there are some plans in the future to sim
 
 ### Device dumps
 You can also contribute device dumps by making an issue with a link to your device dump, **but be aware if your device was already onboarded on your WiFi AP**. If you don't want your SSID and/or SSID password to be out there, then it's best to dump a device that was never onboarded on any AP. Otherwise, you may also configure it on a dummy access point a few times before dumping it. This will greatly lower the chances of accidental leakage to anyone working on the building a profile from your device flash dump, **but it is never zero in this case**. As a rule of thumb, it's better to dump a fresh device, but if you still want to dump one that's in use then know that you always run the risk of leaking your SSID and password.
-
+Note that a dump made on a device which has been already activated on Tuya's app using a dummy SSID and password would simplify profile building a lot for contributors, so if possible please try to do so.
 Tools to dump flash from devices:
 - https://github.com/khalednassar/bk7231tools
 - https://github.com/OpenBekenIOT/hid_download_py
