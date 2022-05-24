@@ -25,7 +25,7 @@ fi
 wifi_connect () {
     AP_PASS=${1:-""}
 
-AP_SEARCH_LIST=$(echo ${COMBINED_AP_PREAMBLE} | sed 's/-e //g')
+    AP_SEARCH_LIST=$(echo ${COMBINED_AP_PREAMBLE} | sed 's/-e //g')
 
     for i in {1..5}
     do
