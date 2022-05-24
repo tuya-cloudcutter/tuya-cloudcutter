@@ -8,7 +8,7 @@ def ask_options(text, options):
 
 def ask_files(text, dir):
     files = [path for path in os.listdir(dir) if not path.startswith(".")]
-    return ask_options(text, files)['result']
+    return ask_options(text, sorted(files, key=str.casefold))['result']
 
 
 def ask_device_type():

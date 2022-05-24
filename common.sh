@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-COMBINED_AP_PREAMBLE=$(cat ap_preambles.txt | grep -v '#' | awk '{print "-e \""$0"\"" }' | tr '\n' ' ')
+COMBINED_AP_PREAMBLE=$(cat ap_preambles.txt | grep -v '#' | sort -u | awk '{print "-e \""$0"\"" }' | tr '\n' ' ')
 
 AP_MATCHED_NAME=""
 FIRST_WIFI=$(nmcli device status | grep " wifi " | head -n1 | awk -F ' ' '{print $1}')
@@ -15,7 +15,7 @@ if [ -z ${RESETNM+x} ]; then
     return 0
 else
     echo "Wiping NetworkManager configs"
-    rm /etc/NetworkManager/system-connections/*.nmconnection*
+    rm -f /etc/NetworkManager/system-connections/*.nmconnection*
     service NetworkManager restart
     return 0
 fi
@@ -24,8 +24,8 @@ fi
 
 wifi_connect () {
     AP_PASS=${1:-""}
-    
-    AP_SEARCH_LIST=$(echo ${COMBINED_AP_PREAMBLE} | sed 's/-e / /g')
+
+    AP_SEARCH_LIST=$(echo ${COMBINED_AP_PREAMBLE} | sed 's/-e //g')
 
     for i in {1..5}
     do
