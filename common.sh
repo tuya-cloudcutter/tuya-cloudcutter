@@ -15,7 +15,7 @@ if [ -z ${RESETNM+x} ]; then
     return 0
 else
     echo "Wiping NetworkManager configs"
-    rm /etc/NetworkManager/system-connections/*.nmconnection*
+    rm -f /etc/NetworkManager/system-connections/*.nmconnection*
     service NetworkManager restart
     return 0
 fi
