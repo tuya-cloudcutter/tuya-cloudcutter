@@ -8,7 +8,7 @@ if [ "${PROFILE}" == "" ]; then
 fi
 
 # Connect to Tuya device's WiFi
-echo "==> Toggle Tuya device's power off and on again 6 times, with ~1 sec pauses in between, to enable AP mode. Repeat if your device's SSID doesn't show up within ~30 seconds."
+echo "==> Toggle Tuya device's power off and on again 6 times, with ~1 sec pauses in between, to enable AP mode. Repeat if your device's SSID doesn't show up within ~30 seconds. For smart plugs long press the reset button on the device for about 5 seconds. See https://support.tuya.com/en/help/_detail/K9hut3w10nby8 for more information."
 wifi_connect
 if [ ! $? -eq 0 ]; then
     echo "Failed to connect, please run this script again"
@@ -31,7 +31,7 @@ echo "Saved device config in ${CONFIG_DIR}"
 
 
 # Connect to Tuya device's WiFi again, to make it connect to our hostapd AP later
-echo "==> Turn the device off and on again once. Repeat 6 more times if your device's SSID doesn't show up within ~5 seconds."
+echo "==> Turn the device off and on again once. Repeat 6 more times if your device's SSID doesn't show up within ~5 seconds. For smart plugs long press the reset button on the device for about 5 seconds. See https://support.tuya.com/en/help/_detail/K9hut3w10nby8 for more information."
 sleep 1
 wifi_connect
 if [ ! $? -eq 0 ]; then
