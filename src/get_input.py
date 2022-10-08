@@ -1,21 +1,67 @@
+import json
 import os, sys
 import inquirer
+import requests
+
+
+def api_get(path):
+    with requests.get(f"https://tuya-cloudcutter.github.io/api/{path}") as r:
+        return r.json()
 
 
 def ask_options(text, options):
-    return inquirer.prompt([inquirer.List('result', carousel=True, message=text, choices=options)])
+    return inquirer.prompt([inquirer.List('result', carousel=True, message=text, choices=options)])["result"]
 
 
 def ask_files(text, dir):
     files = [path for path in os.listdir(dir) if not path.startswith(".")]
-    return ask_options(text, sorted(files, key=str.casefold))['result']
+    return ask_options(text, sorted(files, key=str.casefold))
 
 
-def ask_device_type():
-    profile_dir = "/work/device-profiles"
-    manufacturer = ask_files("Select the brand of your device", profile_dir)
-    device = ask_files("Select the article number of your device", f"{profile_dir}/{manufacturer}")
-    return manufacturer, device
+def ask_target_profile():
+    opts = [
+        "By manufacturer/device name",
+        "By firmware version and name",
+    ]
+    mode = ask_options("How do you want to choose the device?", opts)
+    if mode == opts[0]:
+        device_slug = ask_device_base(api_get("devices.json"))["slug"]
+        device = api_get(f"devices/{device_slug}.json")
+        profiles = device["profiles"]
+    else:
+        profiles = api_get("profiles.json")
+    profile_slug = ask_profile_base(profiles)["slug"]
+    profile = api_get(f"profiles/{profile_slug}.json")
+    return profile
+
+
+def ask_device_base(devices):
+    brands = sorted(set(device["manufacturer"] for device in devices))
+    manufacturer = ask_options("Select the brand of your device", brands)
+    names = sorted(
+        set(
+            device["name"]
+            for device in devices
+            if device["manufacturer"] == manufacturer
+        )
+    )
+    name = ask_options("Select the article number of your device", names)
+    return next(
+        device
+        for device in devices
+        if device["manufacturer"] == manufacturer and device["name"] == name
+    )
+
+
+def ask_profile_base(profiles):
+    profiles = {
+        f"{profile['name']} / {profile['sub_name']}": profile
+        for profile in profiles
+        if profile["type"] == "CLASSIC"
+    }
+    names = sorted(set(profiles.keys()))
+    name = ask_options("Select the firmware version and name", names)
+    return profiles[name]
 
 
 def ask_custom_firmware(firmware_dir):
@@ -53,8 +99,9 @@ if __name__ == "__main__":
     input_type = sys.argv[1]
     output_file = open(sys.argv[2], "wt")
     if input_type == "device":
-        manufacturer, device = ask_device_type()
-        print(f"{manufacturer}/{device}", file=output_file)
+        profile = ask_target_profile()
+        with output_file as f:
+            json.dump(profile, f)
     elif input_type == "firmware":
         firmware_dir = "/work/custom-firmware"
         firmware = ask_custom_firmware(firmware_dir)
