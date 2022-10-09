@@ -2,6 +2,7 @@ import json
 import os, sys
 import inquirer
 import requests
+from os.path import join, dirname
 
 
 def api_get(path):
@@ -28,11 +29,23 @@ def ask_target_profile():
         device_slug = ask_device_base(api_get("devices.json"))["slug"]
         device = api_get(f"devices/{device_slug}.json")
         profiles = device["profiles"]
+        profile_slug = ask_profile_base(profiles)["slug"]
+        profile = api_get(f"profiles/{profile_slug}.json")
     else:
-        profiles = api_get("profiles.json")
-    profile_slug = ask_profile_base(profiles)["slug"]
-    profile = api_get(f"profiles/{profile_slug}.json")
-    return profile
+        profile_slug = ask_profile_base(api_get("profiles.json"))["slug"]
+        profile = api_get(f"profiles/{profile_slug}.json")
+        devices = profile["devices"]
+        device_slug = ask_device_base(devices)["slug"]
+        device = api_get(f"devices/{device_slug}.json")
+
+    output_path = join(dirname(__file__), "..", "device-profiles", device_slug)
+    os.makedirs(output_path, exist_ok=True)
+    with open(join(output_path, "device.json"), "w") as f:
+        json.dump(device, f, indent="\t")
+    with open(join(output_path, "profile.json"), "w") as f:
+        json.dump(profile, f, indent="\t")
+
+    return device_slug
 
 
 def ask_device_base(devices):
@@ -99,9 +112,8 @@ if __name__ == "__main__":
     input_type = sys.argv[1]
     output_file = open(sys.argv[2], "wt")
     if input_type == "device":
-        profile = ask_target_profile()
-        with output_file as f:
-            json.dump(profile, f)
+        device_slug = ask_target_profile()
+        print(f"{device_slug}", file=output_file)
     elif input_type == "firmware":
         firmware_dir = "/work/custom-firmware"
         firmware = ask_custom_firmware(firmware_dir)
