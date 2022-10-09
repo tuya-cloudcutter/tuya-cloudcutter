@@ -15,6 +15,8 @@ class DeviceConfig(object):
     DEVICE_ID = 'device_id'
     PSK = 'psk'
     CHIP_FAMILY = 'chip_family'
+    PROFILE = 'profile_slug'
+    DEVICE = 'device_slug'
 
     def __init__(self, config: Dict):
         self.config = config.copy()

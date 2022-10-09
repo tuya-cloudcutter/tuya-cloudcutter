@@ -228,14 +228,17 @@ def __exploit_device(args):
         sys.exit(60)
 
     profile_path = os.path.join(args.profile, DEVICE_PROFILE_FILE_NAME)
+    device_path = os.path.join(args.profile, DEVICE_DATA_FILE_NAME)
     try:
         with open(profile_path, "r") as fs:
             exploit_profile = json.load(fs)
+        with open(device_path, "r") as fs:
+            exploit_device = json.load(fs)
     except OSError:
         print(f"Could not load profile {profile_path}. Are you sure the profile directory and file exist?", file=sys.stderr)
         sys.exit(65)
 
-    device_config = exploit_device_with_config(args, exploit_profile)
+    device_config = exploit_device_with_config(args, exploit_profile, exploit_device)
     device_uuid = device_config.get(DeviceConfig.UUID)
 
     output_path = os.path.join(output_dir, f"{device_uuid}.deviceconfig")
