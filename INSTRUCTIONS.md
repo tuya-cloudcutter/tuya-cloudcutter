@@ -32,4 +32,7 @@ Here we describe how to use tuya-cloudcutter to jailbreak Tuya IoT devices by re
 
 
 ## Flashing custom firmware
-WIP: we're still polishing this part of tuya-cloudcutter. It uses a similar flow to how custom flashing was done before by e.g. `tuya-convert`, which runs after our exploit has replaced the security keys of your device. Check back here in a bit to see if this is finished then!
+* Copy your new firmware .bin file to ./custom-firmware
+* Run `./run_flash.sh <wifi adapter name> <device profile> <firmware_name>`, e.g. `./run_flash.sh "wlp5s0" "LSC/2578539-970724" "OpenBK7231T_UG_1.12.30.bin"`
+* Follow the instructions from the script to turn off/on your device 6 times during 2 steps (similar to the steps above)
+* If all goes well, your device is now running your custom firmware, enjoy!

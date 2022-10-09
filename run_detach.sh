@@ -13,6 +13,8 @@ SSID_PASS=${@:$OPTIND+1:1}
 WIFI_ADAPTER=${@:$OPTIND+2:1}
 PROFILE=${@:$OPTIND+3:1}
 
+echo "Using ${DEVICEID} and ${LOCALKEY}"
+
 source common.sh
 source common_run.sh
 
