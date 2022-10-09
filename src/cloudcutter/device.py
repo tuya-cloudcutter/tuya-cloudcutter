@@ -3,7 +3,8 @@ import os
 from typing import Dict
 
 DEFAULT_AUTH_KEY = b'A' * 16
-DEVICE_PROFILE_FILE_NAME = "profile"
+DEVICE_DATA_FILE_NAME = "device.json"
+DEVICE_PROFILE_FILE_NAME = "profile.json"
 
 
 class DeviceConfig(object):

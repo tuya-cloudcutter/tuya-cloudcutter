@@ -16,7 +16,7 @@ import tornado.ioloop
 import tornado.web
 
 from .crypto.pskcontext import PSKContext
-from .device import DEFAULT_AUTH_KEY, DEVICE_PROFILE_FILE_NAME, DeviceConfig
+from .device import DEFAULT_AUTH_KEY, DEVICE_DATA_FILE_NAME, DEVICE_PROFILE_FILE_NAME, DeviceConfig
 from .exploit import (build_network_config_packet, exploit_device_with_config,
                       send_network_config_datagram)
 from .protocol import mqtt
@@ -98,6 +98,9 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
     authkey, uuid = config.get_bytes(DeviceConfig.AUTH_KEY, default=DEFAULT_AUTH_KEY), config.get_bytes(DeviceConfig.UUID)
     context = PSKContext(authkey=authkey, uuid=uuid)
 
+    with open(os.path.join(args.profile, DEVICE_DATA_FILE_NAME), "r") as f:
+        device = json.load(f)
+
     def dynamic_config_endpoint_hook(handler, *_):
         """
         Hooks into an endpoint response for the dynamic config. Standard response should not be overwritten, but needs to
@@ -133,8 +136,30 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
             "t": int(time.time())
         }
 
+    def active_endpoint_hook(handler, *_):
+        schema_id, schema = device["schemas"].items()[0]
+        return {
+            "result": {
+                "schema": json.dumps(schema),
+                "devId": "DUMMY",
+                "resetFactory": False,
+                "timeZone": "+02:00",
+                "capability": 1025,
+                "secKey": "DUMMY",
+                "stdTimeZone": "+01:00",
+                "schemaId": schema_id,
+                "dstIntervals": [],
+                "localKey": "DUMMY",
+            },
+            "success": True,
+            "t": int(time.time())
+        }
+
     response_transformers = __configure_local_device_response_transformers(config)
-    endpoint_hooks = {"tuya.device.dynamic.config.get": dynamic_config_endpoint_hook}
+    endpoint_hooks = {
+        "tuya.device.dynamic.config.get": dynamic_config_endpoint_hook,
+        "tuya.device.active": active_endpoint_hook,
+    }
 
     if update_firmare:
         endpoint_hooks.update({
