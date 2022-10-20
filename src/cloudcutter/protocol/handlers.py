@@ -69,9 +69,9 @@ class OTAFilesHandler(tornado.web.StaticFileHandler):
 class DetachHandler(TuyaServerHandler):
     AUTHKEY_ENDPOINTS = ["tuya.device.active", "tuya.device.uuid.pskkey.get"]
 
-    def initialize(self, profile_directory: os.PathLike, config: DeviceConfig, response_transformers: List[ResponseTransformer], endpoint_hooks=None):
+    def initialize(self, schema_directory: os.PathLike, config: DeviceConfig, response_transformers: List[ResponseTransformer], endpoint_hooks=None):
         super().initialize(config=config)
-        self.profile_directory = profile_directory
+        self.schema_directory = schema_directory
         self.endpoint_hooks = endpoint_hooks
         self.response_transformers = response_transformers
 
@@ -110,15 +110,12 @@ class DetachHandler(TuyaServerHandler):
             response = endpoint_hook_response
         else:
             # Default process, read the response from the base schema directory and return None if it doesn't exist
-            endpoint_response_path = os.path.join(
-                os.path.dirname(__file__),
-                "..", "..", "..",
-                "device-profiles",
-                "schema", f"{endpoint}.json",
-            )
+            endpoint_response_path = os.path.join(self.schema_directory, f"{endpoint}.json")
             if os.path.exists(endpoint_response_path):
                 with open(endpoint_response_path, "r") as responsefs:
                     response = json.load(responsefs)
+            else:
+                print(f"!!! Endpoint default response not found - {endpoint}")
 
         if response is None:
             return None

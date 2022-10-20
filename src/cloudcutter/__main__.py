@@ -137,10 +137,10 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
         }
 
     def active_endpoint_hook(handler, *_):
-        schema_id, schema = device["schemas"].items()[0]
+        schema_id, schema = next(device["schemas"].items())
         return {
             "result": {
-                "schema": json.dumps(schema),
+                "schema": json.dumps(schema, separators=(',', ':')),
                 "devId": "DUMMY",
                 "resetFactory": False,
                 "timeZone": "+02:00",
@@ -172,7 +172,7 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
         (r'/v2/url_config', GetURLHandler, dict(ipaddr=args.ip)),
         # 2018 SDK specific endpoint
         (r'/device/url_config', OldSDKGetURLHandler, dict(ipaddr=args.ip)),
-        (r'/d.json', DetachHandler, dict(profile_directory=args.profile, response_transformers=response_transformers, config=config, endpoint_hooks=endpoint_hooks)),
+        (r'/d.json', DetachHandler, dict(schema_directory=args.schema, response_transformers=response_transformers, config=config, endpoint_hooks=endpoint_hooks)),
         (f'/files/(.*)', OTAFilesHandler, dict(path="/work/custom-firmware/")),
     ])
 
@@ -295,6 +295,7 @@ def parse_args():
 
     parser_configure = subparsers.add_parser("configure_local_device", help="Configure detached device with local keys and onboard it on desired WiFi AP")
     parser_configure.add_argument("profile", help="Device profile directory to use for detaching")
+    parser_configure.add_argument("schema", help="Endpoint schemas directory to use for detaching")
     parser_configure.add_argument("config", help="Device configuration file")
     parser_configure.add_argument(
         "--ip",
@@ -317,6 +318,7 @@ def parse_args():
 
     parser_update_firmware = subparsers.add_parser("update_firmware", help="Update the device's firmware")
     parser_update_firmware.add_argument("profile", help="Device profile directory to use for updating")
+    parser_update_firmware.add_argument("schema", help="Endpoint schemas directory to use for updating")
     parser_update_firmware.add_argument("config", help="Device configuration file")
     parser_update_firmware.add_argument("firmware", help="OTA firmware image to update the device to")
     parser_update_firmware.add_argument(
