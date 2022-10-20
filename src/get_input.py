@@ -19,7 +19,7 @@ def ask_files(text, dir):
     return ask_options(text, sorted(files, key=str.casefold))
 
 
-def ask_target_profile():
+def ask_target_profile(output):
     opts = [
         "By manufacturer/device name",
         "By firmware version and name",
@@ -38,7 +38,7 @@ def ask_target_profile():
         device_slug = ask_device_base(devices)["slug"]
         device = api_get(f"devices/{device_slug}.json")
 
-    output_path = join(dirname(__file__), "..", "device-profiles", device_slug)
+    output_path = join(output, "device-profiles", device_slug)
     os.makedirs(output_path, exist_ok=True)
     with open(join(output_path, "device.json"), "w") as f:
         json.dump(device, f, indent="\t")
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     input_type = sys.argv[1]
     output_file = open(sys.argv[2], "wt")
     if input_type == "device":
-        device_slug = ask_target_profile()
+        device_slug = ask_target_profile(sys.argv[3])
         print(f"{device_slug}", file=output_file)
     elif input_type == "firmware":
         firmware_dir = "/work/custom-firmware"

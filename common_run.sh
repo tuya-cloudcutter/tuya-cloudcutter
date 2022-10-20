@@ -2,7 +2,7 @@
 
 # Select the right device
 if [ "${PROFILE}" == "" ]; then
-  run_in_docker pipenv run python3 get_input.py device /work/profile.txt
+  run_in_docker pipenv run python3 get_input.py device /work/profile.txt /work/
   PROFILE=$(cat profile.txt)
   rm -f profile.txt
 fi
