@@ -137,7 +137,7 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
         }
 
     def active_endpoint_hook(handler, *_):
-        schema_id, schema = next(device["schemas"].items())
+        schema_id, schema = list(device["schemas"].items())[0]
         return {
             "result": {
                 "schema": json.dumps(schema, separators=(',', ':')),
