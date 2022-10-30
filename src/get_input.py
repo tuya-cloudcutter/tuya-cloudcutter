@@ -18,9 +18,8 @@ def ask_device_type():
     return manufacturer, device
 
 
-def ask_custom_firmware():
-    firmware_dir = "/work/custom-firmware"
-    return f"{firmware_dir}/{ask_files('Select your custom firmware file', firmware_dir)}"
+def ask_custom_firmware(firmware_dir):
+    return f"{ask_files('Select your custom firmware file', firmware_dir)}"
 
 
 def validate_firmware_file(firmware):
@@ -57,6 +56,8 @@ if __name__ == "__main__":
         manufacturer, device = ask_device_type()
         print(f"{manufacturer}/{device}", file=output_file)
     elif input_type == "firmware":
-        firmware = ask_custom_firmware()
-        firmware = validate_firmware_file(firmware)
+        firmware_dir = "/work/custom-firmware"
+        firmware = ask_custom_firmware(firmware_dir)
+        firmware_file_path = os.path.join(firmware_dir, firmware)
+        validate_firmware_file(firmware_file_path)
         print(f"{firmware}", file=output_file)
