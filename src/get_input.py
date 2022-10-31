@@ -38,14 +38,18 @@ def ask_target_profile(output):
         device_slug = ask_device_base(devices)["slug"]
         device = api_get(f"devices/{device_slug}.json")
 
-    output_path = join(output, "device-profiles", device_slug)
-    os.makedirs(output_path, exist_ok=True)
-    with open(join(output_path, "device.json"), "w") as f:
-        json.dump(device, f, indent="\t")
-    with open(join(output_path, "profile.json"), "w") as f:
-        json.dump(profile, f, indent="\t")
+    return save_profile(output, device, profile)
 
-    return device_slug
+
+def download_profile(output, device_slug):
+    output_path = join(output, "device-profiles", device_slug)
+    if os.path.isfile(join(output_path, "device.json")) and os.path.isfile(join(output_path, "profile.json")):
+        return device_slug
+    device = api_get(f"devices/{device_slug}.json")
+    profiles = device["profiles"]
+    profile_slug = profiles[0]["slug"]
+    profile = api_get(f"profiles/{profile_slug}.json")
+    return save_profile(output, device, profile)
 
 
 def ask_device_base(devices):
@@ -81,6 +85,17 @@ def ask_custom_firmware(firmware_dir):
     return f"{ask_files('Select your custom firmware file', firmware_dir)}"
 
 
+def save_profile(output, device, profile):
+    device_slug = device["slug"]
+    output_path = join(output, "device-profiles", device_slug)
+    os.makedirs(output_path, exist_ok=True)
+    with open(join(output_path, "device.json"), "w") as f:
+        json.dump(device, f, indent="\t")
+    with open(join(output_path, "profile.json"), "w") as f:
+        json.dump(profile, f, indent="\t")
+    return device_slug
+
+
 def validate_firmware_file(firmware):
     UG_FILE_MAGIC = b"\x55\xAA\x55\xAA"
     FILE_MAGIC_DICT = {
@@ -110,6 +125,9 @@ def validate_firmware_file(firmware):
 
 if __name__ == "__main__":
     input_type = sys.argv[1]
+    if input_type == "download_profile":
+        download_profile(sys.argv[2], sys.argv[3])
+        exit(0)
     output_file = open(sys.argv[2], "wt")
     if input_type == "device":
         device_slug = ask_target_profile(sys.argv[3])
