@@ -54,3 +54,12 @@ Knowing this, you can run `./run_detach.sh` without any parameters. Then, use th
 * Run `./run_flash.sh <wifi adapter name> <device name> <firmware_name>`, e.g. `./run_flash.sh "wlp5s0" "avatar-asl04-tv-backlight" "custom_firmware_UG_file.bin"`
 * Follow the instructions from the script to turn off/on your device 6 times during 2 steps (similar to the steps above)
 * If all goes well, your device is now running your custom firmware, enjoy!
+
+### Custom firmware options
+
+There are custom firmware projects already available for BK7231 (*in alphabetical order*):
+
+- [ESPHome](https://github.com/kuba2k2/libretuya-esphome), based on [LibreTuya core](https://github.com/kuba2k2/libretuya) / [docs](https://docs.libretuya.ml/docs/projects/esphome/) - ESPHome is a system to control your devices by simple yet powerful configuration files and control them remotely through Home Automation systems
+- [OpenBK7231T_App](https://github.com/openshwprojects/OpenBK7231T_App) (OpenBeken) / [wiki](https://github.com/openshwprojects/OpenBK7231T_App/wiki/Wiki-Home) - Tasmota/Esphome replacement for new Tuya modules featuring MQTT and Home Assistant compatibility
+
+If your app/project/firmware is not listed here, and you want it to be, feel free to submit a PR.
