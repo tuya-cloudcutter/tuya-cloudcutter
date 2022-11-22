@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-COMBINED_AP_PREAMBLE=$(cat ap_preambles.txt | grep -v '#' | sort -u | awk '{print "-e \""$0"\"" }' | tr '\n' ' ')
+COMBINED_AP_PREAMBLE=$(cat ap_preambles.txt | grep -v '#' | sort -u | awk '{print "-e \"^"$0"\"" }' | tr '\n' ' ')
 
 AP_MATCHED_NAME=""
 FIRST_WIFI=$(nmcli device status | grep " wifi " | head -n1 | awk -F ' ' '{print $1}')
@@ -42,7 +42,7 @@ wifi_connect () {
         while [ "${AP_MATCHED_NAME}" == "" ]
         do
             echo "Scanning for ${AP_SEARCH_LIST} SSID..."
-	    AP_MATCHED_NAME=$(nmcli -t -f SSID dev wifi list --rescan yes | eval grep -F $COMBINED_AP_PREAMBLE | sort -u)
+	    AP_MATCHED_NAME=$(nmcli -t -f SSID dev wifi list --rescan yes | eval grep $COMBINED_AP_PREAMBLE | sort -u)
         done
 
         echo "Found access point name: \"${AP_MATCHED_NAME}\", trying to connect.."
