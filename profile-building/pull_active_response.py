@@ -16,7 +16,7 @@
 # 
 ##
 import socket
-import sslpsk
+import sslpsk2 as sslpsk
 import sys
 import ssl
 from Cryptodome.Cipher import AES
@@ -26,6 +26,8 @@ from hashlib import md5, sha256
 import random
 import json
 import base64
+import time
+import os
 
 class TuyaAPIConnection(object):
     def __init__(self, uuid: str, authkey: str, psk: str = None):
@@ -38,10 +40,6 @@ class TuyaAPIConnection(object):
         hostname = parsed_url.hostname
         psk_wrapped = parsed_url.scheme == "https"
         port = parsed_url.port or (443 if psk_wrapped else 80)
-
-        params["et"] = 1
-        params["uuid"] = self.uuid.decode("utf-8")
-
         querystring = self._build_querystring(params)
         requestline = f"{parsed_url.path}{querystring}"
         body = self._encrypt_data(data)
@@ -130,42 +128,127 @@ class TuyaAPIConnection(object):
         return (self.psk, init_id.replace(b'\x00', b'?'))
 
 
+def print_help():
+    print('Usage: python pull_active_response.py --input <uuid> <authkey> [<product key / firmware key>] <softVer> <baselineVer> <region> <token>')
+    print('   or: python pull_active_response.py --directory <directory> <region> <token>')
+    sys.exit(1)
+
+def read_single_line_file(path):
+    with open(path, 'r') as file:
+        fileContents = file.read()
+        if fileContents.__contains__('\n'):
+            return None
+        return fileContents
+
+def print_and_exit(printText):
+    print(printText)
+    sys.exit(2)
+
 if __name__ == '__main__':
-    if not sys.argv[3:]:
-        print('Usage: python pull_active_response.py <uuid> <authkey> <token> [<product key / firmware key>]', file=sys.stderr)
-        sys.exit(1)
+    uuid = None
+    authkey = None
+    prodkey = None
+    softVer = None
+    baselineVer = None
+    region = None
+    token = None
+    directory = ''
+    device_file_name_prefix = ''
+    
+    if (sys.argv[2:]):
+        if sys.argv[1] == '--input':
+            if not sys.argv[8:]:
+                print('Unrecognized input.')
+                print_help()
+            uuid = sys.argv[2]
+            authkey = sys.argv[3]
+            prodkey = sys.argv[4]
+            softVer = sys.argv[5]
+            baselineVer = sys.argv[6]
+            # us, eu
+            region = sys.argv[7]
+            token = sys.argv[8]
+        elif sys.argv[1] == '--directory':
+            if not sys.argv[4:]:
+                print('Unrecognized input.')
+                print_help()
+            directory = sys.argv[2]
+            region = sys.argv[3]
+            token = sys.argv[4]
 
+            dirListing = os.listdir(f'{directory}')
 
-    uuid = sys.argv[1]
-    authkey = sys.argv[2]
+            for file in dirListing:
+                if file.endswith('_uuid.txt'):
+                    uuid = read_single_line_file(os.path.join(directory, file))
+                elif file.endswith('_auth_key.txt'):
+                    authkey = read_single_line_file(os.path.join(directory, file))
+                elif file.endswith('_key.txt'):
+                    prodkey = read_single_line_file(os.path.join(directory, file))
+                elif file.endswith('_swv.txt'):
+                    softVer = read_single_line_file(os.path.join(directory, file))
+                elif file.endswith('_bv.txt'):
+                    baselineVer = read_single_line_file(os.path.join(directory, file))
+                elif file.endswith('_chip.txt'):
+                    device_file_name_prefix = file.replace('chip.txt', '')
 
-    token = sys.argv[3]
-    prodkey = sys.argv[4] if len(sys.argv) > 4 else 'keytg5kq8gvkv9dh'
-    request_type = int(sys.argv[5]) if len(sys.argv) > 5 else 1
+    else:
+        print_help()
 
-    if len(token) != 14:
-        print('Token must be 14 chars')
-        sys.exit(2)
+    knownRegions = [ 'us', 'eu' ]
+
+    if uuid is None or len(uuid) != 16:
+        if prodkey is not None and len(prodkey) == 16:
+            uuid = prodkey
+        else:
+            print_and_exit('required uuid was not found or was invalid (expected 16 characters)')
+    if authkey is None or len(authkey) != 32:
+        print_and_exit('required authkey was not found or was invalid (expected 32 characters)')
+    if prodkey is None or len(prodkey) != 16:
+        print_and_exit('required prodkey was not found or was invalid (expected 16 characters)')
+    if softVer is None or len(softVer) < 5:
+        print_and_exit('required softVer was not found or was invalid (expected >= 5 characters)')
+    if baselineVer is None or len(baselineVer) < 5:
+        print_and_exit('required baselineVer was not found or was invalid (expected 5 characters)')
+    if region is None or region not in knownRegions:
+        print_and_exit(f'required region was not found or was invalid.  Known regions: {knownRegions}')
+    if token is None or len(token) != 14:
+        print_and_exit('required token was not found or was invalid (expected 14 characters)')
 
     token = token[2:]
     token = token[:8]
     assert len(token) == 8
     print('Using token:', token, 'prodkey:', prodkey, file=sys.stderr)
     connection = TuyaAPIConnection(uuid=uuid, authkey=authkey)
-    url="http://a.tuyaeu.com/d.json"
-    t=37
+    url = f"http://a.tuya{region}.com/d.json"
+    t = int(time.time())
     params = {
-            "a": "tuya.device.active",
-            "t": t,
-            "v": "4.4"
+        "a": "tuya.device.active",
+        "t": t,
+        "uuid": uuid,
+        "v": "4.4",
+        "et": 1,
     }
-    if request_type == 1:
-        data = {'token': token, 'softVer': '2.9.16', 'productKey': prodkey, 'protocolVer': '2.2', 'baselineVer': '40.00', 'productKeyStr': prodkey, 'devId': 'bf27a86f49bf35f70c7ign', 'hid': '508a06b10603', 'modules': '[{"type":9,"softVer":"2.9.16","online":true}]', 'devAttribute': 515, 'cadVer': '1.0.2', 'cdVer': '1.0.0', 'options': '{"isFK":true}', 't': t}
-    elif request_type == 2:
-        data = {'token': token, 'softVer': '1.1.5', 'productKey': prodkey, 'protocolVer': '2.2', 'baselineVer': '40.00', 'productKeyStr': prodkey, 'devId': 'bx26189fa49d18626bchza', 'hid': '508a06fe73ed', 'modules': '[{"otaChannel":9,"softVer":"1.1.5","online":true}]', 'devAttribute': 579, 'cadVer': '1.0.2', 'cdVer': '1.0.0', 'options': '{"isFK":true,"otaChannel":0}', 't': t}
-    elif request_type == 3:
-        data = {'token': token, 'softVer': '2.0.6', 'productKey': prodkey, 'protocolVer': '2.2', 'baselineVer': '30.06', 'productKeyStr': prodkey, 'hid': '508a06b10603', 'modules': '[{"type":9,"softVer":"2.0.6","online":true}]', 'devAttribute': 3, 'cadVer': '1.0.2', 'cdVer': '1.0.0', 'options': '{"isFK":false}', 't': t}
+    data = {
+        'token': token,
+        'productKey': prodkey,
+        'softVer': softVer,
+        'protocolVer': '2.2',
+        'baselineVer': baselineVer,
+        'options': '{"isFK":true}',
+        'cadVer': '1.0.2',
+        'cdVer': '1.0.0',
+        't': t,
+    }
+
+    response = connection.request(url, params, data, "POST")
+
+    if response["success"] == False:
+        print(response)
     else:
-        print("Unknown request type", file=sys.stderr)
-        sys.exit(1)
-    print(json.dumps(connection.request(url, params, data, "POST"), separators=(',',':')))
+        print(f"Schema Id: {response['result']['schemaId']}")
+        print(f"Schema: {response['result']['schema']}")
+        with open(os.path.join(directory, device_file_name_prefix + "schema_id.txt"), 'w') as f:
+            f.write(response['result']['schemaId'])
+        with open(os.path.join(directory, device_file_name_prefix + "schema.txt"), 'w') as f:
+            f.write(response['result']['schema'])
