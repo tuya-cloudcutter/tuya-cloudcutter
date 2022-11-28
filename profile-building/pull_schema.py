@@ -216,7 +216,7 @@ def receive_token():
         except:
             pass
 
-def run(output_file_prefix: str, uuid: str, prodkey: str, authkey: str, softVer: str, cadVer :str, baselineVer: str, region: str = 'us', token: str = None):
+def run(directory: str, output_file_prefix: str, uuid: str, prodkey: str, authkey: str, softVer: str, cadVer :str, baselineVer: str, region: str = 'us', token: str = None):
     knownRegions = [ 'us', 'eu' ]
 
     if uuid is None or len(uuid) != 16:
@@ -267,10 +267,16 @@ def run(output_file_prefix: str, uuid: str, prodkey: str, authkey: str, softVer:
             f.write(response['result']['schema'])
 
 def run_input(uuid, authkey, prodkey, softVer, cadVer = '1.0.2', baselineVer = '40.00', region = 'us', token = None):
-    run('.\\', uuid, prodkey, authkey, softVer, cadVer, baselineVer, region, token)
+    run('.\\', 'device', uuid, prodkey, authkey, softVer, cadVer, baselineVer, region, token)
 
 def run_directory(directory, region = 'us', token = None):
     hasSchema = False
+    uuid = None
+    authkey = None
+    prodkey = None
+    softVer = None
+    baselineVer = None
+    output_file_prefix = None
 
     dirListing = os.listdir(f'{directory}')
 
@@ -290,13 +296,29 @@ def run_directory(directory, region = 'us', token = None):
         elif file.endswith('_schema_id.txt'):
             hasSchema = True
     
-    cadVer = '1.0.2'
-
     if hasSchema:
         print('[+] Schema already present')
         return
-    else:
-        run(output_file_prefix, uuid, prodkey, authkey, softVer, cadVer, baselineVer, region, token)
+
+    cadVer = '1.0.2'
+
+    if uuid is None:
+        print('[!] uuid was not found')
+        return
+    if authkey is None:
+        print('[!] authkey was not found')
+        return
+    if prodkey is None:
+        print('[!] prodkey was not found')
+        return
+    if softVer is None:
+        print('[!] softVer was not found')
+        return
+    if baselineVer is None:
+        print('[!] baselineVer was not found')
+        return
+
+    run(directory, output_file_prefix, uuid, prodkey, authkey, softVer, cadVer, baselineVer, region, token)
 
 if __name__ == '__main__':
    

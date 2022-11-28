@@ -316,7 +316,7 @@ def run(decrypted_app_file: str):
         print('Usage: python haxomatic.py <app code file>')
         sys.exit(1)
 
-    address_finish_file = decrypted_app_file.replace('_app.1.00_decrypted.bin', '_address_finish.txt')
+    address_finish_file = decrypted_app_file.replace('_app_1.00_decrypted.bin', '_address_finish.txt')
     if os.path.exists(address_finish_file):
         print('[+] Haxomatic has already been run')
         return

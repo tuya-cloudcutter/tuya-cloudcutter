@@ -1,17 +1,17 @@
 import sys
 import json
-from os.path import basename, join, dirname
+import os.path
 
 def write_file(key, value):
-    with open(join(base_folder, base_name + "_" + key + ".txt"), "w") as file:
+    with open(os.path.join(base_folder, base_name + "_" + key + ".txt"), "w") as file:
         file.write(value)
 
 def dump(file):
     with open(file, "r") as storage_file:
         storage = json.load(storage_file)
         global base_name, base_folder
-        base_name = basename(file)[:-13]
-        base_folder = dirname(file)
+        base_name = os.path.basename(file)[:-13]
+        base_folder = os.path.dirname(file)
         print(f"[+] uuid: {storage['gw_bi']['uuid']}")
         write_file("uuid", storage['gw_bi']['uuid'])
         print(f"[+] auth_key: {storage['gw_bi']['auth_key']}")
@@ -50,7 +50,11 @@ def run(storage_file: str):
         print('Usage: python parse_storage.py <storage.json file>')
         sys.exit(1)
 
-    dump(storage_file)
+    if os.path.exists(storage_file):
+        dump(storage_file)
+    else:
+        print('[!] Storage file not found')
+        return
 
 if __name__ == '__main__':
     run(sys.argv[1])
