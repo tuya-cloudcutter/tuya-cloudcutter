@@ -25,10 +25,10 @@ def assemble():
     chip = load_file("chip")
     sdk = load_file("sdk")
     bv = load_file("bv")
-    uuid = load_file("uuid")
+    #uuid = load_file("uuid")
 
     ap_ssid = load_file("ap_ssid")
-    auth_key = load_file("auth_key")
+    #auth_key = load_file("auth_key")
     address_finish = load_file("address_finish")
     icon = load_file("icon")
 
@@ -85,11 +85,11 @@ def assemble():
     if not os.path.exists(os.path.join(full_path, "profile-universal", "profiles")):
         os.makedirs(os.path.join(full_path, "profile-universal", "profiles"))
 
-    universal_profile_name = f"{device_class}-{swv}-sdk-{sdk}-{bv}".lower()
+    universal_profile_name = f"{device_class.replace('_', '-')}-{swv}-sdk-{sdk}-{bv}".lower()
 
     print(f"[+] Creating universal profile {universal_profile_name}")
     with open(os.path.join(full_path, "profile-universal", "profiles", f"{universal_profile_name}.json"), 'w') as f:
-        f.write(json.dumps(profile, indent=4))
+        f.write(json.dumps(profile, indent='\t'))
         f.write('\n')
 
     device = {}
@@ -97,13 +97,14 @@ def assemble():
     device["name"] = name
     # this won't be used in exploiting, bit it is useful to have a known one
     # in case we need to regenerate schemas from Tuya's API
-    device["uuid"] = uuid
-    device["auth_key"] = auth_key
+    #device["uuid"] = uuid
+    #device["auth_key"] = auth_key
     device["ap_ssid"] = ap_ssid
 
     if issue is not None:
         device["github_issues"] = [ int(issue) ]
 
+    device["image_urls"] = []
     device["profiles"] = [ universal_profile_name ]
 
     if schema_id is not None and schema is not None:
@@ -117,7 +118,7 @@ def assemble():
     device_filename = f"{manufacturer.replace(' ', '-')}-{name.replace(' ', '-')}".lower()
     print(f"[+] Creating device profile {device_filename}")
     with open(os.path.join(full_path, "profile-universal", "devices", f"{device_filename}.json"), 'w') as f:
-        f.write(json.dumps(device, indent=4))
+        f.write(json.dumps(device, indent='\t'))
         f.write('\n')
 
 def run(processed_directory: str):
