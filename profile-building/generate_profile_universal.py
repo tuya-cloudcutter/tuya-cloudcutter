@@ -109,7 +109,7 @@ def assemble():
     if schema_id is not None and schema is not None:
         schema_dict = {}
         schema_dict[f"{schema_id}"] = schema
-        device["schema"] = schema_dict
+        device["schemas"] = schema_dict
     else:
         print("[!] Schema is not present, unable to generate universal device file")
         return
