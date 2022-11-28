@@ -28,6 +28,12 @@ import json
 import base64
 import time
 import os
+import struct
+import threading
+
+global multicast_token, cancel_thread
+multicast_token = None
+cancel_thread = False
 
 class TuyaAPIConnection(object):
     def __init__(self, uuid: str, authkey: str, psk: str = None):
@@ -127,7 +133,6 @@ class TuyaAPIConnection(object):
         init_id = b'\x02' + rand_data + uuid_hash
         return (self.psk, init_id.replace(b'\x00', b'?'))
 
-
 def print_help():
     print('Usage: python pull_active_response.py --input <uuid> <authkey> [<product key / firmware key>] <softVer> <baselineVer> <region> <token>')
     print('   or: python pull_active_response.py --directory <directory> <region> <token>')
@@ -144,57 +149,74 @@ def print_and_exit(printText):
     print(printText)
     sys.exit(2)
 
-if __name__ == '__main__':
-    uuid = None
-    authkey = None
-    prodkey = None
-    softVer = None
-    baselineVer = None
-    region = None
-    token = None
-    directory = ''
-    device_file_name_prefix = ''
-    
-    if (sys.argv[2:]):
-        if sys.argv[1] == '--input':
-            if not sys.argv[8:]:
-                print('Unrecognized input.')
-                print_help()
-            uuid = sys.argv[2]
-            authkey = sys.argv[3]
-            prodkey = sys.argv[4]
-            softVer = sys.argv[5]
-            baselineVer = sys.argv[6]
-            # us, eu
-            region = sys.argv[7]
-            token = sys.argv[8]
-        elif sys.argv[1] == '--directory':
-            if not sys.argv[4:]:
-                print('Unrecognized input.')
-                print_help()
-            directory = sys.argv[2]
-            region = sys.argv[3]
-            token = sys.argv[4]
+def build_params(epoch_time, uuid):
+    params = {
+        "a": "tuya.device.active",
+        "t": epoch_time,
+        "uuid": uuid,
+        "v": "4.4",
+        "et": 1,
+    }
 
-            dirListing = os.listdir(f'{directory}')
+    return params
 
-            for file in dirListing:
-                if file.endswith('_uuid.txt'):
-                    uuid = read_single_line_file(os.path.join(directory, file))
-                elif file.endswith('_auth_key.txt'):
-                    authkey = read_single_line_file(os.path.join(directory, file))
-                elif file.endswith('_key.txt'):
-                    prodkey = read_single_line_file(os.path.join(directory, file))
-                elif file.endswith('_swv.txt'):
-                    softVer = read_single_line_file(os.path.join(directory, file))
-                elif file.endswith('_bv.txt'):
-                    baselineVer = read_single_line_file(os.path.join(directory, file))
-                elif file.endswith('_chip.txt'):
-                    device_file_name_prefix = file.replace('chip.txt', '')
+def build_data(token, prodkey, softVer, baselineVer, cadVer, epoch_time):
+    data = {
+        'token': token,
+        'productKey': prodkey,
+        'softVer': softVer,
+        'protocolVer': '2.2',
+        'baselineVer': baselineVer,
+        'options': '{"isFK":true}',
+        'cadVer': cadVer,
+        'cdVer': '1.0.0',
+        't': epoch_time,
+    }
+        
+    return data
 
-    else:
-        print_help()
+def get_new_token():
+    print('[!] No token provided.  On the same network, please log into Smart Life, start the add device procedure, select \'Socket (Wi-Fi)\', enter your network credentials, next until it asks the status of the indicator and select \'Blink Slowly\', select \'Go to Connect\', then in your wifi selection screen, hit the back button to return to Smart Life.  A new token should be sent to your network, and this script will continue.')
+    print('[!] Note: this will join the device to your account.  You can safely delete it afterwards.')
+    print('[+] Waiting for multicast token from app...')
 
+    global multicast_token, cancel_thread
+
+    try:
+        thread = threading.Thread(target=receive_token, args=[])
+        thread.start()
+        while multicast_token is None:
+            time.sleep(0.25)
+            pass
+    except:
+        cancel_thread = True
+        print('[!] Cancelled waiting for token.')
+
+    return multicast_token
+
+def receive_token():
+    global multicast_token, cancel_thread
+    received_token = False
+    while received_token == False and cancel_thread == False:
+        s = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+        s.bind(('0.0.0.0', 6669))
+        s.settimeout(2)
+        try:
+            # despite suggestions of being unused, addr must remain present, or this will fail
+            msg, addr = s.recvfrom(255)
+            (msglen,) = struct.unpack(">I", msg[12:16])
+            msg = msg[16 : msglen + 8].decode()
+            msg = json.loads(msg)
+            token = msg["token"]
+            received_token = True
+            s.close()
+            multicast_token = token
+        except KeyboardInterrupt:
+            return
+        except:
+            pass
+
+def run(output_file_prefix: str, uuid: str, prodkey: str, authkey: str, softVer: str, cadVer :str, baselineVer: str, region: str = 'us', token: str = None):
     knownRegions = [ 'us', 'eu' ]
 
     if uuid is None or len(uuid) != 16:
@@ -208,12 +230,18 @@ if __name__ == '__main__':
         print_and_exit('required prodkey was not found or was invalid (expected 16 characters)')
     if softVer is None or len(softVer) < 5:
         print_and_exit('required softVer was not found or was invalid (expected >= 5 characters)')
+    if cadVer is None or len(cadVer) < 5:
+        print_and_exit('required cadVer was not found or was invalid (expected >= 5 characters)')
     if baselineVer is None or len(baselineVer) < 5:
         print_and_exit('required baselineVer was not found or was invalid (expected 5 characters)')
     if region is None or region not in knownRegions:
         print_and_exit(f'required region was not found or was invalid.  Known regions: {knownRegions}')
+    
     if token is None or len(token) != 14:
-        print_and_exit('required token was not found or was invalid (expected 14 characters)')
+        token = get_new_token()
+
+    if token is None:
+        print_and_exit('[!] Error receiving new token.')
 
     token = token[2:]
     token = token[:8]
@@ -221,34 +249,79 @@ if __name__ == '__main__':
     print('Using token:', token, 'prodkey:', prodkey, file=sys.stderr)
     connection = TuyaAPIConnection(uuid=uuid, authkey=authkey)
     url = f"http://a.tuya{region}.com/d.json"
-    t = int(time.time())
-    params = {
-        "a": "tuya.device.active",
-        "t": t,
-        "uuid": uuid,
-        "v": "4.4",
-        "et": 1,
-    }
-    data = {
-        'token': token,
-        'productKey': prodkey,
-        'softVer': softVer,
-        'protocolVer': '2.2',
-        'baselineVer': baselineVer,
-        'options': '{"isFK":true}',
-        'cadVer': '1.0.2',
-        'cdVer': '1.0.0',
-        't': t,
-    }
+    epoch_time = int(time.time())
+
+    params = build_params(epoch_time, uuid)
+    data = build_data(token, prodkey, softVer, baselineVer, cadVer, epoch_time)
 
     response = connection.request(url, params, data, "POST")
 
     if response["success"] == False:
         print(response)
     else:
-        print(f"Schema Id: {response['result']['schemaId']}")
-        print(f"Schema: {response['result']['schema']}")
-        with open(os.path.join(directory, device_file_name_prefix + "schema_id.txt"), 'w') as f:
+        print(f"[+] Schema Id: {response['result']['schemaId']}")
+        print(f"[+] Schema: {response['result']['schema']}")
+        with open(os.path.join(directory, output_file_prefix + "_schema_id.txt"), 'w') as f:
             f.write(response['result']['schemaId'])
-        with open(os.path.join(directory, device_file_name_prefix + "schema.txt"), 'w') as f:
+        with open(os.path.join(directory, output_file_prefix + "_schema.txt"), 'w') as f:
             f.write(response['result']['schema'])
+
+def run_input(uuid, authkey, prodkey, softVer, cadVer = '1.0.2', baselineVer = '40.00', region = 'us', token = None):
+    run('.\\', uuid, prodkey, authkey, softVer, cadVer, baselineVer, region, token)
+
+def run_directory(directory, region = 'us', token = None):
+    hasSchema = False
+
+    dirListing = os.listdir(f'{directory}')
+
+    for file in dirListing:
+        if file.endswith('_uuid.txt'):
+            uuid = read_single_line_file(os.path.join(directory, file))
+        elif file.endswith('_auth_key.txt'):
+            authkey = read_single_line_file(os.path.join(directory, file))
+        elif file.endswith('_key.txt'):
+            prodkey = read_single_line_file(os.path.join(directory, file))
+        elif file.endswith('_swv.txt'):
+            softVer = read_single_line_file(os.path.join(directory, file))
+        elif file.endswith('_bv.txt'):
+            baselineVer = read_single_line_file(os.path.join(directory, file))
+        elif file.endswith('_chip.txt'):
+            output_file_prefix = file.replace('_chip.txt', '')
+        elif file.endswith('_schema_id.txt'):
+            hasSchema = True
+    
+    cadVer = '1.0.2'
+
+    if hasSchema:
+        print('[+] Schema already present')
+        return
+    else:
+        run(output_file_prefix, uuid, prodkey, authkey, softVer, cadVer, baselineVer, region, token)
+
+if __name__ == '__main__':
+   
+    if (sys.argv[2:]):
+        if sys.argv[1] == '--input':
+            if not sys.argv[5:]:
+                print('Unrecognized input.')
+                print_help()
+            uuid = sys.argv[2]
+            authkey = sys.argv[3]
+            prodkey = sys.argv[4]
+            softVer = sys.argv[5]
+            cadVer = ('1.0.2' if sys.argv[6] is None else sys.argv[6])
+            baselineVer = ('40.00' if sys.argv[7] is None else sys.argv[7])
+            region = ('us' if sys.argv[8] is None else sys.argv[8])
+            token = sys.argv[9]
+            run_input(uuid, authkey, prodkey, softVer, cadVer, baselineVer, region, token)
+        elif sys.argv[1] == '--directory':
+            if not sys.argv[2:]:
+                print('Unrecognized input.')
+                print_help()
+            directory = sys.argv[2]
+            print(len(sys.argv))
+            region = ('us' if len(sys.argv) < 4 else sys.argv[3])
+            token = (None if len(sys.argv) < 5 else sys.argv[4])
+            run_directory(directory, region, token)
+    else:
+        print_help()
