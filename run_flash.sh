@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
-while getopts "r" flag; do
+while getopts "rh" flag; do
 case "$flag" in
     r) RESETNM="true";;
+    h) echo "usage: $0 [-hr] [wifi adapter name] [device name] [firmware name]"
+       echo "  -r      reset NetworkManager"
+       echo "  -h      show this message"
+       exit 0
 esac
 done
 

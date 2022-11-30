@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 
-while getopts "rd:l:" flag; do
+while getopts "hrd:l:" flag; do
 case "$flag" in
     r) RESETNM="true";;
     d) DEVICEID=${OPTARG};;
     l) LOCALKEY=${OPTARG};;
+	h) echo "usage: $0 [-hr] <SSID> <password> [wifi adapter name] [device name] [-d new_device_id] [-l new_local_key]"
+       echo "  -r      reset NetworkManager"
+       echo "  -h      show this message"
+       exit 0
 esac
 done
 
