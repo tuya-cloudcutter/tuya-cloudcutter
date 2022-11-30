@@ -19,24 +19,26 @@ def run(full_encrypted_file: str):
         sys.exit(1)
 
     output_dir = full_encrypted_file.replace('.bin', '')
+    extractfolder = os.path.abspath(output_dir)
+    foldername = os.path.basename(output_dir)
     
     input = argparse.ArgumentParser()
     input.layout = 'ota_1'
     input.rbl = ''
     input.file = full_encrypted_file
-    input.output_dir = os.path.join(output_dir)
+    input.output_dir = os.path.join(extractfolder)
     input.extract = True
     input.storage = False
 
-    if not os.path.exists(output_dir) or not os.path.exists(os.path.join(output_dir, output_dir + "_app_1.00_decrypted.bin")):
+    if not os.path.exists(extractfolder) or not os.path.exists(os.path.join(extractfolder, foldername + "_app_1.00_decrypted.bin")):
         bk7231tools.__main__.dissect_dump_file(input)
-        dirListing = os.listdir(output_dir)
+        dirListing = os.listdir(extractfolder)
 
         for file in dirListing:
             if file.endswith('app_pattern_scan.bin'):
-                os.rename(os.path.join(output_dir, file), os.path.join(output_dir, file.replace('app_pattern_scan.bin', 'app_1.00.bin')))
+                os.rename(os.path.join(extractfolder, file), os.path.join(extractfolder, file.replace('app_pattern_scan.bin', 'app_1.00.bin')))
             elif file.endswith('app_pattern_scan_decrypted.bin'):
-                os.rename(os.path.join(output_dir, file), os.path.join(output_dir, file.replace('app_pattern_scan_decrypted.bin', 'app_1.00_decrypted.bin')))
+                os.rename(os.path.join(extractfolder, file), os.path.join(extractfolder, file.replace('app_pattern_scan_decrypted.bin', 'app_1.00_decrypted.bin')))
     else:
         print('[+] Encrypted bin has already been extracted')
         return
