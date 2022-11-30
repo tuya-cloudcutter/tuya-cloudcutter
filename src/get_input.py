@@ -47,7 +47,7 @@ def ask_target_profile(output):
     return save_profile(output, device, profile)
 
 
-def download_profile(output, device_slug):
+def download_device(output, device_slug):
     output_path = join(output, "device-profiles", device_slug)
     if os.path.isfile(join(output_path, "device.json")) and os.path.isfile(join(output_path, "profile.json")):
         return device_slug
@@ -131,8 +131,8 @@ def validate_firmware_file(firmware):
 
 if __name__ == "__main__":
     input_type = sys.argv[1]
-    if input_type == "download_profile":
-        download_profile(sys.argv[2], sys.argv[3])
+    if input_type == "download_device":
+        download_device(sys.argv[2], sys.argv[3])
         exit(0)
     output_file = open(sys.argv[2], "wt")
     if input_type == "device":
