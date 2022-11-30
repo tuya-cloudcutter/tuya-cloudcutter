@@ -33,8 +33,10 @@ def run(full_encrypted_file: str):
         dirListing = os.listdir(output_dir)
 
         for file in dirListing:
-            if file.endswith('app_pattern_scan_decrypted.bin'):
-                os.rename(file, file.replace('app_pattern_scan_decrypted.bin', 'app_1.00_decrypted.bin'))
+            if file.endswith('app_pattern_scan.bin'):
+                os.rename(os.path.join(output_dir, file), os.path.join(output_dir, file.replace('app_pattern_scan.bin', 'app_1.00.bin')))
+            elif file.endswith('app_pattern_scan_decrypted.bin'):
+                os.rename(os.path.join(output_dir, file), os.path.join(output_dir, file.replace('app_pattern_scan_decrypted.bin', 'app_1.00_decrypted.bin')))
     else:
         print('[+] Encrypted bin has already been extracted')
         return
