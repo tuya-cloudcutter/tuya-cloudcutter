@@ -33,7 +33,7 @@ def assemble():
     icon = load_file("icon")
 
     if address_finish is None:
-        print("[!] Directory has not been fully processed, unable to generate universal profile")
+        print("[!] Directory has not been fully processed, unable to generate classic profile")
         return
 
     # Optional items
@@ -78,17 +78,17 @@ def assemble():
 
     profile["data"] = data
 
-    if not os.path.exists(os.path.join(full_path, "profile-universal")):
-        os.makedirs(os.path.join(full_path, "profile-universal"))
-    if not os.path.exists(os.path.join(full_path, "profile-universal", "devices")):
-        os.makedirs(os.path.join(full_path, "profile-universal", "devices"))
-    if not os.path.exists(os.path.join(full_path, "profile-universal", "profiles")):
-        os.makedirs(os.path.join(full_path, "profile-universal", "profiles"))
+    if not os.path.exists(os.path.join(full_path, "profile-classic")):
+        os.makedirs(os.path.join(full_path, "profile-classic"))
+    if not os.path.exists(os.path.join(full_path, "profile-classic", "devices")):
+        os.makedirs(os.path.join(full_path, "profile-classic", "devices"))
+    if not os.path.exists(os.path.join(full_path, "profile-classic", "profiles")):
+        os.makedirs(os.path.join(full_path, "profile-classic", "profiles"))
 
-    universal_profile_name = f"{device_class.replace('_', '-')}-{swv}-sdk-{sdk}-{bv}".lower()
+    classic_profile_name = f"{device_class.replace('_', '-')}-{swv}-sdk-{sdk}-{bv}".lower()
 
-    print(f"[+] Creating universal profile {universal_profile_name}")
-    with open(os.path.join(full_path, "profile-universal", "profiles", f"{universal_profile_name}.json"), 'w') as f:
+    print(f"[+] Creating classic profile {classic_profile_name}")
+    with open(os.path.join(full_path, "profile-classic", "profiles", f"{classic_profile_name}.json"), 'w') as f:
         f.write(json.dumps(profile, indent='\t'))
         f.write('\n')
 
@@ -105,19 +105,19 @@ def assemble():
         device["github_issues"] = [ int(issue) ]
 
     device["image_urls"] = []
-    device["profiles"] = [ universal_profile_name ]
+    device["profiles"] = [ classic_profile_name ]
 
     if schema_id is not None and schema is not None:
         schema_dict = {}
         schema_dict[f"{schema_id}"] = schema
         device["schemas"] = schema_dict
     else:
-        print("[!] Schema is not present, unable to generate universal device file")
+        print("[!] Schema is not present, unable to generate classic device file")
         return
 
     device_filename = f"{manufacturer.replace(' ', '-')}-{name.replace(' ', '-')}".lower()
     print(f"[+] Creating device profile {device_filename}")
-    with open(os.path.join(full_path, "profile-universal", "devices", f"{device_filename}.json"), 'w') as f:
+    with open(os.path.join(full_path, "profile-classic", "devices", f"{device_filename}.json"), 'w') as f:
         f.write(json.dumps(device, indent='\t'))
         f.write('\n')
 
@@ -131,7 +131,7 @@ def run(processed_directory: str):
 
 if __name__ == '__main__':
     if not sys.argv[1:]:
-        print('Usage: python generate_universal.py <processed_directory>')
+        print('Usage: python generate_classic.py <processed_directory>')
         sys.exit(1)
     
     run(sys.argv[1])
