@@ -100,9 +100,10 @@ def assemble():
     #device["uuid"] = uuid
     #device["auth_key"] = auth_key
     device["ap_ssid"] = ap_ssid
+    device["github_issues"] = []
 
     if issue is not None:
-        device["github_issues"] = [ int(issue) ]
+        device["github_issues"].append(int(issue))
 
     device["image_urls"] = []
     device["profiles"] = [ classic_profile_name ]
