@@ -190,7 +190,10 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
 
 
 def __update_firmware(args):
-    if not (os.path.exists(args.firmware) and os.path.isfile(args.firmware)):
+    if not os.path.isfile(args.firmware):
+        # try as a relative path
+        args.firmware = os.path.join(args.firmware_dir, args.firmware)
+    if not os.path.isfile(args.firmware):
         print(f"Firmware {args.firmware} does not exist or not a file.", file=sys.stderr)
         sys.exit(50)
 
@@ -320,6 +323,7 @@ def parse_args():
     parser_update_firmware.add_argument("profile", help="Device profile directory to use for updating")
     parser_update_firmware.add_argument("schema", help="Endpoint schemas directory to use for updating")
     parser_update_firmware.add_argument("config", help="Device configuration file")
+    parser_update_firmware.add_argument("firmware_dir", help="Directory containing firmware images")
     parser_update_firmware.add_argument("firmware", help="OTA firmware image to update the device to")
     parser_update_firmware.add_argument(
         "--ip",
