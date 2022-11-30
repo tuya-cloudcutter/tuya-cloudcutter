@@ -302,7 +302,7 @@ def make_profile_format2(chipset, intermediate_addr, mf_cmd_process_addr):
     print("[+] Profile:")
     print(json.dumps(data, indent=4))
 
-    with open(name_output_file('classic_profile.txt'), 'w') as f:
+    with open(name_output_file('legacy_profile.txt'), 'w') as f:
         f.write(json.dumps(data, indent=4))
     with open(name_output_file('address_finish.txt'), 'w') as f:
         f.write(f'0x{intermediate_addr:X}')
