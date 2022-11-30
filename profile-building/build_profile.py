@@ -5,7 +5,7 @@ import haxomatic
 import process_storage
 import process_app
 import pull_schema
-import generate_profile_universal
+import generate_profile_legacy
 import generate_profile_classic
 
 if __name__ == '__main__':
@@ -42,5 +42,5 @@ if __name__ == '__main__':
         print("[!] Unable to build complete profile as schema remains missing.")
         exit(1)
 
-    generate_profile_universal.run(extracted_location)
+    generate_profile_legacy.run(extracted_location)
     generate_profile_classic.run(extracted_location)
