@@ -7,6 +7,12 @@ from os.path import join, dirname
 
 def api_get(path):
     with requests.get(f"https://tuya-cloudcutter.github.io/api/{path}") as r:
+        if r.status_code == 404:
+            print("The specified device does not exist in the API.")
+            exit(1)
+        if r.status_code != 200:
+            print("API request failed. Make sure you have an Internet connection.")
+            exit(1)
         return r.json()
 
 
