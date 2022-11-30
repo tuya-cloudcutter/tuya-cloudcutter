@@ -2,9 +2,11 @@
 
 # Select the right device
 if [ "${PROFILE}" == "" ]; then
-  run_in_docker pipenv run python3 get_input.py device /work/profile.txt
+  run_in_docker pipenv run python3 get_input.py device /work/profile.txt /work/
   PROFILE=$(cat profile.txt)
   rm -f profile.txt
+else
+  run_in_docker pipenv run python3 get_input.py download_device /work/ $PROFILE
 fi
 
 # Connect to Tuya device's WiFi

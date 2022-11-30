@@ -1,5 +1,0 @@
-- cloudcut via brute force
-- 12 Pack Phopollo Bulbs
-- profile from LSC/3007213-970787
-- rest of packet from 6 Pack Phopollo Bulbs
-- TinyTuya bulb test script has full functionality

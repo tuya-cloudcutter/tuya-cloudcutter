@@ -9,10 +9,27 @@ Here we describe how to use tuya-cloudcutter to jailbreak Tuya IoT devices by re
 * Running (non-virtualized) Ubuntu (other distros with NetworkManager might also work, untested. VMs might work if you passthrough WiFi adapter.)
 * Docker should be installed, and your user should be part of the "docker" group (reboot if you've just installed Docker, to reload the user groups.)
 
+**Note**: the scripts mentioned below (`run_detach.sh` and `run_flash.sh`) can also be run in interactive mode, i.e. without any parameters, in which the user will be asked to choose one of available options.
+
+### Finding your device
+
+Find the device you have in the [list of available devices](https://github.com/tuya-cloudcutter/tuya-cloudcutter.github.io/tree/master/devices). Note the device name, i.e. a lowercase, alphanumeric string like `avatar-asl04-tv-backlight` (without the .json extension).
+
+If you don't know the exact device model, or your device does not have any available profile, you can choose the device by firmware version:
+- open the Tuya Smart/SmartLife app
+- click on the device (even if it's offline)
+- press the "edit" pencil (top-right corner)
+- choose "Device Update"
+- note the "Main Module" version number
+
+Knowing this, you can run `./run_detach.sh` without any parameters. Then, use the `By firmware version and name` option and choose the version you found.
+
 ### Running the toolchain
 * Download or git clone this repository
 * Open a terminal and `cd` into the repository to make it your working directory
-* Run `./run_detach.sh <SSID> <SSID password> [wifi adapter name] [device profile]`, where SSID/password is the name of the access point you want the Tuya device to join, and wifi adapter is optional (if not set, it will use the first detected adapter in your computer). **If your SSID and/or password have special characters like $ ! or @, make sure to pass them with ' characters, e.g. 'P@$$W0rD!'. If it has the ' character then also make sure to escape that, with bash that'd be `'P@$$W0rD!'"'"' 1234'` to use the password `P@$$W0rD!' 1234`** **Optionally run with parameter -r to reset NetworkManager connections, which may help with some wifi adaptors ( ./run_detach.sh -r <SSID> <SSID password> )**
+* Run `./run_detach.sh <SSID> <SSID password> [wifi adapter name] [device name]`, where SSID/password is the name of the access point you want the Tuya device to join, and wifi adapter is optional (if not set, it will use the first detected adapter in your computer).
+  * Not specifying the device name allows you to choose it knowing the firmware version.
+  * **If your SSID and/or password have special characters like $ ! or @, make sure to pass them with ' characters, e.g. 'P@$$W0rD!'. If it has the ' character then also make sure to escape that, with bash that'd be `'P@$$W0rD!'"'"' 1234'` to use the password `P@$$W0rD!' 1234`** **Optionally run with parameter -r to reset NetworkManager connections, which may help with some wifi adaptors ( ./run_detach.sh -r <SSID> <SSID password> )**
   * If you wish to set a custom deviceid or localkey, prepend these parameters like so: `./run_detach.sh -d 20characterdeviceid -l 16characterlocalkey <SSID> <SSID password> [wifi adapter name] [device profile]`, Note, localtuya in homeassistant currently requires unique deviceid to work.
 * When instructed, put your Tuya device in _AP Mode_ by toggling it off and on again 6 times, with around 1 second in between each toggle. If it's a light bulb, it will blink _slowly_. If it blinks _quickly_, power cycle it 3 more times.
 * The script will automatically connect to your light (assuming it creates a "SmartLife-*" SSID. If not, let us know.) and run the exploit that replaces the security keys (now it can't connect to the cloud anymore)
@@ -32,7 +49,17 @@ Here we describe how to use tuya-cloudcutter to jailbreak Tuya IoT devices by re
 
 
 ## Flashing custom firmware
-* Copy your new firmware .bin file to ./custom-firmware
-* Run `./run_flash.sh <wifi adapter name> <device profile> <firmware_name>`, e.g. `./run_flash.sh "wlp5s0" "LSC/2578539-970724" "OpenBK7231T_UG_1.12.30.bin"`
+* Copy your new firmware .bin file (UG only!) to ./custom-firmware
+* Find your device name, as instructed in the steps above.
+* Run `./run_flash.sh <wifi adapter name> <device name> <firmware_name>`, e.g. `./run_flash.sh "wlp5s0" "avatar-asl04-tv-backlight" "custom_firmware_UG_file.bin"`
 * Follow the instructions from the script to turn off/on your device 6 times during 2 steps (similar to the steps above)
 * If all goes well, your device is now running your custom firmware, enjoy!
+
+### Custom firmware options
+
+There are custom firmware projects already available for BK7231 (*in alphabetical order*):
+
+- [ESPHome](https://github.com/kuba2k2/libretuya-esphome), based on [LibreTuya core](https://github.com/kuba2k2/libretuya) / [docs](https://docs.libretuya.ml/docs/projects/esphome/) - ESPHome is a system to control your devices by simple yet powerful configuration files and control them remotely through Home Automation systems
+- [OpenBK7231T_App](https://github.com/openshwprojects/OpenBK7231T_App) (OpenBeken) / [wiki](https://github.com/openshwprojects/OpenBK7231T_App/wiki/Wiki-Home) - Tasmota/Esphome replacement for new Tuya modules featuring MQTT and Home Assistant compatibility
+
+If your app/project/firmware is not listed here, and you want it to be, feel free to submit a PR.

@@ -16,7 +16,7 @@ import tornado.ioloop
 import tornado.web
 
 from .crypto.pskcontext import PSKContext
-from .device import DEFAULT_AUTH_KEY, DEVICE_PROFILE_FILE_NAME, DeviceConfig
+from .device import DEFAULT_AUTH_KEY, DEVICE_DATA_FILE_NAME, DEVICE_PROFILE_FILE_NAME, DeviceConfig
 from .exploit import (build_network_config_packet, exploit_device_with_config,
                       send_network_config_datagram)
 from .protocol import mqtt
@@ -98,6 +98,9 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
     authkey, uuid = config.get_bytes(DeviceConfig.AUTH_KEY, default=DEFAULT_AUTH_KEY), config.get_bytes(DeviceConfig.UUID)
     context = PSKContext(authkey=authkey, uuid=uuid)
 
+    with open(os.path.join(args.profile, DEVICE_DATA_FILE_NAME), "r") as f:
+        device = json.load(f)
+
     def dynamic_config_endpoint_hook(handler, *_):
         """
         Hooks into an endpoint response for the dynamic config. Standard response should not be overwritten, but needs to
@@ -133,8 +136,30 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
             "t": int(time.time())
         }
 
+    def active_endpoint_hook(handler, *_):
+        schema_id, schema = list(device["schemas"].items())[0]
+        return {
+            "result": {
+                "schema": json.dumps(schema, separators=(',', ':')),
+                "devId": "DUMMY",
+                "resetFactory": False,
+                "timeZone": "+02:00",
+                "capability": 1025,
+                "secKey": "DUMMY",
+                "stdTimeZone": "+01:00",
+                "schemaId": schema_id,
+                "dstIntervals": [],
+                "localKey": "DUMMY",
+            },
+            "success": True,
+            "t": int(time.time())
+        }
+
     response_transformers = __configure_local_device_response_transformers(config)
-    endpoint_hooks = {"tuya.device.dynamic.config.get": dynamic_config_endpoint_hook}
+    endpoint_hooks = {
+        "tuya.device.dynamic.config.get": dynamic_config_endpoint_hook,
+        "tuya.device.active": active_endpoint_hook,
+    }
 
     if update_firmare:
         endpoint_hooks.update({
@@ -147,7 +172,7 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
         (r'/v2/url_config', GetURLHandler, dict(ipaddr=args.ip)),
         # 2018 SDK specific endpoint
         (r'/device/url_config', OldSDKGetURLHandler, dict(ipaddr=args.ip)),
-        (r'/d.json', DetachHandler, dict(profile_directory=args.profile, response_transformers=response_transformers, config=config, endpoint_hooks=endpoint_hooks)),
+        (r'/d.json', DetachHandler, dict(schema_directory=args.schema, response_transformers=response_transformers, config=config, endpoint_hooks=endpoint_hooks)),
         (f'/files/(.*)', OTAFilesHandler, dict(path="/work/custom-firmware/")),
     ])
 
@@ -203,14 +228,17 @@ def __exploit_device(args):
         sys.exit(60)
 
     profile_path = os.path.join(args.profile, DEVICE_PROFILE_FILE_NAME)
+    device_path = os.path.join(args.profile, DEVICE_DATA_FILE_NAME)
     try:
         with open(profile_path, "r") as fs:
             exploit_profile = json.load(fs)
+        with open(device_path, "r") as fs:
+            exploit_device = json.load(fs)
     except OSError:
         print(f"Could not load profile {profile_path}. Are you sure the profile directory and file exist?", file=sys.stderr)
         sys.exit(65)
 
-    device_config = exploit_device_with_config(args, exploit_profile)
+    device_config = exploit_device_with_config(args, exploit_profile, exploit_device)
     device_uuid = device_config.get(DeviceConfig.UUID)
 
     output_path = os.path.join(output_dir, f"{device_uuid}.deviceconfig")
@@ -267,6 +295,7 @@ def parse_args():
 
     parser_configure = subparsers.add_parser("configure_local_device", help="Configure detached device with local keys and onboard it on desired WiFi AP")
     parser_configure.add_argument("profile", help="Device profile directory to use for detaching")
+    parser_configure.add_argument("schema", help="Endpoint schemas directory to use for detaching")
     parser_configure.add_argument("config", help="Device configuration file")
     parser_configure.add_argument(
         "--ip",
@@ -289,6 +318,7 @@ def parse_args():
 
     parser_update_firmware = subparsers.add_parser("update_firmware", help="Update the device's firmware")
     parser_update_firmware.add_argument("profile", help="Device profile directory to use for updating")
+    parser_update_firmware.add_argument("schema", help="Endpoint schemas directory to use for updating")
     parser_update_firmware.add_argument("config", help="Device configuration file")
     parser_update_firmware.add_argument("firmware", help="OTA firmware image to update the device to")
     parser_update_firmware.add_argument(
