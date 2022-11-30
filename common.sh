@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source safety_checks.sh
+
 COMBINED_AP_PREAMBLE=$(cat ap_preambles.txt | grep -v '#' | sort -u | awk '{print "-e \"^"$0"\"" }' | tr '\n' ' ')
 
 AP_MATCHED_NAME=""
