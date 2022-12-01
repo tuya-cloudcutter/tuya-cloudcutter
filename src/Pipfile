@@ -9,11 +9,12 @@ autopep8 = "*"
 [packages]
 pycryptodomex = "*"
 tornado = "*"
-sslpsk = {git = "https://github.com/drbild/sslpsk"}
+sslpsk2 = "*"
 inquirer = "*"
 requests = "*"
 pycryptodome = "*"
 paho-mqtt = "*"
+click = "*"
 
 [requires]
 python_version = "3"

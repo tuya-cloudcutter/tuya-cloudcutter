@@ -3,8 +3,6 @@ import os
 from typing import Dict
 
 DEFAULT_AUTH_KEY = b'A' * 16
-DEVICE_DATA_FILE_NAME = "device.json"
-DEVICE_PROFILE_FILE_NAME = "profile.json"
 
 
 class DeviceConfig(object):
@@ -15,7 +13,7 @@ class DeviceConfig(object):
     DEVICE_ID = 'device_id'
     PSK = 'psk'
     CHIP_FAMILY = 'chip_family'
-    PROFILE = 'profile_slug'
+    PROFILE = 'profile_name'
     DEVICE = 'device_slug'
 
     def __init__(self, config: Dict):

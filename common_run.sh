@@ -2,11 +2,11 @@
 
 # Select the right device
 if [ "${PROFILE}" == "" ]; then
-  run_in_docker pipenv run python3 get_input.py device /work/profile.txt /work/
+  run_in_docker pipenv run python3 get_input.py -w /work -o /work/profile.txt choose-profile
   PROFILE=$(cat profile.txt)
   rm -f profile.txt
 else
-  run_in_docker pipenv run python3 get_input.py download_device /work/ $PROFILE
+  run_in_docker pipenv run python3 get_input.py -w /work -o /work/profile.txt write-profile $PROFILE
 fi
 
 # Connect to Tuya device's WiFi
@@ -22,7 +22,7 @@ echo "Waiting 1 sec to allow device to set itself up.."
 sleep 1
 echo "Running initial exploit toolchain.."
 echo "Using ${DEVICEID} and ${LOCALKEY}"
-OUTPUT=$(run_in_docker pipenv run python3 -m cloudcutter exploit_device /work/device-profiles/${PROFILE} --deviceid "${DEVICEID}" --localkey "${LOCALKEY}")
+OUTPUT=$(run_in_docker pipenv run python3 -m cloudcutter exploit_device "${PROFILE}" --deviceid "${DEVICEID}" --localkey "${LOCALKEY}")
 RESULT=$?
 echo "${OUTPUT}"
 if [ ! $RESULT -eq 0 ]; then

@@ -1,2 +1,2 @@
-device.json
-profile.json
+*.json
+!schema/*.json

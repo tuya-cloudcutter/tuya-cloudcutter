@@ -35,7 +35,7 @@ INNER_SCRIPT=$(xargs -0 <<- EOF
 	SSID='${SSID/\'/\'\"\'\"\'}'
 	SSID_PASS='${SSID_PASS/\'/\'\"\'\"\'}'
 	bash /src/setup_apmode.sh ${WIFI_ADAPTER}
-	pipenv run python3 -m cloudcutter configure_local_device --ssid "\${SSID}" --password "\${SSID_PASS}" "/work/device-profiles/${PROFILE}" "/work/device-profiles/schema" "${CONFIG_DIR}"
+	pipenv run python3 -m cloudcutter configure_local_device --ssid "\${SSID}" --password "\${SSID_PASS}" "${PROFILE}" "/work/device-profiles/schema" "${CONFIG_DIR}"
 EOF
 )
 run_in_docker bash -c "$INNER_SCRIPT"
