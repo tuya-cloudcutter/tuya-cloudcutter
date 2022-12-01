@@ -17,7 +17,7 @@ source common.sh
 
 # Select the right device
 if [ "${FIRMWARE}" == "" ]; then
-  run_in_docker pipenv run python3 get_input.py -w /work -o /work/profile.txt choose-firmware
+  run_in_docker pipenv run python3 get_input.py -w /work -o /work/firmware.txt choose-firmware
   if [ ! $? -eq 0 ]; then
     exit 1
   fi
