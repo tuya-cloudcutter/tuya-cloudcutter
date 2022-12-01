@@ -29,11 +29,11 @@ def dump(file):
             print(f"[+] bv: {storage['gw_di']['bv']}")
             write_file("bv", storage['gw_di']['bv'])
             if 'firmk' in storage['gw_di'] and storage['gw_di']['firmk'] is not None:
-                print(f"[+] key: {storage['gw_di']['firmk']}")
-                write_file("key", storage['gw_di']['firmk'])                
-            else:
-                print(f"[+] key: {storage['gw_di']['pk']}")
-                write_file("key", storage['gw_di']['pk'])
+                print(f"[+] firmware key: {storage['gw_di']['firmk']}")
+                write_file("firmware_key", storage['gw_di']['firmk'])     
+            if 'pk' in storage['gw_di'] and storage['gw_di']['pk'] is not None:
+                print(f"[+] product key: {storage['gw_di']['pk']}")
+                write_file("product_key", storage['gw_di']['pk'])
             if 's_id' in storage['gw_di'] and storage['gw_di']['s_id'] is not None:
                 schema_id = storage['gw_di']['s_id']
                 if schema_id in storage:

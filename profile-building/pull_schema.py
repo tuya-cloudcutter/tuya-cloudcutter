@@ -160,16 +160,16 @@ def build_params(epoch_time, uuid):
 
     return params
 
-def build_data(token, prodkey, softVer, baselineVer, cadVer, epoch_time):
+def build_data(epoch_time, token, product_key, software_version, baseline_version = '40.00', cad_version = '1.0.2', cd_version = '1.0.0', protocol_version = '2.2', product_key_is_firmware_key: bool = True):
     data = {
         'token': token,
-        'productKey': prodkey,
-        'softVer': softVer,
-        'protocolVer': '2.2',
-        'baselineVer': baselineVer,
-        'options': '{"isFK":true}',
-        'cadVer': cadVer,
-        'cdVer': '1.0.0',
+        'productKey': product_key,
+        'softVer': software_version,
+        'protocolVer': protocol_version,
+        'baselineVer': baseline_version,
+        'options': '{"isFK":' + str(product_key_is_firmware_key).lower() + '}',
+        'cadVer': cad_version,
+        'cdVer': cd_version,
         't': epoch_time,
     }
         
@@ -216,23 +216,23 @@ def receive_token():
         except:
             pass
 
-def run(directory: str, output_file_prefix: str, uuid: str, prodkey: str, authkey: str, softVer: str, cadVer :str, baselineVer: str, region: str = 'us', token: str = None):
+def run(directory: str, output_file_prefix: str, uuid: str, product_key: str, auth_key: str, software_version: str, baseline_version: str = '40.00', cad_version: str = '1.0.2', cd_version: str = '1.0.0', protocol_version = '2.2', product_key_is_firmware_key: bool = True, region: str = 'us', token: str = None):
     knownRegions = [ 'us', 'eu' ]
 
     if uuid is None or len(uuid) != 16:
-        if prodkey is not None and len(prodkey) == 16:
-            uuid = prodkey
+        if product_key is not None and len(product_key) == 16:
+            uuid = product_key
         else:
             print_and_exit('required uuid was not found or was invalid (expected 16 characters)')
-    if authkey is None or len(authkey) != 32:
+    if auth_key is None or len(auth_key) != 32:
         print_and_exit('required authkey was not found or was invalid (expected 32 characters)')
-    if prodkey is None or len(prodkey) != 16:
+    if product_key is None or len(product_key) != 16:
         print_and_exit('required prodkey was not found or was invalid (expected 16 characters)')
-    if softVer is None or len(softVer) < 5:
+    if software_version is None or len(software_version) < 5:
         print_and_exit('required softVer was not found or was invalid (expected >= 5 characters)')
-    if cadVer is None or len(cadVer) < 5:
+    if cad_version is None or len(cad_version) < 5:
         print_and_exit('required cadVer was not found or was invalid (expected >= 5 characters)')
-    if baselineVer is None or len(baselineVer) < 5:
+    if baseline_version is None or len(baseline_version) < 5:
         print_and_exit('required baselineVer was not found or was invalid (expected 5 characters)')
     if region is None or region not in knownRegions:
         print_and_exit(f'required region was not found or was invalid.  Known regions: {knownRegions}')
@@ -246,13 +246,13 @@ def run(directory: str, output_file_prefix: str, uuid: str, prodkey: str, authke
     token = token[2:]
     token = token[:8]
     assert len(token) == 8
-    print('Using token:', token, 'prodkey:', prodkey, file=sys.stderr)
-    connection = TuyaAPIConnection(uuid=uuid, authkey=authkey)
+    print('Using token:', token, 'prodkey:', product_key, file=sys.stderr)
+    connection = TuyaAPIConnection(uuid=uuid, authkey=auth_key)
     url = f"http://a.tuya{region}.com/d.json"
     epoch_time = int(time.time())
 
     params = build_params(epoch_time, uuid)
-    data = build_data(token, prodkey, softVer, baselineVer, cadVer, epoch_time)
+    data = build_data(epoch_time, token, product_key, software_version, baseline_version, cad_version, cd_version, protocol_version, product_key_is_firmware_key)
 
     response = connection.request(url, params, data, "POST")
 
@@ -266,16 +266,21 @@ def run(directory: str, output_file_prefix: str, uuid: str, prodkey: str, authke
         with open(os.path.join(directory, output_file_prefix + "_schema.txt"), 'w') as f:
             f.write(response['result']['schema'])
 
-def run_input(uuid, authkey, prodkey, softVer, cadVer = '1.0.2', baselineVer = '40.00', region = 'us', token = None):
-    run('.\\', 'device', uuid, prodkey, authkey, softVer, cadVer, baselineVer, region, token)
+def run_input(uuid, authkey, product_key, software_version, baseline_version = '40.00', cad_version = '1.0.2', cd_version = '1.0.0', protocol_version = '2.2', product_key_is_firmware_key: bool = True, region = 'us', token = None):
+    run('.\\', 'device', uuid, product_key, authkey, software_version, baseline_version, cad_version, cd_version, protocol_version, product_key_is_firmware_key, region, token)
 
 def run_directory(directory, region = 'us', token = None):
-    hasSchema = False
+    has_schema = False
     uuid = None
-    authkey = None
-    prodkey = None
-    softVer = None
-    baselineVer = None
+    auth_key = None
+    product_key = None
+    firmware_key = None
+    software_version = None
+    baseline_version = '40.00'
+    cad_version = '1.0.2'
+    cd_version = '1.0.0'
+    protocol_version = '2.2'
+    product_key_is_firmware_key = False
     output_file_prefix = None
 
     dirListing = os.listdir(f'{directory}')
@@ -284,41 +289,45 @@ def run_directory(directory, region = 'us', token = None):
         if file.endswith('_uuid.txt'):
             uuid = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_auth_key.txt'):
-            authkey = read_single_line_file(os.path.join(directory, file))
-        elif file.endswith('_key.txt'):
-            prodkey = read_single_line_file(os.path.join(directory, file))
+            auth_key = read_single_line_file(os.path.join(directory, file))
+        elif file.endswith('_product_key.txt'):
+            product_key = read_single_line_file(os.path.join(directory, file))
+        elif file.endswith('_firmware_key.txt'):
+            firmware_key = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_swv.txt'):
-            softVer = read_single_line_file(os.path.join(directory, file))
+            software_version = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_bv.txt'):
-            baselineVer = read_single_line_file(os.path.join(directory, file))
+            baseline_version = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_chip.txt'):
             output_file_prefix = file.replace('_chip.txt', '')
         elif file.endswith('_schema_id.txt'):
-            hasSchema = True
+            has_schema = True
     
-    if hasSchema:
+    if has_schema:
         print('[+] Schema already present')
         return
 
-    cadVer = '1.0.2'
+    if product_key is None:
+        product_key = firmware_key
+        product_key_is_firmware_key = True
 
     if uuid is None:
         print('[!] uuid was not found')
         return
-    if authkey is None:
+    if auth_key is None:
         print('[!] authkey was not found')
         return
-    if prodkey is None:
+    if product_key is None:
         print('[!] prodkey was not found')
         return
-    if softVer is None:
+    if software_version is None:
         print('[!] softVer was not found')
         return
-    if baselineVer is None:
+    if baseline_version is None:
         print('[!] baselineVer was not found')
         return
 
-    run(directory, output_file_prefix, uuid, prodkey, authkey, softVer, cadVer, baselineVer, region, token)
+    run(directory, output_file_prefix, uuid, product_key, auth_key, software_version, baseline_version, cad_version, cd_version, protocol_version, product_key_is_firmware_key, region, token)
 
 if __name__ == '__main__':
    

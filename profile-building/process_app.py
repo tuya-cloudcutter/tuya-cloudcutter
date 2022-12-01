@@ -186,11 +186,11 @@ def dump():
                 f.write(bv)
 
     # If key doesn't exist from storage
-    if exists(name_output_file("key")) == False:
+    if exists(name_output_file("firmware_key")) == False:
         key = search_key()
         if key is not None and key != '':
-            print(f"[+] key: {key}")
-            with open(name_output_file("key"), 'w') as f:
+            print(f"[+] firmware_key: {key}")
+            with open(name_output_file("firmware_key"), 'w') as f:
                 f.write(key)
 
 def run(device_folder: str):
