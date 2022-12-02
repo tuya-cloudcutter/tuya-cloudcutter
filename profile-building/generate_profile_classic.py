@@ -40,7 +40,8 @@ def assemble():
     swv = load_file("swv")
     if swv is None:
         swv = "0.0.0"
-    key = load_file("key")
+    product_key = load_file("product_key")
+    firmware_key = load_file("firmware_key")
     address_datagram = load_file("address_datagram")
     address_ssid = load_file("address_ssid")
     address_passwd = load_file("address_passwd")
@@ -63,8 +64,8 @@ def assemble():
     firmware["name"] = device_class
     firmware["version"] = swv
     firmware["sdk"] = f"{sdk}-{bv}"
-    if key is not None:
-        firmware["key"] = key
+    if firmware_key is not None:
+        firmware["key"] = firmware_key
 
     profile["firmware"] = firmware
 
@@ -99,6 +100,8 @@ def assemble():
     # in case we need to regenerate schemas from Tuya's API
     #device["uuid"] = uuid
     #device["auth_key"] = auth_key
+    if product_key is not None:
+        firmware["key"] = product_key
     device["ap_ssid"] = ap_ssid
     device["github_issues"] = []
 
