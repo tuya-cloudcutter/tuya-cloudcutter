@@ -1,22 +1,26 @@
 #!/usr/bin/env bash
 
-while getopts "hrd:l:" flag; do
+while getopts "hrw:p:d:l:" flag; do
 	case "$flag" in
 		r) RESETNM="true";;
+		w) WIFI_ADAPTER=${OPTARG};;
+		p) PROFILE=${OPTARG};;
 		d) DEVICEID=${OPTARG};;
 		l) LOCALKEY=${OPTARG};;
 		h)
-			echo "usage: $0 [-hr] [-d new_device_id] [-l new_local_key] <SSID> <password> [wifi adapter name] [device name]"
-			echo "  -r      reset NetworkManager"
-			echo "  -h      show this message"
+			echo "usage: $0 [OPTION]... SSID PASSWORD"
+			echo "  -r          reset NetworkManager"
+			echo "  -w TEXT     WiFi adapter name"
+			echo "  -p TEXT     device profile name"
+			echo "  -d TEXT     new device id"
+			echo "  -l TEXT     new local key"
+			echo "  -h          show this message"
 			exit 0;;
 	esac
 done
 
 SSID=${@:$OPTIND:1}
 SSID_PASS=${@:$OPTIND+1:1}
-WIFI_ADAPTER=${@:$OPTIND+2:1}
-PROFILE=${@:$OPTIND+3:1}
 
 if ! [ -z "${DEVICEID}" ] && ! [ -z "${LOCALKEY}" ]; then
 	echo "Using ${DEVICEID} and ${LOCALKEY}"
@@ -43,6 +47,6 @@ EOF
 )
 run_in_docker bash -c "$INNER_SCRIPT"
 if [ ! $? -eq 0 ]; then
-    echo "Oh no, something went wrong with detaching from the cloud! Try again I guess.."
-    exit 1
+	echo "Oh no, something went wrong with detaching from the cloud! Try again I guess.."
+	exit 1
 fi

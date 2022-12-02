@@ -27,10 +27,10 @@ Knowing this, you can run `./run_detach.sh` without any parameters. Then, use th
 ### Running the toolchain
 * Download or git clone this repository
 * Open a terminal and `cd` into the repository to make it your working directory
-* Run `./run_detach.sh <SSID> <SSID password> [wifi adapter name] [device name]`, where SSID/password is the name of the access point you want the Tuya device to join, and wifi adapter is optional (if not set, it will use the first detected adapter in your computer).
-  * Not specifying the device name allows you to choose it knowing the firmware version.
+* Run `./run_detach.sh <SSID> <SSID password>`, where SSID/password is the name of the access point you want the Tuya device to join.
+  * You can specify the device profile name using `-p my-device-name`; otherwise an interactive menu will be shown.
   * **If your SSID and/or password have special characters like $ ! or @, make sure to pass them with ' characters, e.g. 'P@$$W0rD!'. If it has the ' character then also make sure to escape that, with bash that'd be `'P@$$W0rD!'"'"' 1234'` to use the password `P@$$W0rD!' 1234`** **Optionally run with parameter -r to reset NetworkManager connections, which may help with some wifi adaptors ( ./run_detach.sh -r <SSID> <SSID password> )**
-  * If you wish to set a custom deviceid or localkey, prepend these parameters like so: `./run_detach.sh -d 20characterdeviceid -l 16characterlocalkey <SSID> <SSID password> [wifi adapter name] [device profile]`, Note, localtuya in homeassistant currently requires unique deviceid to work.
+  * If you wish to set a custom deviceid or localkey, prepend these parameters like so: `./run_detach.sh -d 20characterdeviceid -l 16characterlocalkey <SSID> <SSID password>`, Note, localtuya in homeassistant currently requires unique deviceid to work.
 * When instructed, put your Tuya device in _AP Mode_ by toggling it off and on again 6 times, with around 1 second in between each toggle. If it's a light bulb, it will blink _slowly_. If it blinks _quickly_, power cycle it 3 more times.
 * The script will automatically connect to your light (assuming it creates a "SmartLife-*" SSID. If not, let us know.) and run the exploit that replaces the security keys (now it can't connect to the cloud anymore)
 * The exploit freezes the light. It will reboot back into AP mode if left alone, and you can speed this up by power cycling it yourself one time
@@ -51,7 +51,7 @@ Knowing this, you can run `./run_detach.sh` without any parameters. Then, use th
 ## Flashing custom firmware
 * Copy your new firmware .bin file (UG only!) to ./custom-firmware
 * Find your device name, as instructed in the steps above.
-* Run `./run_flash.sh <wifi adapter name> <device name> <firmware_name>`, e.g. `./run_flash.sh "wlp5s0" "avatar-asl04-tv-backlight" "custom_firmware_UG_file.bin"`
+* Run `./run_flash.sh`. You can specify device profile name and firmware file using `-p` and `-f`, respectively (this is optional). Example: `./run_flash.sh -p avatar-asl04-tv-backlight -f custom_firmware_UG_file.bin`
 * Follow the instructions from the script to turn off/on your device 6 times during 2 steps (similar to the steps above)
 * If all goes well, your device is now running your custom firmware, enjoy!
 
