@@ -3,11 +3,15 @@
 # Select the right device
 if [ "${PROFILE}" == "" ]; then
   run_in_docker pipenv run python3 get_input.py -w /work -o /work/profile.txt choose-profile
-  PROFILE=$(cat profile.txt)
-  rm -f profile.txt
 else
   run_in_docker pipenv run python3 get_input.py -w /work -o /work/profile.txt write-profile $PROFILE
 fi
+if [ ! $? -eq 0 ]; then
+  echo "Failed to choose a profile, please run this script again"
+  exit 1
+fi
+PROFILE=$(cat profile.txt)
+rm -f profile.txt
 
 # Connect to Tuya device's WiFi
 echo "==> Toggle Tuya device's power off and on again 6 times, with ~1 sec pauses in between, to enable AP mode. Repeat if your device's SSID doesn't show up within ~30 seconds. For smart plugs long press the reset button on the device for about 5 seconds. See https://support.tuya.com/en/help/_detail/K9hut3w10nby8 for more information."
