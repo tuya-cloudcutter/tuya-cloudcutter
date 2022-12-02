@@ -99,10 +99,19 @@ def save_profile(profile_dir, device, profile):
 
 
 def load_profile(profile_dir):
-    with open(join(profile_dir, "device.json"), "r") as f:
-        device = json.load(f)
-    with open(join(profile_dir, "profile.json"), "r") as f:
-        profile = json.load(f)
+    device, profile = None, None
+    for file in glob(join(profile_dir, "*.json")):
+        with open(file, "r") as f:
+            data = json.load(f)
+        # match characteristic keys
+        if "profiles" in data:
+            device = data
+            continue
+        if "firmware" in data:
+            profile = data
+            continue
+        if device and profile:
+            break
     return device, profile
 
 
@@ -179,27 +188,12 @@ def write_profile(ctx, slug: str):
     profile_dir = join(profiles_dir, device_slug)
     # try to find device and profile JSON files
     if isdir(profile_dir):
-        device, profile = None, None
-        for file in glob(join(profile_dir, "*.json")):
-            with open(file, "r") as f:
-                data = json.load(f)
-            # match characteristic keys
-            if "profiles" in data:
-                device = data
-                continue
-            if "firmware" in data:
-                profile = data
-                continue
-            if device and profile:
-                break
-        # write profile data if found
-        if device and profile:
-            path = save_combined_profile(profile_dir, device, profile)
-            ctx.obj["output"].write(path)
-            return
+        device, profile = load_profile(profile_dir)
     # else try to download the profile from API
-    device, profile = download_profile(device_slug)
-    save_profile(profile_dir, device, profile)
+    if not (device and profile):
+        device, profile = download_profile(device_slug)
+        save_profile(profile_dir, device, profile)
+    # write profile data if found
     path = save_combined_profile(profile_dir, device, profile)
     ctx.obj["output"].write(path)
 
