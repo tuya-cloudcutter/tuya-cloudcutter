@@ -20,25 +20,27 @@ If you're curious about the vulnerability and how the exploit chain works, here'
 Check out [usage instructions](./INSTRUCTIONS.md) and [some host specific instructions for setups on devices like a Raspberry Pi](./HOST_SPECIFIC_INSTRUCTIONS.md)
 
 ## Contribution
-We'd be happy to receive your contributions! One way to contribute if you already know your way around some binary exploitation or would like to get your hands into it is by building device profiles to support more exploitable devices. Check out the [detailed writeup](https://rb9.nl/posts/2022-03-29-light-jailbreaking-exploiting-tuya-iot-devices/) for the information about the vulnerability and exploit chain. Example device profiles can also be found in the `device-profiles` directory.
+We'd be happy to receive your contributions! One way to contribute if you already know your way around some binary exploitation or would like to get your hands into it is by building device profiles to support more exploitable devices. Check out the [detailed writeup](https://rb9.nl/posts/2022-03-29-light-jailbreaking-exploiting-tuya-iot-devices/) for the information about the vulnerability and exploit chain.
 
-These are currently done manually, but there are some plans in the future to simplify the building process. Additionally, we'd love to see a device-agnostic exploit chain!
+Additional work on expanding lightleak, which can dump unexploited firmware could use additional attention, as well as possibly expanding it to flash firmware, similiar to regular cloud-cutter as well.  A port to bash/linux may also be useful.
 
 ### Device dumps
 You can also contribute device dumps by making an issue with a link to your device dump, **but be aware if your device was already onboarded on your WiFi AP**. If you don't want your SSID and/or SSID password to be out there, then it's best to dump a device that was onboarded on a dummy AP that you don't mind leaking the parameters for. Otherwise, you may also configure it on a dummy access point a few times before dumping it. This will greatly lower the chances of accidental leakage to anyone working on the building a profile from your device flash dump, **but it is never zero in this case**. As a rule of thumb, it's better to dump a fresh device which has been configured with a dummy AP, but if you still want to dump one that's in use on your home AP then know that you always run the risk of leaking your SSID and password.
-Note that a dump made on a device which has been already activated on Tuya's app using a dummy SSID and password would simplify profile building a lot for contributors, so if possible please try to do so.
+Note that a dump made on a device which has been already activated on Tuya's app using a dummy SSID and password would simplify profile building a lot for contributors, so if possible please try to do so. A dump of devices that have never been joined to Smart Life are now generally acceptable.  In order to not potentially leak personal information, that may be the preferred way.
 
 Tools to dump flash from devices:
-- https://github.com/khalednassar/bk7231tools
-- https://github.com/OpenBekenIOT/hid_download_py
+- https://github.com/tuya-cloudcutter/bk7231tools
 
-Additionally, device profiles require a proper Datapoint ID (DPID) schema for local configuration with stock firmware. These can be pulled directly from flash on a device (config region starts at 0x1EF000 on BK7231 devices) if it has been configured to communicate with Tuya servers at least once, or through other more cumbersome ways (e.g. proxying the traffic of a device as it's being initialized after pulling its authkey + uuid + psk). It'd be very handy if you happen to know a simpler way pull these schemas!
+Note: other tools such as hid_download_py create incomplete dumps, or have data out-of-order which makes processing more difficult.  Please use bk7231tools instead.
+
+Example dump: `bk7231tools read_flash -s 0 -c 512 device-make-and-model.bin`
+`-s 0` means start at the beginning of the flash and `-c 512` means read 512 blocks (each block being 4096 bytes).
+A valid dump for a standard 2M rom should be 2,097,152 bytes.  If your dump is any other size, it is probably incomplete!
+
+Additionally, device profiles require a proper Datapoint ID (DPID) schema for local configuration with stock firmware. These can be pulled directly from flash on a device (config region starts at 0x1EF000 on BK7231 devices) if it has been configured to communicate with Tuya servers at least once, or through the profiler-builder scripts with the aid of an active Smart Life account.  Profile builder's pull-schema.py script will walk you through the process.  If you are not comfortable with this, just submit the full bin in an issue and a schema will be pulled and added.
 
 ### Testing if a device is exploitable
 If you'd like to check if a device is exploitable, one way to lower the chance of having to pry open a device that's not exploitable is testing it out with [this test script](./proof-of-concept/test_device_exploitable.py). **The downside to this test is that it won't tell you if the device is BK7231 based or not, since it seems that RTL87{1,2}0 devices are also exploitable but so far no work has been done to support them.**
-
-## Device support
-Check out the initial list of [supported devices](./SUPPORTED.md).
 
 ## Previous work
 - [Smart Home - Smart Hack (35c3 talk)](https://media.ccc.de/v/35c3-9723-smart_home_-_smart_hack) by Michael Steigerwald from [VRUST](https://www.vtrust.de/).
