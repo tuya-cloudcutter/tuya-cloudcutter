@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 
 while getopts "hrd:l:" flag; do
-case "$flag" in
-    r) RESETNM="true";;
-    d) DEVICEID=${OPTARG};;
-    l) LOCALKEY=${OPTARG};;
-	h) echo "usage: $0 [-hr] <SSID> <password> [wifi adapter name] [device name] [-d new_device_id] [-l new_local_key]"
-       echo "  -r      reset NetworkManager"
-       echo "  -h      show this message"
-       exit 0
-esac
+	case "$flag" in
+		r) RESETNM="true";;
+		d) DEVICEID=${OPTARG};;
+		l) LOCALKEY=${OPTARG};;
+		h)
+			echo "usage: $0 [-hr] [-d new_device_id] [-l new_local_key] <SSID> <password> [wifi adapter name] [device name]"
+			echo "  -r      reset NetworkManager"
+			echo "  -h      show this message"
+			exit 0;;
+	esac
 done
 
 SSID=${@:$OPTIND:1}
@@ -17,7 +18,9 @@ SSID_PASS=${@:$OPTIND+1:1}
 WIFI_ADAPTER=${@:$OPTIND+2:1}
 PROFILE=${@:$OPTIND+3:1}
 
-echo "Using ${DEVICEID} and ${LOCALKEY}"
+if ! [ -z "${DEVICEID}" ] && ! [ -z "${LOCALKEY}" ]; then
+	echo "Using ${DEVICEID} and ${LOCALKEY}"
+fi
 
 source common.sh
 source common_run.sh

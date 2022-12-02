@@ -21,7 +21,9 @@ fi
 echo "Waiting 1 sec to allow device to set itself up.."
 sleep 1
 echo "Running initial exploit toolchain.."
-echo "Using ${DEVICEID} and ${LOCALKEY}"
+if ! [ -z "${DEVICEID}" ] && ! [ -z "${LOCALKEY}" ]; then
+	echo "Using ${DEVICEID} and ${LOCALKEY}"
+fi
 OUTPUT=$(run_in_docker pipenv run python3 -m cloudcutter exploit_device "${PROFILE}" --deviceid "${DEVICEID}" --localkey "${LOCALKEY}")
 RESULT=$?
 echo "${OUTPUT}"
