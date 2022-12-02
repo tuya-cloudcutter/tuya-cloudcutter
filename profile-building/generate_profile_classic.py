@@ -101,7 +101,7 @@ def assemble():
     #device["uuid"] = uuid
     #device["auth_key"] = auth_key
     if product_key is not None:
-        firmware["key"] = product_key
+        device["key"] = product_key
     device["ap_ssid"] = ap_ssid
     device["github_issues"] = []
 
