@@ -86,12 +86,8 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
         print(f"Configuration file {args.config} does not exist", file=sys.stderr)
         sys.exit(10)
 
-    if not os.path.exists(args.profile):
-        print(f"Device profile directory {args.profile} does not exist", file=sys.stderr)
-        sys.exit(20)
-
-    if not os.path.isdir(args.profile):
-        print(f"Provided device profile path {args.profile} is not a directory", file=sys.stderr)
+    if not os.path.isfile(args.profile):
+        print(f"Provided device profile JSON {args.profile} does not exist, or is not a file", file=sys.stderr)
         sys.exit(30)
 
     config = DeviceConfig.read(args.config)
