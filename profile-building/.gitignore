@@ -1,0 +1,5 @@
+*.txt
+*.bin
+*_storage.json
+*/profile-classic/*
+*/profile-legacy/*
