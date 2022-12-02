@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-while getopts "hrw:p:" flag; do
+while getopts "hrw:p:f:" flag; do
 	case "$flag" in
 		r) RESETNM="true";;
 		w) WIFI_ADAPTER=${OPTARG};;
