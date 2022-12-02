@@ -307,7 +307,7 @@ def run_directory(directory, region = 'us', token = None):
         print('[+] Schema already present')
         return
 
-    if product_key is None:
+    if product_key is None or product_key == firmware_key:
         product_key = firmware_key
         product_key_is_firmware_key = True
 
