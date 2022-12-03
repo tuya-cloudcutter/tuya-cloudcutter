@@ -18,6 +18,7 @@ def run(full_encrypted_file: str):
         print('Examples: Tuya-Generic_DS---101-Touch-Switch.bin or Tuya-Generic_A60-E26-RGBCT-Bulb.bin')
         sys.exit(1)
 
+    current_dir = os.path.dirname(full_encrypted_file)
     output_dir = full_encrypted_file.replace('.bin', '')
     extractfolder = os.path.abspath(output_dir)
     foldername = os.path.basename(output_dir)
@@ -39,6 +40,18 @@ def run(full_encrypted_file: str):
                 os.rename(os.path.join(extractfolder, file), os.path.join(extractfolder, file.replace('app_pattern_scan.bin', 'app_1.00.bin')))
             elif file.endswith('app_pattern_scan_decrypted.bin'):
                 os.rename(os.path.join(extractfolder, file), os.path.join(extractfolder, file.replace('app_pattern_scan_decrypted.bin', 'app_1.00_decrypted.bin')))
+
+        if os.path.exists(os.path.join(current_dir, "issue.txt")):
+            with open(os.path.join(current_dir, "issue.txt"), 'r') as f:
+                issue = f.read()
+                with open(os.path.join(extractfolder, foldername + "_issue.txt"), 'w') as issueFile:
+                    issueFile.write(issue)
+
+        if os.path.exists(os.path.join(current_dir, "image.txt")):
+            with open(os.path.join(current_dir, "image.txt"), 'r') as f:
+                image = f.read()
+                with open(os.path.join(extractfolder, foldername + "_image.txt"), 'w') as imageFile:
+                    imageFile.write(image)
     else:
         print('[+] Encrypted bin has already been extracted')
         return

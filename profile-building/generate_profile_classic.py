@@ -50,6 +50,7 @@ def assemble():
     if schema is not None and schema != '':
         schema = json.loads(schema)
     issue = load_file("issue")
+    image = load_file("image")
 
     profile = {}
     firmware = {}
@@ -109,6 +110,10 @@ def assemble():
         device["github_issues"].append(int(issue))
 
     device["image_urls"] = []
+
+    if image is not None:
+        device["image_urls"].append(image)
+
     device["profiles"] = [ classic_profile_name ]
 
     if schema_id is not None and schema is not None:
