@@ -44,6 +44,9 @@ def dump(file):
         else:
             print("[!] No gw_di, No version or key stored, manual lookup required")
             write_file("manually_process", "No version or key stored, manual lookup required")
+        if 'user_param_key' in storage:
+            print("[+] Has configuration, exporting to device_configuration.txt")
+            write_file("device_configuration", json.dumps(storage['user_param_key']))
 
 def run(storage_file: str):
     if not storage_file:

@@ -51,6 +51,7 @@ def assemble():
         schema = json.loads(schema)
     issue = load_file("issue")
     image = load_file("image")
+    device_configuration = load_file("device_configuration")
 
     profile = {}
     firmware = {}
@@ -123,6 +124,9 @@ def assemble():
     else:
         print("[!] Schema is not present, unable to generate classic device file")
         return
+
+    if device_configuration is not None:
+        device["device_configuration"] = json.loads(device_configuration)
 
     device_filename = f"{manufacturer.replace(' ', '-')}-{name.replace(' ', '-')}".lower()
     print(f"[+] Creating device profile {device_filename}")

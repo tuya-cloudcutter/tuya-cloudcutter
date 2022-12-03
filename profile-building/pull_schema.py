@@ -36,9 +36,9 @@ multicast_token = None
 cancel_thread = False
 
 class TuyaAPIConnection(object):
-    def __init__(self, uuid: str, authkey: str, psk: str = None):
+    def __init__(self, uuid: str, auth_key: str, psk: str = None):
         self.psk = psk.encode('utf-8') if psk else b''
-        self.authkey = authkey.encode('utf-8')
+        self.authkey = auth_key.encode('utf-8')
         self.uuid = uuid.encode('utf-8')
 
     def request(self, url: str, params: dict, data: dict, method: str = 'POST') -> dict:
@@ -82,10 +82,10 @@ class TuyaAPIConnection(object):
         query = "&".join([f"{k}={v}" for k, v in sorted_params])
         signature_body = query.replace("&", "||").encode("utf-8")
         signature_body += f"||{self.authkey.decode('utf-8')}".encode("utf-8")
-        print(signature_body)
+        #print(signature_body)
         signature = md5(signature_body).hexdigest()
         query += "&sign=" + signature
-        print(query)
+        #print(query)
         return f"?{query}"
 
     def _build_request(self, method: str, hostname: str, requestline: str, body: str):
@@ -134,8 +134,8 @@ class TuyaAPIConnection(object):
         return (self.psk, init_id.replace(b'\x00', b'?'))
 
 def print_help():
-    print('Usage: python pull_active_response.py --input <uuid> <authkey> [<product key / firmware key>] <softVer> <baselineVer> <region> <token>')
-    print('   or: python pull_active_response.py --directory <directory> <region> <token>')
+    print('Usage: python pull_schema.py --input <uuid> <auth_key> <product_key or empty string ""> <firmware_key or empty string ""> <software_version> <baseline_version> <region> <token>')
+    print('   or: python pull_schema.py --directory <directory> <region> <token>')
     sys.exit(1)
 
 def read_single_line_file(path):
@@ -160,14 +160,14 @@ def build_params(epoch_time, uuid):
 
     return params
 
-def build_data(epoch_time, token, product_key, software_version, baseline_version = '40.00', cad_version = '1.0.2', cd_version = '1.0.0', protocol_version = '2.2', product_key_is_firmware_key: bool = True):
+def build_data(epoch_time, token, product_key, software_version, baseline_version = '40.00', cad_version = '1.0.2', cd_version = '1.0.0', protocol_version = '2.2', is_fk: bool = True):
     data = {
         'token': token,
         'productKey': product_key,
         'softVer': software_version,
         'protocolVer': protocol_version,
         'baselineVer': baseline_version,
-        'options': '{"isFK":' + str(product_key_is_firmware_key).lower() + '}',
+        'options': '{"isFK":' + str(is_fk).lower() + '}',
         'cadVer': cad_version,
         'cdVer': cd_version,
         't': epoch_time,
@@ -216,7 +216,7 @@ def receive_token():
         except:
             pass
 
-def run(directory: str, output_file_prefix: str, uuid: str, product_key: str, auth_key: str, software_version: str, baseline_version: str = '40.00', cad_version: str = '1.0.2', cd_version: str = '1.0.0', protocol_version = '2.2', product_key_is_firmware_key: bool = True, region: str = 'us', token: str = None):
+def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, product_key: str, firmware_key: str, software_version: str, baseline_version: str = '40.00', cad_version: str = '1.0.2', cd_version: str = '1.0.0', protocol_version = '2.2', region: str = 'us', token: str = None):
     knownRegions = [ 'us', 'eu' ]
 
     if uuid is None or len(uuid) != 16:
@@ -225,9 +225,9 @@ def run(directory: str, output_file_prefix: str, uuid: str, product_key: str, au
         else:
             print_and_exit('required uuid was not found or was invalid (expected 16 characters)')
     if auth_key is None or len(auth_key) != 32:
-        print_and_exit('required authkey was not found or was invalid (expected 32 characters)')
-    if product_key is None or len(product_key) != 16:
-        print_and_exit('required prodkey was not found or was invalid (expected 16 characters)')
+        print_and_exit('required auth_key was not found or was invalid (expected 32 characters)')
+    if (product_key is None or len(product_key) == 0) and (firmware_key is None or len(firmware_key) == 0):
+        print_and_exit('required product_key or firmware_key was not found or was invalid (expected 16 characters)')
     if software_version is None or len(software_version) < 5:
         print_and_exit('required softVer was not found or was invalid (expected >= 5 characters)')
     if cad_version is None or len(cad_version) < 5:
@@ -246,28 +246,43 @@ def run(directory: str, output_file_prefix: str, uuid: str, product_key: str, au
     token = token[2:]
     token = token[:8]
     assert len(token) == 8
-    print('Using token:', token, 'prodkey:', product_key, file=sys.stderr)
-    connection = TuyaAPIConnection(uuid=uuid, authkey=auth_key)
+    print(f'Using token: {token} product_key: {product_key} firmware_key: {firmware_key}')
+    connection = TuyaAPIConnection(uuid, auth_key)
     url = f"http://a.tuya{region}.com/d.json"
     epoch_time = int(time.time())
-
     params = build_params(epoch_time, uuid)
-    data = build_data(epoch_time, token, product_key, software_version, baseline_version, cad_version, cd_version, protocol_version, product_key_is_firmware_key)
+    response = None
 
-    response = connection.request(url, params, data, "POST")
+    if product_key is not None:
+        data = build_data(epoch_time, token, product_key, software_version, baseline_version, cad_version, cd_version, protocol_version, False)
+        response = connection.request(url, params, data, "POST")
 
-    if response["success"] == False:
-        print(response)
-    else:
+        if response["success"] == False and response["errorCode"] == 'FIRMWARE_NOT_MATCH':
+            data = build_data(epoch_time, token, product_key, software_version, baseline_version, cad_version, cd_version, protocol_version, True)
+            response = connection.request(url, params, data, "POST")
+
+    if firmware_key is not None and (response is None or (response["success"] == False and response["errorCode"] != "EXPIRE")):
+        data = build_data(epoch_time, token, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, True)
+        response = connection.request(url, params, data, "POST")
+
+        if response["success"] == False and response["errorCode"] == 'FIRMWARE_NOT_MATCH':
+            data = build_data(epoch_time, token, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, False)
+            response = connection.request(url, params, data, "POST")
+
+    if response["success"] == True:
         print(f"[+] Schema Id: {response['result']['schemaId']}")
         print(f"[+] Schema: {response['result']['schema']}")
         with open(os.path.join(directory, output_file_prefix + "_schema_id.txt"), 'w') as f:
             f.write(response['result']['schemaId'])
         with open(os.path.join(directory, output_file_prefix + "_schema.txt"), 'w') as f:
             f.write(response['result']['schema'])
+    elif response["success"] == False and response["errorCode"] == 'EXPIRE':
+        print("[!] The token provided has either expired, or you are connected to the wrong region")
+    else:
+        print(response)
 
-def run_input(uuid, authkey, product_key, software_version, baseline_version = '40.00', cad_version = '1.0.2', cd_version = '1.0.0', protocol_version = '2.2', product_key_is_firmware_key: bool = True, region = 'us', token = None):
-    run('.\\', 'device', uuid, product_key, authkey, software_version, baseline_version, cad_version, cd_version, protocol_version, product_key_is_firmware_key, region, token)
+def run_input(uuid, auth_key, product_key, firmware_key, software_version, baseline_version = '40.00', cad_version = '1.0.2', cd_version = '1.0.0', protocol_version = '2.2', region = 'us', token = None):
+    run('.\\', 'device', uuid, auth_key, product_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, region, token)
 
 def run_directory(directory, region = 'us', token = None):
     has_schema = False
@@ -280,7 +295,6 @@ def run_directory(directory, region = 'us', token = None):
     cad_version = '1.0.2'
     cd_version = '1.0.0'
     protocol_version = '2.2'
-    product_key_is_firmware_key = False
     output_file_prefix = None
 
     dirListing = os.listdir(f'{directory}')
@@ -292,6 +306,8 @@ def run_directory(directory, region = 'us', token = None):
             auth_key = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_product_key.txt'):
             product_key = read_single_line_file(os.path.join(directory, file))
+        elif file.endswith('_firmware_key.txt'):
+            firmware_key = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_firmware_key.txt'):
             firmware_key = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_swv.txt'):
@@ -307,50 +323,46 @@ def run_directory(directory, region = 'us', token = None):
         print('[+] Schema already present')
         return
 
-    if product_key is None or product_key == firmware_key:
-        product_key = firmware_key
-        product_key_is_firmware_key = True
-
     if uuid is None:
         print('[!] uuid was not found')
         return
     if auth_key is None:
-        print('[!] authkey was not found')
+        print('[!] auth_key was not found')
         return
-    if product_key is None:
-        print('[!] prodkey was not found')
+    if (product_key is None or product_key == '') and (firmware_key is None or firmware_key == ''):
+        print('[!] product_key or firmware_key was not found, at least one must be provided')
         return
     if software_version is None:
-        print('[!] softVer was not found')
+        print('[!] software_version was not found')
         return
     if baseline_version is None:
-        print('[!] baselineVer was not found')
+        print('[!] baseline_version was not found')
         return
 
-    run(directory, output_file_prefix, uuid, product_key, auth_key, software_version, baseline_version, cad_version, cd_version, protocol_version, product_key_is_firmware_key, region, token)
+    run(directory, output_file_prefix, uuid, auth_key, product_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, region, token)
 
 if __name__ == '__main__':
    
     if (sys.argv[2:]):
         if sys.argv[1] == '--input':
-            if not sys.argv[5:]:
+            if not sys.argv[7:]:
                 print('Unrecognized input.')
                 print_help()
             uuid = sys.argv[2]
-            authkey = sys.argv[3]
-            prodkey = sys.argv[4]
-            softVer = sys.argv[5]
-            cadVer = ('1.0.2' if sys.argv[6] is None else sys.argv[6])
-            baselineVer = ('40.00' if sys.argv[7] is None else sys.argv[7])
-            region = ('us' if sys.argv[8] is None else sys.argv[8])
+            auth_key = sys.argv[3]
+            product_key = sys.argv[4]
+            firmware_key = sys.argv[5]
+            software_version = sys.argv[6]
+            cad_version = ('1.0.2' if sys.argv[7] is None else sys.argv[7])
+            baseline_version = ('40.00' if sys.argv[8] is None else sys.argv[8])
+            region = ('us' if sys.argv[9] is None else sys.argv[9])
             token = sys.argv[9]
-            run_input(uuid, authkey, prodkey, softVer, cadVer, baselineVer, region, token)
+            run_input(uuid, auth_key, product_key, firmware_key, software_version, cad_version, baseline_version, region, token)
         elif sys.argv[1] == '--directory':
             if not sys.argv[2:]:
                 print('Unrecognized input.')
                 print_help()
             directory = sys.argv[2]
-            print(len(sys.argv))
             region = ('us' if len(sys.argv) < 4 else sys.argv[3])
             token = (None if len(sys.argv) < 5 else sys.argv[4])
             run_directory(directory, region, token)
