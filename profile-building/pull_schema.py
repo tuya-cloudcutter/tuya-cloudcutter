@@ -253,19 +253,21 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, produ
     params = build_params(epoch_time, uuid)
     response = None
 
+    responseCodesToContinueAter = [ 'FIRMWARE_NOT_MATCH', 'APP_PRODUCT_UNSUPPORT', 'NOT_EXISTS'] 
+
     if product_key is not None:
         data = build_data(epoch_time, token, product_key, software_version, baseline_version, cad_version, cd_version, protocol_version, False)
         response = connection.request(url, params, data, "POST")
 
-        if response["success"] == False and response["errorCode"] == 'FIRMWARE_NOT_MATCH':
+        if response["success"] == False and response["errorCode"] in responseCodesToContinueAter:
             data = build_data(epoch_time, token, product_key, software_version, baseline_version, cad_version, cd_version, protocol_version, True)
             response = connection.request(url, params, data, "POST")
 
-    if firmware_key is not None and (response is None or (response["success"] == False and response["errorCode"] != "EXPIRE")):
+    if (response is None or (response is not None and response["success"] == False and response["errorCode"] != "EXPIRE")) and firmware_key is not None:
         data = build_data(epoch_time, token, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, True)
         response = connection.request(url, params, data, "POST")
 
-        if response["success"] == False and response["errorCode"] == 'FIRMWARE_NOT_MATCH':
+        if response["success"] == False and response["errorCode"] in responseCodesToContinueAter:
             data = build_data(epoch_time, token, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, False)
             response = connection.request(url, params, data, "POST")
 
