@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "tuya-cloudcutter"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">= 3.0, < 3.11"
+tornado = "^6.2"
+pycryptodome = "^3.16.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "profile-building"
+version = "0.1.0"
+description = ""
+authors = ["Cossid"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+bk7231tools = "^1.1.5"
+sslpsk2 = "^1.0.2"
+capstone = "^4.0.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
