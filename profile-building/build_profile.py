@@ -5,13 +5,15 @@ import haxomatic
 import process_storage
 import process_app
 import pull_schema
-import generate_profile_legacy
+#import generate_profile_legacy
 import generate_profile_classic
 
 if __name__ == '__main__':
     if not sys.argv[1:]:
-        print('Usage: python build_profile.py <full 2M encrypted bin file> <region code=\'us\'> <token=\'None\'')
+        print('Usage: python build_profile.py <full 2M encrypted bin file> <region code=\'us\'> <token=\'None\'>')
         print('region and token are optional.  Region will default to \'us\', token instructions will prompt if needed.')
+        print('Note: encrypted bin name must be in the pattern of Manufacturer-Name_Model-and-device-description')
+        print('If a dash (-) is present, replace it with 3 dashes (---)')
         sys.exit(1)
 
     region = 'us'
@@ -42,5 +44,5 @@ if __name__ == '__main__':
         print("[!] Unable to build complete profile as schema remains missing.")
         exit(1)
 
-    generate_profile_legacy.run(extracted_location)
+    #generate_profile_legacy.run(extracted_location)
     generate_profile_classic.run(extracted_location)
