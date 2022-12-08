@@ -102,7 +102,11 @@ def load_profile(profile_dir):
     device, profile = None, None
     for file in glob(join(profile_dir, "*.json")):
         with open(file, "r") as f:
-            data = json.load(f)
+            try:
+                data = json.load(f)
+            except:
+                print(f"File {file} does not contain valid JSON.  Please update your file and try again.")
+                exit(53)
         # match characteristic keys
         if "profiles" in data:
             device = data
