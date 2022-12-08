@@ -53,12 +53,15 @@ wifi_connect () {
 	    AP_MATCHED_NAME=$(nmcli -t -f SSID dev wifi list --rescan yes | eval grep $COMBINED_AP_PREAMBLE | sort -u)
         done
 
-        echo "Found access point name: \"${AP_MATCHED_NAME}\", trying to connect.."
+        echo -e "\nFound access point name: \"${AP_MATCHED_NAME}\", trying to connect.."
         nmcli dev wifi connect "${AP_MATCHED_NAME}" ${AP_PASS}
 
         # Check if successfully connected
-        AP_STATUS=$(nmcli -f GENERAL.STATE con show "${AP_MATCHED_NAME}" | awk -F ' ' '{print $2}')
-        if [ "${AP_STATUS}" != "activated" ]; then
+        # Note, we were previously checking GENERAL.STATE and comparing to != "activated" but that has internationalization problems
+        # There does not appear to be a numeric status code we can check
+        # This may need updating if Tuya or one of their sub-vendors ever change their AP mode gateway IP
+        AP_GATEWAY=$(nmcli -f IP4.GATEWAY con show "${AP_MATCHED_NAME}" | awk -F ' ' '{print $2}')
+        if [ "${AP_GATEWAY}" != "192.168.175.1" ]; then
             if [[ "${i}" == "5" ]]; then
                 echo "Error, could not connect to SSID."
                 return 1
