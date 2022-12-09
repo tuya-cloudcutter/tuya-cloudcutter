@@ -244,6 +244,7 @@ def choose_profile(ctx):
 def choose_firmware(ctx):
     firmware_dir = ctx.obj["firmware_dir"]
     path = ask_files("Select your custom firmware file", firmware_dir)
+    validate_firmware_file(path)
     ctx.obj["output"].write(path)
 
 
