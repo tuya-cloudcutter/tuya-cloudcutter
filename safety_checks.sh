@@ -64,8 +64,8 @@ check_blacklist () {
 	fi
 }
 
-#check_port udp 53 "resolve DNS queries"
-#check_port udp 67 "offer DHCP leases"
+check_port udp 53 "resolve DNS queries"
+check_port udp 67 "offer DHCP leases"
 check_port tcp 80 "answer HTTP requests"
 check_port tcp 443 "answer HTTPS requests"
 #check_port udp 6666 "detect unencrypted Tuya firmware"
