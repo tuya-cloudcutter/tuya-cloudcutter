@@ -2,9 +2,6 @@
 
 source safety_checks.sh
 
-COMBINED_AP_PREAMBLE=$(cat ap_preambles.txt | grep -v '#' | sort -u | awk '{print "-e \"^"$0"\"" }' | tr '\n' ' ')
-AP_SEARCH_LIST=$(cat ap_preambles.txt | grep -v '#' | sort -u | awk '{print "-e \""$0"\""}' | tr '\n' ' ' | sed 's/-e //g')
-
 AP_MATCHED_NAME=""
 FIRST_WIFI=$(nmcli device status | grep " wifi " | head -n1 | awk -F ' ' '{print $1}')
 
@@ -44,13 +41,14 @@ wifi_connect () {
         while [ "${AP_MATCHED_NAME}" == "" ]
         do
             if [ ${FIRST_RUN} == true ]; then
-                echo "Scanning for known AP SSID prfixes: ${AP_SEARCH_LIST}"
+                echo "Scanning for open Tuya SmartLife AP"
                 FIRST_RUN=false
             else
                 echo -n "."
             fi
             
-	    AP_MATCHED_NAME=$(nmcli -t -f SSID dev wifi list --rescan yes | eval grep $COMBINED_AP_PREAMBLE | sort -u)
+		# Search for an AP ending with - and 4 hexidecimal characters that has no security mode
+	    AP_MATCHED_NAME=$(nmcli -t -f SSID,SECURITY dev wifi list --rescan yes | grep -E .*-[A-F0-9]{4}:$ | awk -F ':' '{print $1}')
         done
 
         echo -e "\nFound access point name: \"${AP_MATCHED_NAME}\", trying to connect.."
