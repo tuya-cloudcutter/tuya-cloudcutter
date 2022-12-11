@@ -51,7 +51,7 @@ def assemble():
         schema = json.loads(schema)
     issue = load_file("issue")
     image = load_file("image")
-    device_configuration = load_file("device_configuration")
+    device_configuration = load_file("user_param_key")
 
     profile = {}
     firmware = {}
