@@ -5,8 +5,8 @@ import sys
 full_path: str
 base_name: str
 
-def load_file(filename):
-    path = os.path.join(full_path, f"{base_name}_{filename}.txt")
+def load_file(filename, extension = "txt"):
+    path = os.path.join(full_path, f"{base_name}_{filename}.{extension}")
     if os.path.exists(path):
         with open(path, 'r') as f:
             return f.read()
@@ -51,7 +51,7 @@ def assemble():
         schema = json.loads(schema)
     issue = load_file("issue")
     image = load_file("image")
-    device_configuration = load_file("user_param_key")
+    device_configuration = load_file("user_param_key", "json")
 
     profile = {}
     firmware = {}
