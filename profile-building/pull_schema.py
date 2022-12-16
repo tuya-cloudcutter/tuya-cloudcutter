@@ -52,15 +52,21 @@ class TuyaAPIConnection(object):
         http_request = self._build_request(method, hostname, requestline, body)
 
         with self._make_socket(hostname, port, psk_wrapped) as socket:
-            socket.send(http_request)
-            datas = socket.recv(10000)
-            response_body = datas.split(b"\r\n\r\n")[1].decode("utf-8").strip()
-            result = json.loads(response_body)["result"]
-            result = base64.b64decode(result)
-            result = self._decrypt_data(result)
-            result = result.decode('utf-8')
-            result = json.loads(result)
-            return result
+            try:
+                socket.send(http_request)
+                datas = socket.recv(10000)
+                response_body = datas.split(b"\r\n\r\n")[1].decode("utf-8").strip()
+                result = json.loads(response_body)["result"]
+                result = base64.b64decode(result)
+                result = self._decrypt_data(result)
+                result = result.decode('utf-8')
+                result = json.loads(result)
+                return result
+            except Exception as exception:
+                print("[!] Unable to get a response from Tuya API, or response was malformed.")
+                print(f"[!] {url} must not be blocked in order to pull a schema.")
+                print(f"[!] Error message: {exception}")
+                sys.exit(3)
 
 
     def _encrypt_data(self, data: dict):
