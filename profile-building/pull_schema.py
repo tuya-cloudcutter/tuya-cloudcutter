@@ -140,8 +140,8 @@ class TuyaAPIConnection(object):
         return (self.psk, init_id.replace(b'\x00', b'?'))
 
 def print_help():
-    print('Usage: python pull_schema.py --input <uuid> <auth_key> <product_key or empty string ""> <firmware_key or empty string ""> <software_version> <baseline_version> <region> <token>')
-    print('   or: python pull_schema.py --directory <directory> <region> <token>')
+    print('Usage: python pull_schema.py --input <uuid> <auth_key> <product_key or empty string ""> <firmware_key or empty string ""> <software_version> <baseline_version> <token>')
+    print('   or: python pull_schema.py --directory <directory> <token>')
     sys.exit(1)
 
 def read_single_line_file(path):
@@ -222,9 +222,7 @@ def receive_token():
         except:
             pass
 
-def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, product_key: str, firmware_key: str, software_version: str, baseline_version: str = '40.00', cad_version: str = '1.0.2', cd_version: str = '1.0.0', protocol_version = '2.2', region: str = 'us', token: str = None):
-    knownRegions = [ 'us', 'eu' ]
-
+def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, product_key: str, firmware_key: str, software_version: str, baseline_version: str = '40.00', cad_version: str = '1.0.2', cd_version: str = '1.0.0', protocol_version = '2.2', token: str = None):
     if uuid is None or len(uuid) != 16:
         if product_key is not None and len(product_key) == 16:
             uuid = product_key
@@ -240,14 +238,24 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, produ
         print_and_exit('required cadVer was not found or was invalid (expected >= 5 characters)')
     if baseline_version is None or len(baseline_version) < 5:
         print_and_exit('required baselineVer was not found or was invalid (expected 5 characters)')
-    if region is None or region not in knownRegions:
-        print_and_exit(f'required region was not found or was invalid.  Known regions: {knownRegions}')
     
     if token is None or len(token) != 14:
         token = get_new_token()
 
     if token is None:
         print_and_exit('[!] Error receiving new token.')
+
+    region = token[:2]
+
+    if region == "AZ":
+        region = "us"
+    elif region == "EU":
+        region = "eu"
+    elif region == "AY":
+        region == "cn"
+    else:
+        print("[!] Unable to determine region from token provided")
+        sys.exit(4)
 
     token = token[2:]
     token = token[:8]
@@ -289,10 +297,10 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, produ
     else:
         print(response)
 
-def run_input(uuid, auth_key, product_key, firmware_key, software_version, baseline_version = '40.00', cad_version = '1.0.2', cd_version = '1.0.0', protocol_version = '2.2', region = 'us', token = None):
-    run('.\\', 'device', uuid, auth_key, product_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, region, token)
+def run_input(uuid, auth_key, product_key, firmware_key, software_version, baseline_version = '40.00', cad_version = '1.0.2', cd_version = '1.0.0', protocol_version = '2.2', token = None):
+    run('.\\', 'device', uuid, auth_key, product_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, token)
 
-def run_directory(directory, region = 'us', token = None):
+def run_directory(directory, token = None):
     has_schema = False
     uuid = None
     auth_key = None
@@ -347,7 +355,7 @@ def run_directory(directory, region = 'us', token = None):
         print('[!] baseline_version was not found')
         return
 
-    run(directory, output_file_prefix, uuid, auth_key, product_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, region, token)
+    run(directory, output_file_prefix, uuid, auth_key, product_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, token)
 
 if __name__ == '__main__':
    
@@ -363,16 +371,14 @@ if __name__ == '__main__':
             software_version = sys.argv[6]
             cad_version = ('1.0.2' if sys.argv[7] is None else sys.argv[7])
             baseline_version = ('40.00' if sys.argv[8] is None else sys.argv[8])
-            region = ('us' if sys.argv[9] is None else sys.argv[9])
             token = sys.argv[9]
-            run_input(uuid, auth_key, product_key, firmware_key, software_version, cad_version, baseline_version, region, token)
+            run_input(uuid, auth_key, product_key, firmware_key, software_version, cad_version, baseline_version, token)
         elif sys.argv[1] == '--directory':
             if not sys.argv[2:]:
                 print('Unrecognized input.')
                 print_help()
             directory = sys.argv[2]
-            region = ('us' if len(sys.argv) < 4 else sys.argv[3])
-            token = (None if len(sys.argv) < 5 else sys.argv[4])
-            run_directory(directory, region, token)
+            token = (None if len(sys.argv) < 4 else sys.argv[3])
+            run_directory(directory, token)
     else:
         print_help()
