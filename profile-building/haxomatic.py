@@ -172,8 +172,8 @@ def walk_app_code():
         process_generic("BK7231T", 2, 1, "2368381c9847", 2, 0, "a14f061e", 1, 0)
         return
 
-    # Strange apparently 1-off version with a BK7231N SDK adapted to BK7231T, BS 40.00, SDK 2.3.2
-    if b'BY embed FOR ty_iot_sdk AT bk7231t' in appcode:
+    # Newest versions of BK7231T, BS 40.00, SDK 2.3.2
+    if b'BY embed FOR ty_iot_sdk AT bk7231t' in appcode or b'BY ci_manage FOR ty_iot_sdk AT bk7231t' in appcode:
         # TODO: Figure out how to process this format
         raise RuntimeError("This device uses an unusual SDK and there is currently no pattern to mach it.")
         #process_generic("BK7231T", 3, 1/2, "", 0, 0, "", 0, 0) # Uknown if payload_version is 1 or 2, more likely 2
