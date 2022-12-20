@@ -66,12 +66,12 @@ def search_device_class_after_compiled_line():
             return after
     return ''
 
-def search_device_class_after_bk7231n():
-    bk7231n_string = b'\0bk7231n\0'
-    offset = appcode.find(bk7231n_string, 0)
+def search_device_class_after_chipid(chipid: str):
+    chipid_string = b'\0' + bytes(chipid, 'utf-8') + b'\0'
+    offset = appcode.find(chipid_string, 0)
     if offset == -1:
         return ''
-    offset += len(bk7231n_string) + 1
+    offset += len(chipid_string) + 1
     after = read_between_null_or_newline(offset)
     if after.count('_') > 0:
         return after
@@ -141,9 +141,10 @@ def dump():
         
     if device_class == '':
         device_class = search_device_class_after_compiled_line()
-
     if device_class == '':
-        device_class = search_device_class_after_bk7231n()
+        device_class = search_device_class_after_chipid("bk7231n")
+    if device_class == '':
+        device_class = search_device_class_after_chipid("BK7231NL")
 
     if device_class != '':
         print(f"[+] Device class: {device_class}")
