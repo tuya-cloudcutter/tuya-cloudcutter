@@ -5,10 +5,13 @@ import sys
 full_path: str
 base_name: str
 
-def load_file(filename, extension = "txt"):
-    path = os.path.join(full_path, f"{base_name}_{filename}.{extension}")
+def load_file(filename):
+    permission = 'r'
+    if filename.endswith(".jpg"):
+        permission += 'b'
+    path = os.path.join(full_path, f"{base_name}_{filename}")
     if os.path.exists(path):
-        with open(path, 'r') as f:
+        with open(path, permission) as f:
             return f.read()
     return None
 
@@ -40,18 +43,18 @@ def assemble():
     swv = load_file("swv")
     if swv is None:
         swv = "0.0.0"
-    product_key = load_file("product_key")
-    firmware_key = load_file("firmware_key")
-    address_datagram = load_file("address_datagram")
-    address_ssid = load_file("address_ssid")
-    address_passwd = load_file("address_passwd")
-    schema_id = load_file("schema_id")
-    schema = load_file("schema")
+    product_key = load_file("product_key.txt")
+    firmware_key = load_file("firmware_key.txt")
+    address_datagram = load_file("address_datagram.txt")
+    address_ssid = load_file("address_ssid.txt")
+    address_passwd = load_file("address_passwd.txt")
+    schema_id = load_file("schema_id.txt")
+    schema = load_file("schema.txt")
     if schema is not None and schema != '':
         schema = json.loads(schema)
-    issue = load_file("issue")
-    image = load_file("image")
-    device_configuration = load_file("user_param_key", "json")
+    issue = load_file("issue.txt")
+    image = load_file("image.jpg")
+    device_configuration = load_file("user_param_key.json")
 
     profile = {}
     firmware = {}
@@ -85,6 +88,8 @@ def assemble():
         os.makedirs(os.path.join(full_path, "profile-classic"))
     if not os.path.exists(os.path.join(full_path, "profile-classic", "devices")):
         os.makedirs(os.path.join(full_path, "profile-classic", "devices"))
+    if not os.path.exists(os.path.join(full_path, "profile-classic", "images")):
+        os.makedirs(os.path.join(full_path, "profile-classic", "images"))
     if not os.path.exists(os.path.join(full_path, "profile-classic", "profiles")):
         os.makedirs(os.path.join(full_path, "profile-classic", "profiles"))
 
@@ -98,6 +103,7 @@ def assemble():
     device = {}
     device["manufacturer"] = manufacturer
     device["name"] = name
+    device_filename = f"{manufacturer.replace(' ', '-')}-{name.replace(' ', '-')}".lower()
     # this won't be used in exploiting, bit it is useful to have a known one
     # in case we need to regenerate schemas from Tuya's API
     #device["uuid"] = uuid
@@ -113,7 +119,7 @@ def assemble():
     device["image_urls"] = []
 
     if image is not None:
-        device["image_urls"].append(image)
+        device["image_urls"].append(device_filename + ".jpg")
 
     device["profiles"] = [ classic_profile_name ]
 
@@ -128,11 +134,14 @@ def assemble():
     if device_configuration is not None:
         device["device_configuration"] = json.loads(device_configuration)
 
-    device_filename = f"{manufacturer.replace(' ', '-')}-{name.replace(' ', '-')}".lower()
     print(f"[+] Creating device profile {device_filename}")
     with open(os.path.join(full_path, "profile-classic", "devices", f"{device_filename}.json"), 'w') as f:
         f.write(json.dumps(device, indent='\t'))
         f.write('\n')
+
+    if image is not None:
+        with open(os.path.join(full_path, "profile-classic", "images", f"{device_filename}.jpg"), 'wb') as f:
+            f.write(image)
 
 def run(processed_directory: str):
     global full_path, base_name

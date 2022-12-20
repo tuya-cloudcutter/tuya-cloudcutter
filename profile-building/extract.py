@@ -3,6 +3,16 @@ import argparse
 import bk7231tools
 import os, os.path
 
+def load_file(filename: str):
+    global current_dir
+    permission = 'r'
+    if filename.endswith(".jpg"):
+        permission += 'b'
+    if os.path.exists(os.path.join(current_dir, filename)):
+        with open(os.path.join(current_dir, filename), permission) as f:
+            return f.read()
+    return None
+
 def run(full_encrypted_file: str):
     if full_encrypted_file is None or full_encrypted_file == '':
         print('Usage: python extract.py <full 2M encrypted bin file>')
@@ -18,6 +28,7 @@ def run(full_encrypted_file: str):
         print('Examples: Tuya-Generic_DS---101-Touch-Switch.bin or Tuya-Generic_A60-E26-RGBCT-Bulb.bin')
         sys.exit(1)
 
+    global current_dir, extractfolder, foldername
     current_dir = os.path.dirname(full_encrypted_file)
     output_dir = full_encrypted_file.replace('.bin', '')
     extractfolder = os.path.abspath(output_dir)
@@ -41,17 +52,25 @@ def run(full_encrypted_file: str):
             elif file.endswith('app_pattern_scan_decrypted.bin'):
                 os.rename(os.path.join(extractfolder, file), os.path.join(extractfolder, file.replace('app_pattern_scan_decrypted.bin', 'app_1.00_decrypted.bin')))
 
-        if os.path.exists(os.path.join(current_dir, "issue.txt")):
-            with open(os.path.join(current_dir, "issue.txt"), 'r') as f:
-                issue = f.read()
-                with open(os.path.join(extractfolder, foldername + "_issue.txt"), 'w') as issueFile:
-                    issueFile.write(issue)
+        issue = load_file("issue.txt")
+        if issue is not None:
+            with open(os.path.join(extractfolder, foldername + "_issue.txt"), 'w') as issueFile:
+                issueFile.write(issue)
 
-        if os.path.exists(os.path.join(current_dir, "image.txt")):
-            with open(os.path.join(current_dir, "image.txt"), 'r') as f:
-                image = f.read()
-                with open(os.path.join(extractfolder, foldername + "_image.txt"), 'w') as imageFile:
-                    imageFile.write(image)
+        image = load_file("image.jpg")
+        if image is not None:
+            with open(os.path.join(extractfolder, foldername + "_image.jpg"), 'wb') as imageFile:
+                imageFile.write(image)
+
+        schemaId = load_file("schema_id.txt")
+        if schemaId is not None:
+            with open(os.path.join(extractfolder, foldername + "_schema_id.txt"), 'w') as schemaIdFile:
+                schemaIdFile.write(schemaId)
+
+        schema = load_file("schema.txt")
+        if schema is not None:
+            with open(os.path.join(extractfolder, foldername + "_schema.txt"), 'w') as schemaFile:
+                schemaFile.write(schema)
     else:
         print('[+] Encrypted bin has already been extracted')
         return
