@@ -24,23 +24,23 @@ def assemble():
     manufacturer = base_name.split('_')[0].replace('-', ' ').replace("   ", "-")
     name = base_name.split('_')[1].replace('-', ' ').replace("   ", "-")
     
-    device_class = load_file("device_class")
-    chip = load_file("chip")
-    sdk = load_file("sdk")
-    bv = load_file("bv")
-    #uuid = load_file("uuid")
+    device_class = load_file("device_class.txt")
+    chip = load_file("chip.txt")
+    sdk = load_file("sdk.txt")
+    bv = load_file("bv.txt")
+    #uuid = load_file("uuid.txt")
 
-    ap_ssid = load_file("ap_ssid")
-    #auth_key = load_file("auth_key")
-    address_finish = load_file("address_finish")
-    icon = load_file("icon")
+    ap_ssid = load_file("ap_ssid.txt")
+    #auth_key = load_file("auth_key.txt")
+    address_finish = load_file("address_finish.txt")
+    icon = load_file("icon.txt")
 
     if address_finish is None:
         print("[!] Directory has not been fully processed, unable to generate classic profile")
         return
 
     # Optional items
-    swv = load_file("swv")
+    swv = load_file("swv.txt")
     if swv is None:
         swv = "0.0.0"
     product_key = load_file("product_key.txt")
