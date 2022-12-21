@@ -136,12 +136,20 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, produ
 
     region = token[:2]
 
-    if region == "AZ":
+    # Region information found at: https://airtake-public-data.oss-cn-hangzhou.aliyuncs.com/goat/pdf/1582271993811/Tuya%20Smart%20Cloud%20Platform%20Overview_Tuya%20Smart_Docs.pdf
+    # AZ American west AWS Oregan Main Machine Room
+    # UEAZ American east AZURE Virginia Machine Room
+    if region == "AZ" or region == "UE":
         region = "us"
+    # EU Europe AWS Frankfurt Machine Room
     elif region == "EU":
         region = "eu"
+    # AY Asia Tencent ShangHai Core Machine Room
     elif region == "AY":
-        region == "cn"
+        region = "cn"
+    # IN Indian AWS Mumbai Machine Room
+    elif region == "IN":
+        region = "in"
     else:
         print(f"[!] Unable to determine region from token provided (prefix {region})")
         sys.exit(4)
