@@ -155,7 +155,7 @@ def name_output_file(desired_appended_name):
 
 def walk_app_code():
     # Older versions of BK7231T, BS version 30.0x, SDK 2.0.0
-    if b'BY tuya_iot_team AT 8710_2M' in appcode:
+    if b'TUYA IOT SDK V:2.0.0' in appcode and b'AT 8710_2M' in appcode:
         # 2b 68 30 1c 98 47 is the byte pattern for intermediate addess entry (usually ty_cJSON_Parse)
         # 1 match should be found
         # 04 1e 07 d1 11 9b 21 1c 00 is the byte pattern for mf_cmd_process execution
@@ -164,7 +164,7 @@ def walk_app_code():
         return
 
     # Newer versions of BK7231T, BS 40.00, SDK 1.0.x
-    if b'BY embed FOR ty_iot_wf_bt_sdk_bk AT bk7231t' in appcode:
+    if b'TUYA IOT SDK V:1.0.' in appcode and b'AT bk7231t' in appcode:
         # 23 68 38 1c 98 47 is the byte pattern for intermediate addess entry (usually ty_cJSON_Parse)
         # 2 matches should be found, 1st is correct
         # a1 4f 06 1e is the byte pattern for mf_cmd_process execution
@@ -173,14 +173,16 @@ def walk_app_code():
         return
 
     # Newest versions of BK7231T, BS 40.00, SDK 2.3.2
-    if b'BY embed FOR ty_iot_sdk AT bk7231t' in appcode or b'BY ci_manage FOR ty_iot_sdk AT bk7231t' in appcode:
+    if b'TUYA IOT SDK V:2.3.2 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.4_CD:1.0.0' in appcode:
         # TODO: Figure out how to process this format
-        raise RuntimeError("This device uses an unusual SDK and there is currently no pattern to mach it.")
+        raise RuntimeError("This device uses SDK 2.3.2 and there is currently no pattern to mach it.")
         #process_generic("BK7231T", 3, "datagram/ssid", "", 0, 0, "", 0, 0) # Uknown if payload_version is 1 or 2, more likely 2
         return
 
     # BK7231N, BS 40.00, SDK 2.3.1
-    if b'embed FOR ty_iot_sdk AT bk7231n' in appcode or b'FOR ty_iot_sdk_bk7231n AT bk7231n' in appcode or b'BY ci_manage FOR ty_iot_sdk_bk7231nl AT BK7231NL' in appcode:
+    # 0.0.2 is also a variant of 2.3.1
+    if (b'TUYA IOT SDK V:2.3.1 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0' in appcode
+        or b'TUYA IOT SDK V:0.0.2 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0' in appcode):
         # 43 68 20 1c 98 47 is the byte pattern for intermediate addess entry (usually ty_cJSON_Parse)
         # 1 match should be found
         # 05 1e 00 d1 15 e7 is the byte pattern for mf_cmd_process execution
@@ -189,7 +191,7 @@ def walk_app_code():
         return
 
     # BK7231N, BS 40.00, SDK 2.3.3
-    if b'ci_manage FOR ty_iot_sdk AT bk7231n' in appcode:
+    if b'TUYA IOT SDK V:2.3.3 BS:40.00_PT:2.2_LAN:3.4_CAD:1.0.5_CD:1.0.0' in appcode:
         # 43 68 20 1c 98 47 is the byte pattern for intermediate addess entry (usually ty_cJSON_Parse)
         # 1 match should be found
         # 05 1e 00 d1 fc e6 is the byte pattern for mf_cmd_process execution
@@ -259,11 +261,6 @@ def make_profile_datagram(chipset, intermediate_addr, mf_cmd_process_addr):
         'datagram_padding': base64.b64encode(datagram_padding).decode('utf-8')
     }
 
-    print("[+] Legacy Profile (classic profile addresses exported to address_<type>.txt files):")
-    print(json.dumps(data, indent=4))
-
-    with open(name_output_file('legacy_profile.txt'), 'w') as f:
-        f.write(json.dumps(data, indent=4))
     with open(name_output_file('address_finish.txt'), 'w') as f:
         f.write(f'0x{intermediate_addr:X}')
     with open(name_output_file('address_datagram.txt'), 'w') as f:
@@ -290,11 +287,6 @@ def make_profile_ssid(chipset, intermediate_addr, mf_cmd_process_addr):
         'datagram_padding': base64.b64encode(datagram_padding).decode('utf-8')
     }
 
-    print("[+] Legacy Profile (classic profile addresses exported to address_<type>.txt files):")
-    print(json.dumps(data, indent=4))
-
-    with open(name_output_file('legacy_profile.txt'), 'w') as f:
-        f.write(json.dumps(data, indent=4))
     with open(name_output_file('address_finish.txt'), 'w') as f:
         f.write(f'0x{intermediate_addr:X}')
     with open(name_output_file('address_ssid.txt'), 'w') as f:
