@@ -143,7 +143,7 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, produ
     elif region == "AY":
         region == "cn"
     else:
-        print("[!] Unable to determine region from token provided")
+        print(f"[!] Unable to determine region from token provided (prefix {region})")
         sys.exit(4)
 
     token = token[2:]
