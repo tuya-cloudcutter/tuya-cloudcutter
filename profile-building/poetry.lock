@@ -1,6 +1,6 @@
 [[package]]
 name = "bk7231tools"
-version = "1.1.8"
+version = "1.1.9"
 description = "Tools to interact with and analyze artifacts for BK7231 MCUs"
 category = "main"
 optional = false
@@ -47,13 +47,13 @@ python-versions = "*"
 
 [metadata]
 lock-version = "1.1"
-python-versions = "^3.10"
-content-hash = "93c68a9b0e3dbe63d7c017d7d1a296546b36c09fd1e2ca7d4e3b4871591a5c9e"
+python-versions = ">=3.7,<4.0"
+content-hash = "5ba74b3fabc4b9f9288d415b2e4922f1bf955ce4264c0969e8c6303e16be68ea"
 
 [metadata.files]
 bk7231tools = [
-    {file = "bk7231tools-1.1.8-py3-none-any.whl", hash = "sha256:ec69afcc4bd4947df2af44a8ff281a40d846afba3e6630b668b7f8acd6491f28"},
-    {file = "bk7231tools-1.1.8.tar.gz", hash = "sha256:47fcbb9cca62b38168fff2f324c9f076ae8acd3563d4055639ba5bdc8f2f14ba"},
+    {file = "bk7231tools-1.1.9-py3-none-any.whl", hash = "sha256:ca666e703b15bebb6126f30abb96235f692cc3b1b37546a7640dd3392087df13"},
+    {file = "bk7231tools-1.1.9.tar.gz", hash = "sha256:02c8cdc8a7c5af21a5b4ed62db94dd8586f06bc09ef651b81067968841344b5c"},
 ]
 capstone = [
     {file = "capstone-4.0.2-py2.py3-none-manylinux1_i686.whl", hash = "sha256:da442f979414cf27e4621e70e835880878c858ea438c4f0e957e132593579e37"},
