@@ -7,23 +7,28 @@ import process_app
 import pull_schema
 import generate_profile_classic
 
+def print_filename_instructions():
+    print('Encrypted bin name must be in the pattern of Manufacturer-Name_Model-and-device-description')
+    print('Use dashes in places of spaces, and if a dash (-) is present, replace it with 3 dashes (---)')
+    print('There should only be 1 underscore in the filename, separating manufacturer name and model description')
+
 if __name__ == '__main__':
     if not sys.argv[1:]:
-        print('Usage: python build_profile.py <full 2M encrypted bin file> <region code=\'us\'> <token=\'None\'>')
-        print('region and token are optional.  Region will default to \'us\', token instructions will prompt if needed.')
-        print('Note: encrypted bin name must be in the pattern of Manufacturer-Name_Model-and-device-description')
-        print('Use dashes in places of spaces, and if a dash (-) is present, replace it with 3 dashes (---)')
-        print('There should only be 1 underscore in the filename, separating manufacturer name and model name')
+        print('Usage: python build_profile.py <full 2M encrypted bin file> <token=\'None\'>')
+        print('Token is optional.  Token instructions will prompt if needed.')
+        print_filename_instructions()
         sys.exit(1)
 
-    region = 'us'
     token = None
     if len(sys.argv) > 2 and sys.argv[2] is not None:
-        region = sys.argv[2]
-    if len(sys.argv) > 3 and sys.argv[3] is not None:
-        token = sys.argv[3]
+        token = sys.argv[2]
 
     file = sys.argv[1]
+
+    if file.count('_') != 1 or file.count(' ') > 0:
+        print_filename_instructions()
+        sys.exit(2)
+
     output_dir = sys.argv[1].replace('.bin', '')
     base_name = os.path.basename(output_dir)
     dirname = os.path.dirname(file)
@@ -38,7 +43,7 @@ if __name__ == '__main__':
     haxomatic.run(app_file)
     process_storage.run(storage_file)
     process_app.run(app_file)
-    pull_schema.run_directory(extracted_location)
+    pull_schema.run_directory(extracted_location, token)
 
     if not os.path.exists(schema_id_file):
         print("[!] Unable to build complete profile as schema remains missing.")
