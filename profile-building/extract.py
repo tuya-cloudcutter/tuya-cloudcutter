@@ -21,8 +21,9 @@ def run(full_encrypted_file: str):
     if not full_encrypted_file.__contains__('_') or full_encrypted_file.__contains__(' ') or not full_encrypted_file.endswith('.bin'):
         print('Filename must match specific rules in order to properly generate a useful profile.')
         print('The general format is Manufacturer-Name_Model-Number.bin')
-        print('manufacturer name followed by understoder followed by model are required, and the extension should be .bin')
-        print('Dashes should be used instead of spaces, and if there is a dash (-) in any part of the manufacturer or model, it must be replaced with 3 dashes (---) to be maintained.')
+        print('manufacturer name followed by underscore (_) followed by model are required, and the extension should be .bin')
+        print('Dashes (-) should be used instead of spaces, and if there is a dash (-) in any part of the manufacturer or model, it must be replaced with 3 dashes (---) to be maintained.')
+        print('There should only be one underscore (_) present, separating manufacturer name and model')
         print('Example: a Tuya Generic DS-101 would become Tuya-Generic_DS---101.bin')
         print('Adding the general device type to the end of the model is recommended.')
         print('Examples: Tuya-Generic_DS---101-Touch-Switch.bin or Tuya-Generic_A60-E26-RGBCT-Bulb.bin')
