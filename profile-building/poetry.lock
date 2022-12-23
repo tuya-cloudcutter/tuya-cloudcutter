@@ -11,14 +11,6 @@ pycryptodomex = ">=3.16.0,<4.0.0"
 pyserial = ">=3.5,<4.0"
 
 [[package]]
-name = "capstone"
-version = "4.0.2"
-description = "Capstone disassembly engine"
-category = "main"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-
-[[package]]
 name = "pycryptodomex"
 version = "3.16.0"
 description = "Cryptographic library for Python"
@@ -48,19 +40,12 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7,<4.0"
-content-hash = "5ba74b3fabc4b9f9288d415b2e4922f1bf955ce4264c0969e8c6303e16be68ea"
+content-hash = "79b4cd5c2708b4a0137d98d7d2c7aa923d52576a9ba5b5b0f2a6b3e0e2956392"
 
 [metadata.files]
 bk7231tools = [
     {file = "bk7231tools-1.1.9-py3-none-any.whl", hash = "sha256:ca666e703b15bebb6126f30abb96235f692cc3b1b37546a7640dd3392087df13"},
     {file = "bk7231tools-1.1.9.tar.gz", hash = "sha256:02c8cdc8a7c5af21a5b4ed62db94dd8586f06bc09ef651b81067968841344b5c"},
-]
-capstone = [
-    {file = "capstone-4.0.2-py2.py3-none-manylinux1_i686.whl", hash = "sha256:da442f979414cf27e4621e70e835880878c858ea438c4f0e957e132593579e37"},
-    {file = "capstone-4.0.2-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:9d1a9096c5f875b11290317722ed44bb6e7c52e50cc79d791f142bce968c49aa"},
-    {file = "capstone-4.0.2-py2.py3-none-win32.whl", hash = "sha256:c3d9b443d1adb40ee2d9a4e7341169b76476ddcf3a54c03793b16cdc7cd35c5a"},
-    {file = "capstone-4.0.2-py2.py3-none-win_amd64.whl", hash = "sha256:0d65ffe8620920976ceadedc769f22318f6f150a592368d8a735612367ac8a1a"},
-    {file = "capstone-4.0.2.tar.gz", hash = "sha256:2842913092c9b69fd903744bc1b87488e1451625460baac173056e1808ec1c66"},
 ]
 pycryptodomex = [
     {file = "pycryptodomex-3.16.0-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:b3d04c00d777c36972b539fb79958790126847d84ec0129fce1efef250bfe3ce"},
