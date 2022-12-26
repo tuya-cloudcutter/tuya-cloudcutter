@@ -47,7 +47,7 @@ done
 
 if [ $METHOD_DETACH ] && [ $METHOD_FLASH ]; then
     echo "You have supplied arguments for both detaching and flashing.  Please only include the arguments for your desired action."
-    echo "Please see `${0} -h` for more information."
+    echo "Please see '${0} -h' for more information."
     exit 1
 fi
 
@@ -71,7 +71,7 @@ if [ $METHOD_DETACH ] && [ ! $HAVE_SSID ]; then
     echo "Detaching requires an SSID and Password, please enter each at the following prompt"
 	echo "In order to provide secure logging, the values you type for your password will not show on screen"
 	echo "If you make a mistake, you can run the detach process again"
-	echo "You can also pass credentials via the -s command line option, see `${0} -h` for more information'"
+	echo "You can also pass credentials via the -s command line option, see '${0} -h' for more information'"
     read -p "Please enter your SSID: " SSID
     read -p "Please enter your Passowrd: "$'\n' -s SSID_PASS
 fi
