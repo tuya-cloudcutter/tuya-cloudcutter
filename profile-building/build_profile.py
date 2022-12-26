@@ -27,18 +27,17 @@ if __name__ == '__main__':
         token = sys.argv[2]
 
     file = sys.argv[1]
-
-    if file.count('_') != 1 or file.count(' ') > 0:
-        print_filename_instructions()
-        sys.exit(2)
-
-    output_dir = sys.argv[1].replace('.bin', '')
+    output_dir = file.replace('.bin', '')
     base_name = os.path.basename(output_dir)
     dirname = os.path.dirname(file)
     storage_file = os.path.join(dirname, base_name, base_name + '_storage.json')
     app_file = os.path.join(dirname, base_name, base_name + '_app_1.00_decrypted.bin')
     schema_id_file = os.path.join(dirname, base_name, base_name + '_schema_id.txt')
     extracted_location = os.path.join(dirname, base_name)
+
+    if base_name.count('_') != 1 or base_name.count(' ') > 0:
+        print_filename_instructions()
+        sys.exit(2)
 
     print(f"[+] Processing {file=} as {base_name}")
 
