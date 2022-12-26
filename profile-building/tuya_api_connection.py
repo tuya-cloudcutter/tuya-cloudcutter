@@ -1,14 +1,16 @@
-import socket
-import sslpsk2 as sslpsk
-import sys
-import ssl
-from Cryptodome.Cipher import AES
-import Cryptodome.Util.Padding as padding
-from urllib.parse import urlparse
-from hashlib import md5, sha256
-import random
-import json
 import base64
+import json
+import random
+import socket
+import ssl
+import sys
+from hashlib import md5, sha256
+from urllib.parse import urlparse
+
+import Cryptodome.Util.Padding as padding
+import sslpsk2 as sslpsk
+from Cryptodome.Cipher import AES
+
 
 class TuyaAPIConnection(object):
     def __init__(self, uuid: str, auth_key: str, psk: str = None):
@@ -31,13 +33,14 @@ class TuyaAPIConnection(object):
                 socket.send(http_request)
                 datas = socket.recv(10000)
                 response_body = datas.split(b"\r\n\r\n")[1].decode("utf-8").strip()
-                #print(response_body)
+                # print(response_body)
                 response_body_json = json.loads(response_body)
                 result = response_body_json["result"]
                 result = base64.b64decode(result)
                 result = self._decrypt_data(result)
                 result = result.decode('utf-8')
                 result = json.loads(result)
+                # print(result)
                 return result
             except Exception as exception:
                 print("[!] Unable to get a response from Tuya API, or response was malformed.")
@@ -49,9 +52,8 @@ class TuyaAPIConnection(object):
                     print(f"[!] Error message: {exception}")
                 sys.exit(3)
 
-
     def _encrypt_data(self, data: dict):
-        jsondata = json.dumps(data, separators=(",",":"))
+        jsondata = json.dumps(data, separators=(",", ":"))
         jsondata = padding.pad(jsondata.encode("utf-8"), block_size=16)
         cipher = self._build_cipher()
         encrypted = cipher.encrypt(jsondata)
@@ -69,17 +71,17 @@ class TuyaAPIConnection(object):
         query = "&".join([f"{k}={v}" for k, v in sorted_params])
         signature_body = query.replace("&", "||").encode("utf-8")
         signature_body += f"||{self.authkey.decode('utf-8')}".encode("utf-8")
-        #print(signature_body)
+        # print(signature_body)
         signature = md5(signature_body).hexdigest()
         query += "&sign=" + signature
-        #print(query)
+        # print(query)
         return f"?{query}"
 
     def _build_request(self, method: str, hostname: str, requestline: str, body: str):
         headers = {
-                "Host": hostname,
-                "User-Agent": "TUYA_IOT_SDK",
-                "Connection": "keep-alive"
+            "Host": hostname,
+            "User-Agent": "TUYA_IOT_SDK",
+            "Connection": "keep-alive"
         }
 
         if body:
@@ -93,7 +95,7 @@ class TuyaAPIConnection(object):
     def _make_socket(self, host: str, port: int, encrypted=True):
         csocket = socket.create_connection((host, port))
         if encrypted:
-            x = lambda hint: self._psk_and_pskid(hint)
+            def x(hint): return self._psk_and_pskid(hint)
             csocket = sslpsk.wrap_socket(csocket, ssl_version=ssl.PROTOCOL_TLSv1_2, ciphers='PSK-AES128-CBC-SHA256', psk=x)
         return csocket
 

@@ -22,10 +22,10 @@ class DeviceConfig(object):
     def set(self, key: str, value):
         self.config[key] = value
 
-    def get(self, key: str, default = None):
+    def get(self, key: str, default=None):
         return self.config.get(key, default)
 
-    def get_bytes(self, key: str, encoding = 'utf-8', default = None):
+    def get_bytes(self, key: str, encoding='utf-8', default=None):
         return self.get(key, default).encode(encoding)
 
     def write(self, config_file_path: os.PathLike):

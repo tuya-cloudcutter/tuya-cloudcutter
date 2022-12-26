@@ -8,8 +8,22 @@ import tornado
 
 from ..crypto.tuyacipher import TuyaCipher, TuyaCipherKeyChoice
 from ..device import DeviceConfig
-from .transformers import ResponseTransformer
 from ..utils import object_to_json
+from .transformers import ResponseTransformer
+
+
+def log_request(request, decrypted_response_body: str = None):
+    print(f'[LOG (Client)] Request: {request}')
+    print('[LOG (Client)] ==== Request body ===')
+    if (decrypted_response_body is None):
+        print(request.body)
+    else:
+        print(decrypted_response_body)
+    print('[LOG (Client)] ==== End request body ===')
+
+
+def log_response(response):
+    print(f'[LOG (Server)] Response: ', response)
 
 
 class TuyaHeadersHandler(tornado.web.RequestHandler):
@@ -17,6 +31,7 @@ class TuyaHeadersHandler(tornado.web.RequestHandler):
         self.set_header("Content-Type", "text/plain; charset=utf-8")
         self.set_header("Connection", "keep-alive")
         self.set_header("Server", "Tuya-Sec")
+
 
 class TuyaServerHandler(TuyaHeadersHandler):
     def initialize(self, config: DeviceConfig):
@@ -27,14 +42,11 @@ class TuyaServerHandler(TuyaHeadersHandler):
     def reply(self, key_choice, response: dict):
         encrypted = self.cipher.encrypt(response, key_choice)
         encrypted = base64.b64encode(encrypted).decode("utf-8")
-
         timestamp = int(time.time())
         response = {"result": encrypted, "t": timestamp}
         signature = self.cipher.sign_server(response, key_choice)
-
         response["sign"] = signature
         response = object_to_json(response) + "\n"
-
         self.finish(response)
 
 
@@ -43,9 +55,10 @@ class GetURLHandler(TuyaHeadersHandler):
         self.ipaddr = ipaddr
 
     def post(self):
-        response = {"caArr":None,"httpUrl":{"addr":f"http://{self.ipaddr}/d.json","ips":[self.ipaddr]},"mqttUrl":{"addr":f"{self.ipaddr}:1883","ips":[self.ipaddr]},"ttl":600}
+        log_request(self.request, self.request.body)
+        response = {"caArr": None, "httpUrl": {"addr": f"http://{self.ipaddr}/d.json", "ips": [self.ipaddr]}, "mqttUrl": {"addr": f"{self.ipaddr}:1883", "ips": [self.ipaddr]}, "ttl": 600}
         response = object_to_json(response)
-
+        log_response(response)
         self.finish(response)
 
 
@@ -54,9 +67,10 @@ class OldSDKGetURLHandler(TuyaHeadersHandler):
         self.ipaddr = ipaddr
 
     def post(self):
-        response = {"caArr":None,"httpUrl":f"http://{self.ipaddr}/d.json","mqttUrl":f"{self.ipaddr}:1883"}
+        log_request(self.request, self.request.body)
+        response = {"caArr": None, "httpUrl": f"http://{self.ipaddr}/d.json", "mqttUrl": f"{self.ipaddr}:1883"}
         response = object_to_json(response)
-
+        log_response(response)
         self.finish(response)
 
 
@@ -65,6 +79,7 @@ class OTAFilesHandler(tornado.web.StaticFileHandler):
         range_value = self.request.headers.get("Range", "bytes 0-0")
         total = self.get_content_size()
         print(f"[DEVICE OTA] Responding to device OTA HTTP request range: {range_value}/{total}")
+
 
 class DetachHandler(TuyaServerHandler):
     AUTHKEY_ENDPOINTS = ["tuya.device.active", "tuya.device.uuid.pskkey.get"]
@@ -79,22 +94,13 @@ class DetachHandler(TuyaServerHandler):
         endpoint = self.get_query_argument("a")
         key_choice = TuyaCipherKeyChoice.AUTHKEY if endpoint in self.AUTHKEY_ENDPOINTS else TuyaCipherKeyChoice.SECKEY
         request_body = self.__decrypt_request_body(key_choice)
-
-        print(f'[LOG] Client request PATH: {self.request.path} - QS: {self.request.query}')
-        print('[LOG] ==== Client request body ===')
-        print(request_body)
-        print('[LOG] ==== End client request body ===')
-
         response = self.__rework_endpoint_response(endpoint, request_body)
-
         default_response = {"success": True, "t": int(time.time())}
         if not response:
             response = default_response
-
-        print(f'{endpoint} - response:', response)
-
+        log_response(response)
         self.reply(key_choice, response)
-        
+
     def __rework_endpoint_response(self, endpoint, request_body):
         response = None
         endpoint_hook_response = None
@@ -119,7 +125,7 @@ class DetachHandler(TuyaServerHandler):
 
         if response is None:
             return None
-            
+
         for transformer in self.response_transformers:
             response = transformer.apply(response)
 

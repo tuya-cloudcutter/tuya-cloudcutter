@@ -1,10 +1,12 @@
-import sys
 import json
 import os.path
+import sys
+
 
 def write_file(key, value):
     with open(os.path.join(base_folder, base_name + "_" + key + ".txt"), "w") as file:
         file.write(value)
+
 
 def dump(file):
     with open(file, "r") as storage_file:
@@ -30,7 +32,7 @@ def dump(file):
             write_file("bv", storage['gw_di']['bv'])
             if 'firmk' in storage['gw_di'] and storage['gw_di']['firmk'] is not None:
                 print(f"[+] firmware key: {storage['gw_di']['firmk']}")
-                write_file("firmware_key", storage['gw_di']['firmk'])     
+                write_file("firmware_key", storage['gw_di']['firmk'])
             if 'pk' in storage['gw_di'] and storage['gw_di']['pk'] is not None:
                 print(f"[+] product key: {storage['gw_di']['pk']}")
                 write_file("product_key", storage['gw_di']['pk'])
@@ -45,6 +47,7 @@ def dump(file):
             print("[!] No gw_di, No version or key stored, manual lookup required")
             write_file("manually_process", "No version or key stored, manual lookup required")
 
+
 def run(storage_file: str):
     if not storage_file:
         print('Usage: python parse_storage.py <storage.json file>')
@@ -55,6 +58,7 @@ def run(storage_file: str):
     else:
         print('[!] Storage file not found')
         return
+
 
 if __name__ == '__main__':
     run(sys.argv[1])

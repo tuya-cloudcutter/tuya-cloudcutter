@@ -1,16 +1,19 @@
-import sys
 import os.path
+import sys
+
 import extract
-import haxomatic
-import process_storage
-import process_app
-import pull_schema
 import generate_profile_classic
+import haxomatic
+import process_app
+import process_storage
+import pull_schema
+
 
 def print_filename_instructions():
     print('Encrypted bin name must be in the pattern of Manufacturer-Name_Model-and-device-description')
     print('Use dashes in places of spaces, and if a dash (-) is present, replace it with 3 dashes (---)')
     print('There should only be 1 underscore in the filename, separating manufacturer name and model description')
+
 
 if __name__ == '__main__':
     if not sys.argv[1:]:

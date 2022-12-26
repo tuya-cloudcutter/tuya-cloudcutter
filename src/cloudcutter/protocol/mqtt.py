@@ -58,8 +58,4 @@ def trigger_firmware_update(device_id, local_key, protocol="2.2", broker="127.0.
     print("Sending firmware update message",
           message, "using protocol", protocol)
     m1 = iot_enc(message, local_key, protocol)
-
-    # Publishing 5 messages is not really necessary, but it's just a bit more reliable
-    for _ in range(5):
-        publish.single("smart/device/in/%s" % (device_id), m1, hostname=broker)
-        time.sleep(0.200)
+    publish.single("smart/device/in/%s" % (device_id), m1, hostname=broker)

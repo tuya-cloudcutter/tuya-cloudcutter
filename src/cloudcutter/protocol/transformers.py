@@ -1,11 +1,12 @@
-from typing import List, Dict, Union, Set
+from typing import Dict, List, Set, Union
+
 
 class ResponseTransformer(object):
     def __init__(self, keys: Set[str], reworking_function):
         self.reworking_function = reworking_function
         self.keys = keys
 
-    def apply(self, response: Union[List,Dict]):
+    def apply(self, response: Union[List, Dict]):
         if isinstance(response, List):
             return self.__recurse_apply_list(response)
         else:

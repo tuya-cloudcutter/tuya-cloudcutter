@@ -1,5 +1,4 @@
 import argparse
-from fileinput import filename
 import hmac
 import json
 import os
@@ -7,20 +6,22 @@ import re
 import sys
 import time
 from hashlib import sha256
-from tornado.log import enable_pretty_logging
 from traceback import print_exc
 
-import tinytuya.tinytuya as tinytuya
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
+from tornado.log import enable_pretty_logging
+
+import tinytuya.tinytuya as tinytuya
 
 from .crypto.pskcontext import PSKContext
 from .device import DEFAULT_AUTH_KEY, DeviceConfig
 from .exploit import (build_network_config_packet, exploit_device_with_config,
                       send_network_config_datagram)
 from .protocol import mqtt
-from .protocol.handlers import DetachHandler, GetURLHandler, OldSDKGetURLHandler, OTAFilesHandler
+from .protocol.handlers import (DetachHandler, GetURLHandler,
+                                OldSDKGetURLHandler, OTAFilesHandler)
 from .protocol.transformers import ResponseTransformer
 
 # Enable tornado pretty logging for more verbose output by default
@@ -29,11 +30,11 @@ enable_pretty_logging()
 
 def __configure_local_device_response_transformers(config):
     return [
-            ResponseTransformer({"timestamp", "t", "time"}, lambda _: int(time.time())),
-            ResponseTransformer({"devId", "deviceId"}, lambda _: config.get(DeviceConfig.DEVICE_ID)),
-            ResponseTransformer({"secKey"}, lambda _: config.get(DeviceConfig.SEC_KEY)),
-            ResponseTransformer({"localKey"}, lambda _: config.get(DeviceConfig.LOCAL_KEY)),
-            ResponseTransformer({"pskKey", "psk_key"}, lambda _: "")
+        ResponseTransformer({"timestamp", "t", "time"}, lambda _: int(time.time())),
+        ResponseTransformer({"devId", "deviceId"}, lambda _: config.get(DeviceConfig.DEVICE_ID)),
+        ResponseTransformer({"secKey"}, lambda _: config.get(DeviceConfig.SEC_KEY)),
+        ResponseTransformer({"localKey"}, lambda _: config.get(DeviceConfig.LOCAL_KEY)),
+        ResponseTransformer({"pskKey", "psk_key"}, lambda _: "")
     ]
 
 
@@ -45,7 +46,7 @@ def __configure_ssid_on_device(ip: str, config: DeviceConfig, ssid: str, passwor
         device = tinytuya.Device(device_id, ip, local_key)
         device.connection_timeout = 0.2
 
-        payload = { "ssid": ssid }
+        payload = {"ssid": ssid}
         if password:
             payload["passwd"] = password
 
@@ -59,7 +60,7 @@ def __configure_ssid_on_device(ip: str, config: DeviceConfig, ssid: str, passwor
             parsed_data = device._send_receive(device.generate_payload_raw(command=0x0f, retcode=0x0, data=payload, skip_header=False), minresponse=0)
             trials += 1
             time.sleep(0.2)
-        
+
         if trials >= 5:
             print("Failed to set the WiFi AP creds on the device, latest error:")
             print(parsed_data)
@@ -78,7 +79,7 @@ def __trigger_firmware_update(config: DeviceConfig):
 
     mqtt.trigger_firmware_update(device_id=device_id, local_key=local_key, protocol="2.2", broker="127.0.0.1")
     print("Firmware update messages triggered. Device will download and reset. Exiting in 30 seconds.")
-    tornado.ioloop.IOLoop.current().call_later(30.0, lambda : sys.exit(0))
+    tornado.ioloop.IOLoop.current().call_later(30.0, lambda: sys.exit(0))
 
 
 def __configure_local_device_or_update_firmware(args, update_firmare: bool = False):
@@ -200,7 +201,7 @@ def __update_firmware(args):
         b"\x43\x09\xb5\x96": "QIO",
         b"\x2f\x07\xb5\x94": "UA"
     }
-    
+
     with open(args.firmware, "rb") as fs:
         magic = fs.read(4)
         error_code = 0
@@ -217,7 +218,7 @@ def __update_firmware(args):
 
         if error_code != 0:
             sys.exit(error_code)
-    
+
     __configure_local_device_or_update_firmware(args, update_firmare=True)
 
 
@@ -249,7 +250,7 @@ def __exploit_device(args):
 def __configure_wifi(args):
     SSID = args.SSID
     password = args.password
-    
+
     # Pass the payload through the json module specifically
     # to avoid issues with special chars (e.g. ") in either
     # SSIDs or passwords.
@@ -270,6 +271,7 @@ def __configure_wifi(args):
         time.sleep(0.300)
     print(f"Configured device to connect to '{SSID}'")
 
+
 def __validate_localapicredential_arg(length):
     def check_arg(value):
         if (len(value) == 0):
@@ -280,6 +282,7 @@ def __validate_localapicredential_arg(length):
             raise argparse.ArgumentTypeError("%s value is invalid, it must contain only letters or numbers" % value)
         return value
     return check_arg
+
 
 def parse_args():
     parser = argparse.ArgumentParser(

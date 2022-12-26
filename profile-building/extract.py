@@ -1,7 +1,10 @@
-import sys
 import argparse
+import os
+import os.path
+import sys
+
 import bk7231tools
-import os, os.path
+
 
 def load_file(filename: str):
     global current_dir
@@ -12,6 +15,7 @@ def load_file(filename: str):
         with open(os.path.join(current_dir, filename), permission) as f:
             return f.read()
     return None
+
 
 def run(full_encrypted_file: str):
     if full_encrypted_file is None or full_encrypted_file == '':
@@ -34,7 +38,6 @@ def run(full_encrypted_file: str):
     output_dir = full_encrypted_file.replace('.bin', '')
     extractfolder = os.path.abspath(output_dir)
     foldername = os.path.basename(output_dir)
-    
     input = argparse.ArgumentParser()
     input.layout = 'ota_1'
     input.rbl = ''
@@ -75,6 +78,7 @@ def run(full_encrypted_file: str):
     else:
         print('[+] Encrypted bin has already been extracted')
         return
+
 
 if __name__ == '__main__':
     run(sys.argv[1])

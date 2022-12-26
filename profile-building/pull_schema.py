@@ -4,34 +4,37 @@
 # pull_active_response.py
 # Get response for the tuya.device.active endpoint
 # from server for use in device profiles.
-# 
+#
 # Has been tested with light bulbs, and some of
 # the parameters may be off for other devices, but
 # the general concept can be replicated if needed.
-# 
+#
 # Requires a valid device uuid, authkey, product
 # key from a firmware dump as well as a valid activation
 # token. Official mobile apps can generate valid tokens
 # which can be sniffed over the network for use.
-# 
+#
 ##
-import socket
-from tuya_api_connection import TuyaAPIConnection
-import sys
 import json
-import time
 import os
+import socket
 import struct
+import sys
 import threading
+import time
+
+from tuya_api_connection import TuyaAPIConnection
 
 global multicast_token, cancel_thread
 multicast_token = None
 cancel_thread = False
 
+
 def print_help():
     print('Usage: python pull_schema.py --input <uuid> <auth_key> <product_key or empty string ""> <firmware_key or empty string ""> <software_version> <baseline_version> <token>')
     print('   or: python pull_schema.py --directory <directory> <token>')
     sys.exit(1)
+
 
 def read_single_line_file(path):
     with open(path, 'r') as file:
@@ -40,35 +43,39 @@ def read_single_line_file(path):
             return None
         return fileContents
 
+
 def print_and_exit(printText):
     print(printText)
     sys.exit(2)
 
+
 def build_params(epoch_time, uuid):
     params = {
         "a": "tuya.device.active",
+        "et": 1,
         "t": epoch_time,
         "uuid": uuid,
         "v": "4.4",
-        "et": 1,
     }
 
     return params
 
-def build_data(epoch_time, token, product_key, software_version, baseline_version = '40.00', cad_version = '1.0.2', cd_version = '1.0.0', protocol_version = '2.2', is_fk: bool = True):
+
+def build_data(epoch_time, reduced_token, product_key, software_version, baseline_version='40.00', cad_version='1.0.2', cd_version='1.0.0', protocol_version='2.2', is_fk: bool = True):
     data = {
-        'token': token,
-        'productKey': product_key,
+        'token': reduced_token,
         'softVer': software_version,
+        'productKey': product_key,
         'protocolVer': protocol_version,
         'baselineVer': baseline_version,
-        'options': '{"isFK":' + str(is_fk).lower() + '}',
         'cadVer': cad_version,
         'cdVer': cd_version,
+        'options': '{"isFK":' + str(is_fk).lower() + '}',
         't': epoch_time,
     }
-        
+
     return data
+
 
 def get_new_token():
     print('[!] No token provided.  On the same network, please log into Smart Life, start the add device procedure, select \'Socket (Wi-Fi)\', enter your network credentials, next until it asks the status of the indicator and select \'Blink Slowly\', select \'Go to Connect\', then in your wifi selection screen, hit the back button to return to Smart Life.  A new token should be sent to your network, and this script will continue.')
@@ -89,6 +96,7 @@ def get_new_token():
 
     return multicast_token
 
+
 def receive_token():
     global multicast_token, cancel_thread
     received_token = False
@@ -100,7 +108,7 @@ def receive_token():
             # despite suggestions of being unused, addr must remain present, or this will fail
             msg, addr = s.recvfrom(255)
             (msglen,) = struct.unpack(">I", msg[12:16])
-            msg = msg[16 : msglen + 8].decode()
+            msg = msg[16: msglen + 8].decode()
             msg = json.loads(msg)
             token = msg["token"]
             received_token = True
@@ -111,7 +119,8 @@ def receive_token():
         except:
             pass
 
-def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, product_key: str, firmware_key: str, software_version: str, baseline_version: str = '40.00', cad_version: str = '1.0.2', cd_version: str = '1.0.0', protocol_version = '2.2', token: str = None):
+
+def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, product_key: str, firmware_key: str, software_version: str, baseline_version: str = '40.00', cad_version: str = '1.0.2', cd_version: str = '1.0.0', protocol_version='2.2', token: str = None):
     if uuid is None or len(uuid) != 16:
         if product_key is not None and len(product_key) == 16:
             uuid = product_key
@@ -127,7 +136,7 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, produ
         print_and_exit('required cadVer was not found or was invalid (expected >= 5 characters)')
     if baseline_version is None or len(baseline_version) < 5:
         print_and_exit('required baselineVer was not found or was invalid (expected 5 characters)')
-    
+
     if token is None or len(token) != 14:
         token = get_new_token()
 
@@ -154,9 +163,9 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, produ
         print(f"[!] Unable to determine region from token provided (prefix {region})")
         sys.exit(4)
 
-    token = token[2:]
-    token = token[:8]
-    assert len(token) == 8
+    reduced_token = token[2:]
+    reduced_token = reduced_token[:8]
+    assert len(reduced_token) == 8
     print(f'Using token: {token} product_key: {product_key} firmware_key: {firmware_key}')
     connection = TuyaAPIConnection(uuid, auth_key)
     url = f"http://a.tuya{region}.com/d.json"
@@ -164,23 +173,24 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, produ
     params = build_params(epoch_time, uuid)
     response = None
 
-    responseCodesToContinueAter = [ 'FIRMWARE_NOT_MATCH', 'APP_PRODUCT_UNSUPPORT', 'NOT_EXISTS'] 
+    responseCodesToContinueAter = ['FIRMWARE_NOT_MATCH', 'APP_PRODUCT_UNSUPPORT', 'NOT_EXISTS']
 
     if product_key is not None:
-        data = build_data(epoch_time, token, product_key, software_version, baseline_version, cad_version, cd_version, protocol_version, False)
+        data = build_data(epoch_time, reduced_token, product_key, software_version, baseline_version, cad_version, cd_version, protocol_version, False)
         response = connection.request(url, params, data, "POST")
 
         if response["success"] == False and response["errorCode"] in responseCodesToContinueAter:
-            data = build_data(epoch_time, token, product_key, software_version, baseline_version, cad_version, cd_version, protocol_version, True)
+            data = build_data(epoch_time, reduced_token, product_key, software_version, baseline_version, cad_version, cd_version, protocol_version, True)
             response = connection.request(url, params, data, "POST")
 
-    if (response is None or (response is not None and response["success"] == False and response["errorCode"] != "EXPIRE")) and firmware_key is not None:
-        data = build_data(epoch_time, token, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, True)
-        response = connection.request(url, params, data, "POST")
-
-        if response["success"] == False and response["errorCode"] in responseCodesToContinueAter:
-            data = build_data(epoch_time, token, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, False)
+    if product_key != firmware_key:
+        if (response is None or (response is not None and response["success"] == False and response["errorCode"] != "EXPIRE")) and firmware_key is not None:
+            data = build_data(epoch_time, reduced_token, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, True)
             response = connection.request(url, params, data, "POST")
+
+            if response["success"] == False and response["errorCode"] in responseCodesToContinueAter:
+                data = build_data(epoch_time, reduced_token, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, False)
+                response = connection.request(url, params, data, "POST")
 
     if response["success"] == True:
         print(f"[+] Schema Id: {response['result']['schemaId']}")
@@ -194,10 +204,12 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, produ
     else:
         print(response)
 
-def run_input(uuid, auth_key, product_key, firmware_key, software_version, baseline_version = '40.00', cad_version = '1.0.2', cd_version = '1.0.0', protocol_version = '2.2', token = None):
+
+def run_input(uuid, auth_key, product_key, firmware_key, software_version, baseline_version='40.00', cad_version='1.0.2', cd_version='1.0.0', protocol_version='2.2', token=None):
     run('.\\', 'device', uuid, auth_key, product_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, token)
 
-def run_directory(directory, token = None):
+
+def run_directory(directory, token=None):
     has_schema = False
     uuid = None
     auth_key = None
@@ -221,8 +233,6 @@ def run_directory(directory, token = None):
             product_key = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_firmware_key.txt'):
             firmware_key = read_single_line_file(os.path.join(directory, file))
-        elif file.endswith('_firmware_key.txt'):
-            firmware_key = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_swv.txt'):
             software_version = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_bv.txt'):
@@ -231,7 +241,7 @@ def run_directory(directory, token = None):
             output_file_prefix = file.replace('_chip.txt', '')
         elif file.endswith('_schema_id.txt'):
             has_schema = True
-    
+
     if has_schema:
         print('[+] Schema already present')
         return
@@ -254,8 +264,9 @@ def run_directory(directory, token = None):
 
     run(directory, output_file_prefix, uuid, auth_key, product_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, token)
 
+
 if __name__ == '__main__':
-   
+
     if (sys.argv[2:]):
         if sys.argv[1] == '--input':
             if not sys.argv[7:]:
