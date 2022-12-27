@@ -4,6 +4,8 @@ This repository contains the toolchain to exploit a wireless vulnerability that 
 
 Our tool disconnects Tuya devices from the cloud, allowing them to run completely locally. Additionally, it can be used to flash custom firmware to devices over-the-air.
 
+ℹ️ Do you like this tool? Please consider giving it a star on Github so it reaches more people. ✨
+
 ## ⚠️ WARNING⚠️
 **Using cloudcutter means that you will NO LONGER be able to use Tuya's apps and servers. Be absolutely sure that you are never going to use them again!**
 
