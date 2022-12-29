@@ -39,6 +39,9 @@ def name_output_file(desired_appended_name):
 
 def walk_app_code():
     print(f"[+] Searching for known exploit patterns")
+    if b'TUYA' not in appcode:
+        raise RuntimeError('[!] App binary does not appear to be correctly decrypted, or has no Tuya references.')
+        
     # Older versions of BK7231T, BS version 30.0x, SDK 2.0.0
     if b'TUYA IOT SDK V:2.0.0' in appcode and b'AT 8710_2M' in appcode:
         # 04 1e 07 d1 11 9b 21 1c 00 is the byte pattern for datagram payload
