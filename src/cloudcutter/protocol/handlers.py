@@ -94,6 +94,7 @@ class DetachHandler(TuyaServerHandler):
         endpoint = self.get_query_argument("a")
         key_choice = TuyaCipherKeyChoice.AUTHKEY if endpoint in self.AUTHKEY_ENDPOINTS else TuyaCipherKeyChoice.SECKEY
         request_body = self.__decrypt_request_body(key_choice)
+        log_request(self.request, request_body)
         response = self.__rework_endpoint_response(endpoint, request_body)
         default_response = {"success": True, "t": int(time.time())}
         if not response:
