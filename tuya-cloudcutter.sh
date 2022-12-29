@@ -131,4 +131,4 @@ source common_run.sh
 			exit 1
 		fi
 	fi
-} 2>&1 | tee -a ${LOGFILE}
+} #2>&1 | tee -a ${LOGFILE}

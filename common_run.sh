@@ -103,4 +103,4 @@ fi
 	  exit 1
 	fi
 	echo "Device is connecting to 'cloudcutterflash' access point. Passphrase for the AP is 'abcdabcd' (without ')"
-} 2>&1 | tee -a ${LOGFILE}
+} #2>&1 | tee -a ${LOGFILE}
