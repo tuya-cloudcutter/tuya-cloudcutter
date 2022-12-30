@@ -40,8 +40,7 @@ if ! [ -z "${FIRMWARE}" ]; then
 		echo "You have selected a profile for chip type ${CHIP} but the selected firmware filename (${FIRMWARE}) indicates it may be for another chip."
 		read -p "Are you sure want to proceed?  Type 'PROCEED' (case-sensitive) to continue or 'exit' to stop (exit/PROCEED): " doublecheck
 		case $doublecheck in 
-		"PROCEED" ) echo "Proceding with selected profile for chip ${CHIP} and firmware ${FIRMWARE}";
-			break;;
+		"PROCEED" ) echo "Proceding with selected profile for chip ${CHIP} and firmware ${FIRMWARE}";;
 		* ) exit;;
 		esac
 	fi
