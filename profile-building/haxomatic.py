@@ -41,7 +41,7 @@ def walk_app_code():
     print(f"[+] Searching for known exploit patterns")
     if b'TUYA' not in appcode:
         raise RuntimeError('[!] App binary does not appear to be correctly decrypted, or has no Tuya references.')
-        
+
     # Older versions of BK7231T, BS version 30.0x, SDK 2.0.0
     if b'TUYA IOT SDK V:2.0.0' in appcode and b'AT 8710_2M' in appcode:
         # 04 1e 07 d1 11 9b 21 1c 00 is the byte pattern for datagram payload
@@ -78,13 +78,22 @@ def walk_app_code():
         process_generic("BK7231N", 1, "ssid", "051e00d115e7", 1, 0, "4368201c9847", 1, 0)
         return
 
-    # BK7231N, BS 40.00, SDK 2.3.3
+    # BK7231N, BS 40.00, SDK 2.3.3, LAN 3.3, CAD 1.0.4
+    if b'TUYA IOT SDK V:2.3.3 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.4_CD:1.0.0' in appcode:
+        # 05 1e 00 d1 13 e7 is the byte pattern for ssid payload
+        # 1 match should be found
+        # 43 68 20 1c 98 47 is the byte pattern for finish address
+        # 1 match should be found
+        process_generic("BK7231N", 2, "ssid", "051e00d113e7", 1, 0, "4368201c9847", 1, 0)
+        return
+
+    # BK7231N, BS 40.00, SDK 2.3.3, LAN 3.4, CAD 1.0.5
     if b'TUYA IOT SDK V:2.3.3 BS:40.00_PT:2.2_LAN:3.4_CAD:1.0.5_CD:1.0.0' in appcode:
         # 05 1e 00 d1 fc e6 is the byte pattern for ssid payload
         # 1 match should be found
         # 43 68 20 1c 98 47 is the byte pattern for finish address
         # 1 match should be found
-        process_generic("BK7231N", 2, "ssid", "051e00d1fce6", 1, 0, "4368201c9847", 1, 0)
+        process_generic("BK7231N", 3, "ssid", "051e00d1fce6", 1, 0, "4368201c9847", 1, 0)
         return
 
     raise RuntimeError('Unknown pattern, please open a new issue and include the bin.')
