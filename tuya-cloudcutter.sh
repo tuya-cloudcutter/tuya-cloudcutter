@@ -75,7 +75,7 @@ if [ $METHOD_DETACH ] && [ ! $HAVE_SSID ]; then
 	echo "If you make a mistake, you can run the detach process again"
 	echo "You can also pass credentials via the -s command line option, see '${0} -h' for more information'"
     read -p "Please enter your SSID: " SSID
-    read -p "Please enter your Passowrd: "$'\n' -s SSID_PASS
+    read -p "Please enter your Password: "$'\n' -s SSID_PASS
 fi
 
 echo "Loading options, please wait..."
