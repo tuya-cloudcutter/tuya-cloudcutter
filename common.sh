@@ -9,6 +9,21 @@ if [ "${WIFI_ADAPTER}" == "" ]; then
   WIFI_ADAPTER="${FIRST_WIFI}"
 fi
 
+if [ "${WIFI_ADAPTER}" == "" ]; then
+	echo "[!] Unable to auto-detect wifi adapter.  Please use the '-w' argument to pass in a wifi adapter."
+	echo "See '{$0} -h' for more information."
+	return 0
+fi
+
+SUPPORTS_AP=$(nmcli -f wifi-properties device show ${WIFI_ADAPTER} | grep WIFI-PROPERTIES.AP | awk -F ' ' '{print $2}')
+
+# We don't want to hard stop here because localization could lead to false positives, but warn if AP mode does not appear supported.
+if [ "${SUPPORTS_AP}" != "yes" ]; then
+	echo "[!] WARNING: Selected wifi AP support: ${SUPPORTS_AP}"
+	echo "AP support is manditory for tuya-cloudcutter to work.  If this is blank or 'no' your adapter doesn't support this feature."
+	read -n 1 -s -r -p "Press any key to continue, or CTRL+C to exit"
+fi
+
 reset_nm () {
 
 if [ -z ${RESETNM+x} ]; then
