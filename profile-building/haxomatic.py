@@ -67,10 +67,11 @@ def walk_app_code():
         # process_generic("BK7231T", 3, "", "041e00d10ce7", 1, 0, "", 0, 0)
         return
 
-    # BK7231N, BS 40.00, SDK 2.3.1
+    # BK7231N, BS 40.00, SDK 2.3.1, LAN 3.3 & 3.4
     # 0.0.2 is also a variant of 2.3.1
     if (b'TUYA IOT SDK V:2.3.1 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0' in appcode
-            or b'TUYA IOT SDK V:0.0.2 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0' in appcode):
+            or b'TUYA IOT SDK V:0.0.2 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0' in appcode
+            or b'TUYA IOT SDK V:2.3.1 BS:40.00_PT:2.2_LAN:3.4_CAD:1.0.3_CD:1.0.0' in appcode):
         # 05 1e 00 d1 15 e7 is the byte pattern for ssid payload
         # 1 match should be found
         # 43 68 20 1c 98 47 is the byte pattern for finish address
