@@ -49,6 +49,7 @@ def assemble():
     firmware_key = load_file("firmware_key.txt")
     address_datagram = load_file("address_datagram.txt")
     address_ssid = load_file("address_ssid.txt")
+    address_ssid_padding = load_file("address_ssid_padding.txt")
     address_passwd = load_file("address_passwd.txt")
     schema_id = load_file("schema_id.txt")
     schema = load_file("schema.txt")
@@ -81,6 +82,8 @@ def assemble():
         data["address_datagram"] = address_datagram
     if address_ssid is not None:
         data["address_ssid"] = address_ssid
+        if address_ssid_padding is not None:
+            data["address_ssid_padding"] = int(address_ssid_padding)
     if address_passwd is not None:
         data["address_passwd"] = address_passwd
 

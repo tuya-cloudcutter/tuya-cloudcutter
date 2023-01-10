@@ -48,7 +48,7 @@ def walk_app_code():
         # 3 matches, 2nd is correct
         # 2b 68 30 1c 98 47 is the byte pattern for finish addess
         # 1 match should be found
-        process_generic("BK7231T", 1, "datagram", "041e07d1119b211c00", 3, 1, "2b68301c9847", 1, 0)
+        process_generic("BK7231T", 1, "datagram", 0, "041e07d1119b211c00", 3, 1, "2b68301c9847", 1, 0)
         return
 
     # Newer versions of BK7231T, BS 40.00, SDK 1.0.x
@@ -57,14 +57,17 @@ def walk_app_code():
         # 1 match should be found
         # 23 68 38 1c 98 47 is the byte pattern for finish addess
         # 2 matches should be found, 1st is correct
-        process_generic("BK7231T", 2, "datagram", "a14f061e", 1, 0, "2368381c9847", 2, 0)
+        process_generic("BK7231T", 2, "datagram", 0, "a14f061e", 1, 0, "2368381c9847", 2, 0)
         return
 
     # Newest versions of BK7231T, BS 40.00, SDK 2.3.2
     if b'TUYA IOT SDK V:2.3.2 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.4_CD:1.0.0' in appcode:
-        # TODO: Figure out how to process this format
-        raise RuntimeError("This device uses SDK 2.3.2 and there is currently no pattern to mach it.")
-        # process_generic("BK7231T", 3, "", "041e00d10ce7", 1, 0, "", 0, 0)
+        # 04 1e 00 d1 0c e7 is the byte pattern for ssid payload (offset 8 bytes)
+        # 1 match should be found
+        # bb 68 20 1c 98 47 is the byte pattern for finish address
+        # 1 match should be found, 1st is correct
+        # Padding offset of 8 is the only one available in this SDK, instead of the usual 4 for SSID.
+        process_generic("BK7231T", 3, "ssid", 8, "041e00d10ce7", 1, 0, "bb68201c9847", 1, 0)
         return
 
     # BK7231N, BS 40.00, SDK 2.3.1, LAN 3.3 & 3.4
@@ -76,7 +79,7 @@ def walk_app_code():
         # 1 match should be found
         # 43 68 20 1c 98 47 is the byte pattern for finish address
         # 1 match should be found
-        process_generic("BK7231N", 1, "ssid", "051e00d115e7", 1, 0, "4368201c9847", 1, 0)
+        process_generic("BK7231N", 1, "ssid", 4, "051e00d115e7", 1, 0, "4368201c9847", 1, 0)
         return
 
     # BK7231N, BS 40.00, SDK 2.3.3, LAN 3.3, CAD 1.0.4
@@ -85,7 +88,7 @@ def walk_app_code():
         # 1 match should be found
         # 43 68 20 1c 98 47 is the byte pattern for finish address
         # 1 match should be found
-        process_generic("BK7231N", 2, "ssid", "051e00d113e7", 1, 0, "4368201c9847", 1, 0)
+        process_generic("BK7231N", 2, "ssid", 4, "051e00d113e7", 1, 0, "4368201c9847", 1, 0)
         return
 
     # BK7231N, BS 40.00, SDK 2.3.3, LAN 3.4, CAD 1.0.5
@@ -94,13 +97,13 @@ def walk_app_code():
         # 1 match should be found
         # 43 68 20 1c 98 47 is the byte pattern for finish address
         # 1 match should be found
-        process_generic("BK7231N", 3, "ssid", "051e00d1fce6", 1, 0, "4368201c9847", 1, 0)
+        process_generic("BK7231N", 3, "ssid", 4, "051e00d1fce6", 1, 0, "4368201c9847", 1, 0)
         return
 
     raise RuntimeError('Unknown pattern, please open a new issue and include the bin.')
 
 
-def process_generic(chipset, pattern_version, payload_type, payload_string, payload_count, payload_index, finish_string, finish_count, finish_index):
+def process_generic(chipset, pattern_version, payload_type, payload_padding, payload_string, payload_count, payload_index, finish_string, finish_count, finish_index):
     matcher = CodePatternFinder(appcode, 0x0)
     print(f"[+] Matched pattern for {chipset} version {pattern_version}, payload type {payload_type}")
 
@@ -141,6 +144,8 @@ def process_generic(chipset, pattern_version, payload_type, payload_string, payl
     elif payload_type == "ssid":
         with open(name_output_file('address_ssid.txt'), 'w') as f:
             f.write(f'0x{payload_addr:X}')
+        with open(name_output_file('address_ssid_padding.txt'), 'w') as f:
+            f.write(f'{payload_padding}')
     elif payload_type == "passwd":
         with open(name_output_file('address_passwd.txt'), 'w') as f:
             f.write(f'0x{payload_addr:X}')
