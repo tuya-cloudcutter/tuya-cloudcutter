@@ -22,7 +22,7 @@ If you don't know the exact device model, or your device does not have any avail
 - choose "Device Update"
 - note the "Main Module" version number
 
-Knowing this, you can run `./run_detach.sh` without any parameters. Then, use the `By firmware version and name` option and choose the version you found.
+Knowing this, you can run `./tuya-cloudcutter.sh` without any parameters. Then, use the `By firmware version and name` option and choose the version you found.
 
 ### Running the toolchain
 * Download or git clone this repository

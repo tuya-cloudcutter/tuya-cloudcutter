@@ -24,4 +24,4 @@ device-profiles/
 │  ├─ oem-bk7231n-dctrl-switch-1.1.0-sdk-2.3.1-40.00.json
 ```
 
-and run `./run_flash.sh -p your-device-name` or `./run_detach.sh -p your-device-name`.
+and run `./tuya-cloudcutter.sh -p your-device-name`.
