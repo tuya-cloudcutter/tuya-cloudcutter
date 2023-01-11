@@ -103,9 +103,27 @@ def walk_app_code():
     raise RuntimeError('Unknown pattern, please open a new issue and include the bin.')
 
 
+def check_for_patched(known_patch_pattern):
+    matcher = CodePatternFinder(appcode, 0x0)
+
+    patched_bytecode = bytes.fromhex(known_patch_pattern)
+    patched_matches = matcher.bytecode_search(patched_bytecode, stop_at_first=True)
+
+    if patched_matches:
+        print("[!] The binary supplied appears to be patched and no longer vulnerable to the tuya-cloudcutter exploit.")
+        sys.exit(5)
+
+
 def process_generic(chipset, pattern_version, payload_type, payload_padding, payload_string, payload_count, payload_index, finish_string, finish_count, finish_index):
     matcher = CodePatternFinder(appcode, 0x0)
     print(f"[+] Matched pattern for {chipset} version {pattern_version}, payload type {payload_type}")
+
+    patch_patterns = [
+        "2d6811226b1dff33181c002103930bf0f3fb301c0bf054fb1022904200d8021c",  # BK7231N 2.3.3 Patched
+    ]
+
+    for patch_pattern in patch_patterns:
+        check_for_patched(patch_pattern)
 
     print(f"[+] Searching for {payload_type} payload address")
     payload_bytecode = bytes.fromhex(payload_string)
