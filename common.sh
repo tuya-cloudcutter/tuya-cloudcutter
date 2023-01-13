@@ -63,7 +63,7 @@ wifi_connect () {
             fi
             
 		# Search for an AP ending with - and 4 hexidecimal characters that has no security mode
-	    AP_MATCHED_NAME=$(nmcli -t -f SSID,SECURITY dev wifi list --rescan yes | grep -E ^.*-[A-F0-9]{4}:$ | awk -F ':' '{print $1}')
+	    AP_MATCHED_NAME=$(nmcli -t -f SSID,SECURITY dev wifi list --rescan yes | grep -E ^.*-[A-F0-9]{4}:$ | awk -F ':' '{print $1}' | head -n1)
         done
 
         echo -e "\nFound access point name: \"${AP_MATCHED_NAME}\", trying to connect.."
