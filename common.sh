@@ -3,6 +3,7 @@
 source safety_checks.sh
 
 AP_MATCHED_NAME=""
+AP_CONNECTED_ENDING=""
 FIRST_WIFI=$(nmcli device status | grep " wifi " | head -n1 | awk -F ' ' '{print $1}')
 
 if [ "${WIFI_ADAPTER}" == "" ]; then
@@ -62,8 +63,12 @@ wifi_connect () {
                 echo -n "."
             fi
             
-		# Search for an AP ending with - and 4 hexidecimal characters that has no security mode
-	    AP_MATCHED_NAME=$(nmcli -t -f SSID,SECURITY dev wifi list --rescan yes | grep -E ^.*-[A-F0-9]{4}:$ | awk -F ':' '{print $1}' | head -n1)
+            # Search for an AP ending with - and 4 hexidecimal characters that has no security mode
+            if [ "${AP_CONNECTED_ENDING}" != "" ]; then
+                AP_MATCHED_NAME=$(nmcli -t -f SSID,SECURITY dev wifi list --rescan yes | grep -E ^.*${AP_CONNECTED_ENDING}:$ | awk -F ':' '{print $1}' | head -n1)
+            else
+                AP_MATCHED_NAME=$(nmcli -t -f SSID,SECURITY dev wifi list --rescan yes | grep -E ^.*-[A-F0-9]{4}:$ | awk -F ':' '{print $1}' | head -n1)
+            fi
         done
 
         echo -e "\nFound access point name: \"${AP_MATCHED_NAME}\", trying to connect.."
@@ -80,6 +85,7 @@ wifi_connect () {
                 return 1
             fi
         else
+            AP_CONNECTED_ENDING=${AP_MATCHED_NAME: -5}
             break
         fi
 
