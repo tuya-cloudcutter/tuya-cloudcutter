@@ -133,7 +133,11 @@ class DetachHandler(TuyaServerHandler):
         return response
 
     def __decrypt_request_body(self, key_choice: TuyaCipherKeyChoice):
-        body = self.get_argument('data')
-        body = bytes.fromhex(body)
-        decrypted = self.cipher.decrypt(body, key_choice).decode('utf-8')
+        try:
+            body = self.get_argument('data')
+            body = bytes.fromhex(body)
+            decrypted = self.cipher.decrypt(body, key_choice).decode('utf-8')
+        except:
+            print(f"[!] Unable to decrypt device reponse.  PSKKEY/AUTHKEY do not match device.")
+            exit(90)
         return json.loads(decrypted)
