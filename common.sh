@@ -71,7 +71,7 @@ wifi_connect () {
         done
 
         echo -e "\nFound access point name: \"${AP_MATCHED_NAME}\", trying to connect.."
-        nmcli dev wifi connect "${AP_MATCHED_NAME}" ifname ${WIFI_ADAPTER} name ${AP_MATCHED_NAME}
+        nmcli dev wifi connect "${AP_MATCHED_NAME}" ifname ${WIFI_ADAPTER} name "${AP_MATCHED_NAME}"
 
         # Check if successfully connected
         # Note, we were previously checking GENERAL.STATE and comparing to != "activated" but that has internationalization problems
