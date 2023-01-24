@@ -39,7 +39,6 @@ fi
 }
 
 wifi_connect () {
-    AP_PASS=${1:-""}
     FIRST_RUN=true
 
     for i in {1..5}
@@ -65,14 +64,14 @@ wifi_connect () {
             
             # Search for an AP ending with - and 4 hexidecimal characters that has no security mode
             if [ "${AP_CONNECTED_ENDING}" != "" ]; then
-                AP_MATCHED_NAME=$(nmcli -t -f SSID,SECURITY dev wifi list --rescan yes | grep -E ^.*${AP_CONNECTED_ENDING}:$ | awk -F ':' '{print $1}' | head -n1)
+                AP_MATCHED_NAME=$(nmcli -t -f SSID,SECURITY dev wifi list ifname ${WIFI_ADAPTER} --rescan yes | grep -E ^.*${AP_CONNECTED_ENDING}:$ | awk -F ':' '{print $1}' | head -n1)
             else
-                AP_MATCHED_NAME=$(nmcli -t -f SSID,SECURITY dev wifi list --rescan yes | grep -E ^.*-[A-F0-9]{4}:$ | awk -F ':' '{print $1}' | head -n1)
+                AP_MATCHED_NAME=$(nmcli -t -f SSID,SECURITY dev wifi list ifname ${WIFI_ADAPTER} --rescan yes | grep -E ^.*-[A-F0-9]{4}:$ | awk -F ':' '{print $1}' | head -n1)
             fi
         done
 
         echo -e "\nFound access point name: \"${AP_MATCHED_NAME}\", trying to connect.."
-        nmcli dev wifi connect "${AP_MATCHED_NAME}" ${AP_PASS}
+        nmcli dev wifi connect "${AP_MATCHED_NAME}" ifname ${WIFI_ADAPTER} name ${AP_MATCHED_NAME}
 
         # Check if successfully connected
         # Note, we were previously checking GENERAL.STATE and comparing to != "activated" but that has internationalization problems
