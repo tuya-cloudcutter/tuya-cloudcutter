@@ -97,7 +97,7 @@ source common_run.sh
 if [ $METHOD_DETACH ]; then
 	# Cutting device from cloud, allowing local-tuya access still
 	echo "Cutting device off from cloud.."
-	echo "==> Wait for 20-30 seconds for the device to connect to 'cloudcutterflash'. This script will then show the activation requests sent by the device, and tell you whether local activation was successful."
+	echo "==> Wait for up to 60 seconds for the device to connect to 'cloudcutterflash'. This script will then show the activation requests sent by the device, and tell you whether local activation was successful."
 	nmcli device set ${WIFI_ADAPTER} managed no; service NetworkManager stop;
 	trap "service NetworkManager start; nmcli device set ${WIFI_ADAPTER} managed yes" EXIT  # Set WiFi adapter back to managed when the script exits
 	INNER_SCRIPT=$(xargs -0 <<- EOF
@@ -121,7 +121,7 @@ fi
 if [ $METHOD_FLASH ]; then
 	# Flash custom firmware to device
 	echo "Flashing custom firmware .."
-	echo "==> Wait for 20-30 seconds for the device to connect to 'cloudcutterflash'. This script will then show the firmware upgrade requests sent by the device."
+	echo "==> Wait for up to 60 seconds for the device to connect to 'cloudcutterflash'. This script will then show the firmware upgrade requests sent by the device."
 	nmcli device set "${WIFI_ADAPTER}" managed no
 	trap "nmcli device set ${WIFI_ADAPTER} managed yes" EXIT  # Set WiFi adapter back to managed when the script exits
 	run_in_docker bash -c "bash /src/setup_apmode.sh ${WIFI_ADAPTER} && pipenv run python3 -m cloudcutter update_firmware \"${PROFILE}\" \"/work/device-profiles/schema\" \"${CONFIG_DIR}\" \"/work/custom-firmware/\" \"${FIRMWARE}\""
