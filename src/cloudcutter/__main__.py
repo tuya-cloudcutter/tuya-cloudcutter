@@ -27,6 +27,8 @@ from .protocol.transformers import ResponseTransformer
 # Enable tornado pretty logging for more verbose output by default
 enable_pretty_logging()
 
+dynamic_config_endpoint_hook_triggered = False
+
 
 def __configure_local_device_response_transformers(config):
     return [
@@ -78,7 +80,7 @@ def __trigger_firmware_update(config: DeviceConfig):
     local_key = config.get(DeviceConfig.LOCAL_KEY)
 
     mqtt.trigger_firmware_update(device_id=device_id, local_key=local_key, protocol="2.2", broker="127.0.0.1")
-    print("Firmware update messages triggered. Device will download and reset. Exiting in 30 seconds.")
+    print("[MQTT Server] Firmware update messages triggered. Device will download and reset. Exiting in 30 seconds.")
     tornado.ioloop.IOLoop.current().call_later(30.0, lambda: sys.exit(0))
 
 
@@ -104,14 +106,19 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
         Hooks into an endpoint response for the dynamic config. Standard response should not be overwritten, but needs to
         register a task to either changed device SSID or update firmware. Hence, return None.
         """
-        if update_firmare:
-            task_function = __trigger_firmware_update
-            task_args = (config, )
-        else:
-            task_args = (handler.request.remote_ip, config, args.ssid, args.password)
-            task_function = __configure_ssid_on_device
 
-        tornado.ioloop.IOLoop.current().call_later(5.0, task_function, *task_args)
+        global dynamic_config_endpoint_hook_triggered
+        if dynamic_config_endpoint_hook_triggered == False:
+            dynamic_config_endpoint_hook_triggered = True
+            if update_firmare:
+                task_function = __trigger_firmware_update
+                task_args = (config, )
+            else:
+                task_args = (handler.request.remote_ip, config, args.ssid, args.password)
+                task_function = __configure_ssid_on_device
+
+            tornado.ioloop.IOLoop.current().call_later(5.0, task_function, *task_args)
+
         return None
 
     def upgrade_endpoint_hook(handler, *_):

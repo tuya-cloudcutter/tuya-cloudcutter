@@ -13,13 +13,15 @@ from .transformers import ResponseTransformer
 
 
 def log_request(request, decrypted_response_body: str = None):
-    print(f'[LOG (Client)] Request: {request}')
-    print('[LOG (Client)] ==== Request body ===')
-    if (decrypted_response_body is None):
-        print(request.body)
-    else:
-        print(decrypted_response_body)
-    print('[LOG (Client)] ==== End request body ===')
+    print(f'[Log (Client)] Request: {request}')
+
+    if len(request.body) > 0:
+        print('[LOG (Client)] ==== Request body ===')
+        if (decrypted_response_body is not None):
+            print(decrypted_response_body)
+        else:
+            print(request.body)
+        print('[LOG (Client)] ==== End request body ===')
 
 
 def log_response(response):

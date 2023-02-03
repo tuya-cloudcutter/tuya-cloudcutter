@@ -55,7 +55,7 @@ def trigger_firmware_update(device_id, local_key, protocol="2.2", broker="127.0.
     else:
         message = (
             '{"data":{"firmwareType":0},"protocol":15,"t":%d}' % time.time())
-    print("Sending firmware update message",
+    print("[MQTT Server] Sending firmware update message",
           message, "using protocol", protocol)
     m1 = iot_enc(message, local_key, protocol)
     publish.single("smart/device/in/%s" % (device_id), m1, hostname=broker)
