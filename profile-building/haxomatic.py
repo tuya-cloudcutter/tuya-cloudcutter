@@ -48,7 +48,7 @@ def walk_app_code():
         # 3 matches, 2nd is correct
         # 2b 68 30 1c 98 47 is the byte pattern for finish addess
         # 1 match should be found
-        process_generic("BK7231T", 1, "datagram", 0, "041e07d1119b211c00", 3, 1, "2b68301c9847", 1, 0)
+        process_generic("BK7231T", "SDK 2.0.0 8710_2M", "datagram", 0, "041e07d1119b211c00", 3, 1, "2b68301c9847", 1, 0)
         return
 
     # Newer versions of BK7231T, BS 40.00, SDK 1.0.x
@@ -57,7 +57,17 @@ def walk_app_code():
         # 1 match should be found
         # 23 68 38 1c 98 47 is the byte pattern for finish addess
         # 2 matches should be found, 1st is correct
-        process_generic("BK7231T", 2, "datagram", 0, "a14f061e", 1, 0, "2368381c9847", 2, 0)
+        process_generic("BK7231T", "SDK 1.0.#", "datagram", 0, "a14f061e", 1, 0, "2368381c9847", 2, 0)
+        return
+
+    # Newer versions of BK7231T, BS 40.00, SDK 2.3.0
+    if b'TUYA IOT SDK V:2.3.0' in appcode and b'AT bk7231t' in appcode:
+        # 04 1e 08 d1 4d 4b is the byte pattern for datagram payload
+        # 1 match should be found
+        # 7b 69 20 1c 98 47 is the byte pattern for finish addess
+        # 1 match should be found, 1st is correct
+        # Padding offset of 20 is the only one available in this SDK, instead of the usual 4 for SSID.
+        process_generic("BK7231T", "SDK 2.3.0", "ssid", 20, "041e08d14d4b", 1, 0, "7b69201c9847", 1, 0)
         return
 
     # Newest versions of BK7231T, BS 40.00, SDK 2.3.2
@@ -67,7 +77,7 @@ def walk_app_code():
         # bb 68 20 1c 98 47 is the byte pattern for finish address
         # 1 match should be found, 1st is correct
         # Padding offset of 8 is the only one available in this SDK, instead of the usual 4 for SSID.
-        process_generic("BK7231T", 3, "ssid", 8, "041e00d10ce7", 1, 0, "bb68201c9847", 1, 0)
+        process_generic("BK7231T", "SDK 2.3.2", "ssid", 8, "041e00d10ce7", 1, 0, "bb68201c9847", 1, 0)
         return
 
     # BK7231N, BS 40.00, SDK 2.3.1, LAN 3.3 & 3.4
@@ -79,7 +89,7 @@ def walk_app_code():
         # 1 match should be found
         # 43 68 20 1c 98 47 is the byte pattern for finish address
         # 1 match should be found
-        process_generic("BK7231N", 1, "ssid", 4, "051e00d115e7", 1, 0, "4368201c9847", 1, 0)
+        process_generic("BK7231N", "SDK 2.3.1", "ssid", 4, "051e00d115e7", 1, 0, "4368201c9847", 1, 0)
         return
 
     # BK7231N, BS 40.00, SDK 2.3.3, LAN 3.3, CAD 1.0.4
@@ -88,7 +98,7 @@ def walk_app_code():
         # 1 match should be found
         # 43 68 20 1c 98 47 is the byte pattern for finish address
         # 1 match should be found
-        process_generic("BK7231N", 2, "ssid", 4, "051e00d113e7", 1, 0, "4368201c9847", 1, 0)
+        process_generic("BK7231N", "SDK 2.3.3 LAN 3.3/CAD 1.0.4", "ssid", 4, "051e00d113e7", 1, 0, "4368201c9847", 1, 0)
         return
 
     # BK7231N, BS 40.00, SDK 2.3.3, LAN 3.4, CAD 1.0.5
@@ -97,7 +107,7 @@ def walk_app_code():
         # 1 match should be found
         # 43 68 20 1c 98 47 is the byte pattern for finish address
         # 1 match should be found
-        process_generic("BK7231N", 3, "ssid", 4, "051e00d1fce6", 1, 0, "4368201c9847", 1, 0)
+        process_generic("BK7231N", "SDK 2.3.3 LAN 3.4/CAD 1.0.5", "ssid", 4, "051e00d1fce6", 1, 0, "4368201c9847", 1, 0)
         return
 
     raise RuntimeError('Unknown pattern, please open a new issue and include the bin.')

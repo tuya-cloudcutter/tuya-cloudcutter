@@ -156,6 +156,8 @@ def dump():
         device_class = search_device_class_after_chipid("bk7231n")
     if device_class == '':
         device_class = search_device_class_after_chipid("BK7231NL")
+    if device_class == '':
+        device_class = search_device_class_after_chipid("bk7231t")
 
     if device_class != '':
         print(f"[+] Device class: {device_class}")
