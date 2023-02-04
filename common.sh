@@ -63,7 +63,7 @@ wifi_connect () {
             fi
             
             RESCAN_ARG="--rescan yes"
-            if [ ${DISABLE_RESCAN} == "true" ]; then
+            if [ "${DISABLE_RESCAN}" == "true" ]; then
                 RESCAN_ARG=""
             fi
 
