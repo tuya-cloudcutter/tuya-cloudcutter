@@ -1,4 +1,5 @@
 import base64
+import datetime
 import json
 import os
 import time
@@ -13,19 +14,21 @@ from .transformers import ResponseTransformer
 
 
 def log_request(request, decrypted_response_body: str = None):
-    print(f'[Log (Client)] Request: {request}')
+    # print a blank line for easier reading
+    print("")
+    print(f'[{datetime.datetime.now().time()} Log (Client)] Request: {request}')
 
     if len(request.body) > 0:
-        print('[LOG (Client)] ==== Request body ===')
+        print(f'[{datetime.datetime.now().time()} LOG (Client)] ==== Request body ===')
         if (decrypted_response_body is not None):
             print(decrypted_response_body)
         else:
             print(request.body)
-        print('[LOG (Client)] ==== End request body ===')
+        print(f'[{datetime.datetime.now().time()} LOG (Client)] ==== End request body ===')
 
 
 def log_response(response):
-    print(f'[LOG (Server)] Response: ', response)
+    print(f'[{datetime.datetime.now().time()} LOG (Server)] Response: ', response)
 
 
 class TuyaHeadersHandler(tornado.web.RequestHandler):
@@ -77,10 +80,17 @@ class OldSDKGetURLHandler(TuyaHeadersHandler):
 
 
 class OTAFilesHandler(tornado.web.StaticFileHandler):
+    def prepare(self):
+        log_request(self.request, self.request.body)
+        range_value = self.request.headers.get("Range", "bytes 0-0")
+        # get_content_size() is not available in prepare without a lot of overriding work
+        # total = self.get_content_size()
+        log_response(range_value)
+
     def on_finish(self):
         range_value = self.request.headers.get("Range", "bytes 0-0")
         total = self.get_content_size()
-        print(f"[DEVICE OTA] Responding to device OTA HTTP request range: {range_value}/{total}")
+        print(f"[{datetime.datetime.now().time()} DEVICE OTA] Responding to device OTA HTTP request range: {range_value}/{total}")
 
 
 class DetachHandler(TuyaServerHandler):

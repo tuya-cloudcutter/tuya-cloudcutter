@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import hmac
 import json
 import os
@@ -68,7 +69,7 @@ def __configure_ssid_on_device(ip: str, config: DeviceConfig, ssid: str, passwor
             print(parsed_data)
             sys.exit(80)
 
-        print(f"Device should be successfully onboarded on WiFi AP!")
+        print(f"Device should be successfully onboarded on WiFi AP!  Please allow up to 2 minutes for the device to connect to your specified network.")
         sys.exit(0)
     except Exception:
         print_exc()
@@ -80,11 +81,11 @@ def __trigger_firmware_update(config: DeviceConfig):
     local_key = config.get(DeviceConfig.LOCAL_KEY)
 
     mqtt.trigger_firmware_update(device_id=device_id, local_key=local_key, protocol="2.2", broker="127.0.0.1")
-    print("[MQTT Server] Firmware update messages triggered. Device will download and reset. Exiting in 30 seconds.")
-    tornado.ioloop.IOLoop.current().call_later(30.0, lambda: sys.exit(0))
+    print(f"[{datetime.datetime.now().time()} MQTT Sending] Triggering firmware update message. Device will download and reset. Exiting in 60 seconds.")
+    tornado.ioloop.IOLoop.current().call_later(60.0, lambda: sys.exit(0))
 
 
-def __configure_local_device_or_update_firmware(args, update_firmare: bool = False):
+def __configure_local_device_or_update_firmware(args, update_firmware: bool = False):
     if not os.path.exists(args.config):
         print(f"Configuration file {args.config} does not exist", file=sys.stderr)
         sys.exit(10)
@@ -96,21 +97,25 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
     config = DeviceConfig.read(args.config)
     authkey, uuid = config.get_bytes(DeviceConfig.AUTH_KEY, default=DEFAULT_AUTH_KEY), config.get_bytes(DeviceConfig.UUID)
     context = PSKContext(authkey=authkey, uuid=uuid)
+    device_id, local_key = config.get(DeviceConfig.DEVICE_ID), config.get(DeviceConfig.LOCAL_KEY)
+    mqtt.mqtt_connect(device_id, local_key)
 
     with open(args.profile, "r") as f:
         combined = json.load(f)
         device = combined["device"]
 
-    def dynamic_config_endpoint_hook(handler, *_):
+    def pskkey_endpoint_hook(handler, *_):
         """
-        Hooks into an endpoint response for the dynamic config. Standard response should not be overwritten, but needs to
-        register a task to either changed device SSID or update firmware. Hence, return None.
+        Hooks into an endpoint response for the device uuid pskkey get, the apparent last call in standard activation,
+        and less likely to double-trigger in firmware updates (where dynamic config usually gets called twice).
+        Standard response should not be overwritten, but needs to register a task
+        to either change device SSID or update firmware. Hence, return None.
         """
 
         global dynamic_config_endpoint_hook_triggered
         if dynamic_config_endpoint_hook_triggered == False:
             dynamic_config_endpoint_hook_triggered = True
-            if update_firmare:
+            if update_firmware:
                 task_function = __trigger_firmware_update
                 task_args = (config, )
             else:
@@ -162,14 +167,14 @@ def __configure_local_device_or_update_firmware(args, update_firmare: bool = Fal
 
     response_transformers = __configure_local_device_response_transformers(config)
     endpoint_hooks = {
-        "tuya.device.dynamic.config.get": dynamic_config_endpoint_hook,
         "tuya.device.active": active_endpoint_hook,
+        "tuya.device.uuid.pskkey.get": pskkey_endpoint_hook,
     }
 
-    if update_firmare:
+    if update_firmware:
         endpoint_hooks.update({
+            "tuya.device.upgrade.get": upgrade_endpoint_hook,
             "tuya.device.upgrade.silent.get": upgrade_endpoint_hook,
-            "tuya.device.upgrade.get": upgrade_endpoint_hook
         })
 
     application = tornado.web.Application([
@@ -226,7 +231,7 @@ def __update_firmware(args):
         if error_code != 0:
             sys.exit(error_code)
 
-    __configure_local_device_or_update_firmware(args, update_firmare=True)
+    __configure_local_device_or_update_firmware(args, update_firmware=True)
 
 
 def __exploit_device(args):
@@ -248,7 +253,7 @@ def __exploit_device(args):
     output_path = os.path.join(output_dir, f"{device_uuid}.deviceconfig")
     device_config.write(output_path)
 
-    print(f"Exploit run, saved device config to!")
+    print("Exploit run, saved device config too!")
 
     # To communicate with external scripts
     print(f"output={output_path}")
