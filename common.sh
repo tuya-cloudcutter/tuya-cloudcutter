@@ -62,12 +62,18 @@ wifi_connect () {
                 echo -n "."
             fi
             
-            # Search for an AP ending with - and 4 hexidecimal characters that has no security mode
-            if [ "${AP_CONNECTED_ENDING}" != "" ]; then
-                AP_MATCHED_NAME=$(nmcli -t -f SSID,SECURITY dev wifi list --rescan yes ifname ${WIFI_ADAPTER} | grep -E ^.*${AP_CONNECTED_ENDING}:$ | awk -F ':' '{print $1}' | head -n1)
-            else
-                AP_MATCHED_NAME=$(nmcli -t -f SSID,SECURITY dev wifi list --rescan yes ifname ${WIFI_ADAPTER} | grep -E ^.*-[A-F0-9]{4}:$ | awk -F ':' '{print $1}' | head -n1)
+            RESCAN_ARG="--rescan yes"
+            if [ ${DISABLE_RESCAN} == true ]; then
+                RESCAN_ARG=""
             fi
+
+            # Search for an AP ending with - and 4 hexidecimal characters that has no security mode, unless we've already connected to one, in which case we look for that specific one
+            SSID_REGEX="-[A-F0-9]{4}"
+            if [ "${AP_CONNECTED_ENDING}" != "" ]; then
+                SSID_REGEX="${AP_CONNECTED_ENDING}"
+            fi
+
+            AP_MATCHED_NAME=$(nmcli -t -f SSID,SECURITY dev wifi list ${RESCAN_ARG} ifname ${WIFI_ADAPTER} | grep -E ^.*${SSID_REGEX}:$ | awk -F ':' '{print $1}' | head -n1)
         done
 
         echo -e "\nFound access point name: \"${AP_MATCHED_NAME}\", trying to connect.."

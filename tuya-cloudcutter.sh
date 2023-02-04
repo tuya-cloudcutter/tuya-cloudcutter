@@ -14,6 +14,7 @@ function getopts-extra () {
 while getopts "hrw:p:f:d:l:s::" flag; do
 	case "$flag" in
 		r)	RESETNM="true";;
+		n)  DISABLE_RESCAN="true";;
 		w)	WIFI_ADAPTER=${OPTARG};;
 		p)	PROFILE=${OPTARG};;
 		f)	FIRMWARE=${OPTARG}
@@ -32,6 +33,7 @@ while getopts "hrw:p:f:d:l:s::" flag; do
 			echo "usage: $0 [OPTION]..."
             echo "  -h                Show this message"
             echo "  -r                Reset NetworkManager"
+			echo "  -n				  No Rescan (for older versions of nmcli that don't support it)"
             echo "  -w TEXT           WiFi adapter name (optional, auto-selected if not supplied)"
             echo "  -p TEXT           Device profile name (optional)"
 			echo ""
