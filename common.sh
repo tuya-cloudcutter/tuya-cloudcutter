@@ -55,7 +55,7 @@ wifi_connect () {
         nmcli radio wifi on
         while [ "${AP_MATCHED_NAME}" == "" ]
         do
-            if [ ${FIRST_RUN} == true ]; then
+            if [ $FIRST_RUN ]; then
                 echo "Scanning for open Tuya SmartLife AP"
                 FIRST_RUN=false
             else
@@ -63,7 +63,7 @@ wifi_connect () {
             fi
             
             RESCAN_ARG="--rescan yes"
-            if [ ${DISABLE_RESCAN} == true ]; then
+            if [ $DISABLE_RESCAN ]; then
                 RESCAN_ARG=""
             fi
 
