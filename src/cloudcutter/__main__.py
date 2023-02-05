@@ -81,8 +81,8 @@ def __trigger_firmware_update(config: DeviceConfig):
     local_key = config.get(DeviceConfig.LOCAL_KEY)
 
     mqtt.trigger_firmware_update(device_id=device_id, local_key=local_key, protocol="2.2", broker="127.0.0.1")
-    print(f"[{datetime.datetime.now().time()} MQTT Sending] Triggering firmware update message. Device will download and reset. Exiting in 60 seconds.")
-    tornado.ioloop.IOLoop.current().call_later(60.0, lambda: sys.exit(0))
+    print(f"[{datetime.datetime.now().time()} MQTT Sending] Triggering firmware update message. Device will download and reset. Exiting in 40 seconds.")
+    tornado.ioloop.IOLoop.current().call_later(40.0, lambda: sys.exit(0))
 
 
 def __configure_local_device_or_update_firmware(args, update_firmware: bool = False):
@@ -174,7 +174,10 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
     if update_firmware:
         endpoint_hooks.update({
             "tuya.device.upgrade.get": upgrade_endpoint_hook,
-            "tuya.device.upgrade.silent.get": upgrade_endpoint_hook,
+            # Don't hook tuya.device.upgrade.silent.get as an actual upgrade path.  There is a schema which will respond with no upgrade instead.
+            # tuya.device.upgrade.silent.get is reliable/inconsistent, and may interfer with another upgrade already in progress.
+            # We trigger the non-silent variety by mqtt in a more controlled way.
+            # "tuya.device.upgrade.silent.get": upgrade_endpoint_hook,
         })
 
     application = tornado.web.Application([
