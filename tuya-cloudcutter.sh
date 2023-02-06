@@ -106,7 +106,7 @@ if [ $METHOD_DETACH ]; then
 	echo "Cutting device off from cloud..."
 	echo ""
 	echo "================================================================================"
-	echo "Wait for up to 60 seconds for the device to connect to 'cloudcutterflash'. This script will then show the activation requests sent by the device, and tell you whether local activation was successful."
+	echo "Wait for up to 10-120 seconds for the device to connect to 'cloudcutterflash'. This script will then show the activation requests sent by the device, and tell you whether local activation was successful."
 	echo "================================================================================"
 	echo ""
 

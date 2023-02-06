@@ -101,8 +101,12 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
     context = PSKContext(authkey=authkey, uuid=uuid)
     device_id, local_key = config.get(DeviceConfig.DEVICE_ID), config.get(DeviceConfig.LOCAL_KEY)
     flash_timeout = 15
-    if args.flash_timeout is not None:
-        flash_timeout = args.flash_timeout
+    try:
+        # This only exists when flashing, not when cutting
+        if args.flash_timeout is not None:
+            flash_timeout = args.flash_timeout
+    except:
+        pass
     mqtt.mqtt_connect(device_id, local_key, tornado.ioloop.IOLoop.current(), graceful_exit_timeout=flash_timeout, verbose_output=args.verbose_output)
 
     with open(args.profile, "r") as f:
