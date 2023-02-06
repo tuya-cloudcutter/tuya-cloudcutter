@@ -120,7 +120,7 @@ if [ $METHOD_DETACH ]; then
 		SSID='${SSID/\'/\'\"\'\"\'}'
 		SSID_PASS='${SSID_PASS/\'/\'\"\'\"\'}'
 		bash /src/setup_apmode.sh ${WIFI_ADAPTER} ${VERBOSE_OUTPUT}
-		pipenv run python3 -m cloudcutter configure_local_device --ssid "\${SSID}" --password "\${SSID_PASS}" "${PROFILE}" "/work/device-profiles/schema" "${CONFIG_DIR}" ${FLASH_TIMEOUT}" ${VERBOSE_OUTPUT}"
+		pipenv run python3 -m cloudcutter configure_local_device --ssid "\${SSID}" --password "\${SSID_PASS}" "${PROFILE}" "/work/device-profiles/schema" "${CONFIG_DIR}" ${FLASH_TIMEOUT} ${VERBOSE_OUTPUT}"
 	EOF
 	)
 	run_in_docker bash -c "$INNER_SCRIPT"
