@@ -101,12 +101,8 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
     context = PSKContext(authkey=authkey, uuid=uuid)
     device_id, local_key = config.get(DeviceConfig.DEVICE_ID), config.get(DeviceConfig.LOCAL_KEY)
     flash_timeout = 15
-    try:
-        # This only exists when flashing, not when cutting
-        if args.flash_timeout is not None:
-            flash_timeout = args.flash_timeout
-    except:
-        pass
+    if args.flash_timeout is not None:
+        flash_timeout = args.flash_timeout
     mqtt.mqtt_connect(device_id, local_key, tornado.ioloop.IOLoop.current(), graceful_exit_timeout=flash_timeout, verbose_output=args.verbose_output)
 
     with open(args.profile, "r") as f:
@@ -321,6 +317,7 @@ def parse_args():
     parser_configure.add_argument("profile", help="Device profile directory to use for detaching")
     parser_configure.add_argument("schema", help="Endpoint schemas directory to use for detaching")
     parser_configure.add_argument("config", help="Device configuration file")
+    parser_configure.add_argument("flash_timeout", help="Not used for cutting mode", type=int)
     parser_configure.add_argument("verbose_output", help="Flag for more verbose output, 'true' for verbose output", type=bool)
     parser_configure.add_argument(
         "--ip",
