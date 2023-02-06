@@ -2,33 +2,58 @@ import base64
 import datetime
 import json
 import os
+import sys
 import time
 from typing import List
 
 import tornado
+
+from cloudcutter.protocol import mqtt
 
 from ..crypto.tuyacipher import TuyaCipher, TuyaCipherKeyChoice
 from ..device import DeviceConfig
 from ..utils import object_to_json
 from .transformers import ResponseTransformer
 
+device_mac = ""
+file_send_finished = False
 
-def log_request(request, decrypted_response_body: str = None):
-    # print a blank line for easier reading
-    print("")
-    print(f'[{datetime.datetime.now().time()} Log (Client)] Request: {request}')
 
-    if len(request.body) > 0:
-        print(f'[{datetime.datetime.now().time()} LOG (Client)] ==== Request body ===')
-        if (decrypted_response_body is not None):
-            print(decrypted_response_body)
+def log_request(endpoint, request, decrypted_request_body, verbose_output: bool = False):
+    clean_request_body: str = ""
+    if len(request.body) > 0 or len(decrypted_request_body) > 0:
+        if (decrypted_request_body is not None):
+            clean_request_body = decrypted_request_body
         else:
-            print(request.body)
-        print(f'[{datetime.datetime.now().time()} LOG (Client)] ==== End request body ===')
+            clean_request_body = request.body
+        if type(clean_request_body) == bytes:
+            clean_request_body = clean_request_body.decode()
+        try:
+            body_json = json.loads(clean_request_body)
+            if body_json['hid'] is not None:
+                mac_str = body_json['hid']
+                mac_iter = iter(mac_str)
+                global device_mac
+                device_mac = ':'.join(a+b for a, b in zip(mac_iter, mac_iter))
+        except:
+            pass
+
+    if verbose_output:
+        # print a blank line for easier reading
+        print("")
+        print(f'[{datetime.datetime.now().time()} Log (Client)] Request: {request}')
+
+        if len(clean_request_body) > 0:
+            print(f'[{datetime.datetime.now().time()} LOG (Client)] ==== Request body ===')
+            print(clean_request_body)
+            print(f'[{datetime.datetime.now().time()} LOG (Client)] ==== End request body ===')
+    else:
+        print(f"Processing endpoint {endpoint}")
 
 
-def log_response(response):
-    print(f'[{datetime.datetime.now().time()} LOG (Server)] Response: ', response)
+def log_response(response, verbose_output: bool = False):
+    if verbose_output:
+        print(f'[{datetime.datetime.now().time()} LOG (Server)] Response: ', response)
 
 
 class TuyaHeadersHandler(tornado.web.RequestHandler):
@@ -56,62 +81,79 @@ class TuyaServerHandler(TuyaHeadersHandler):
 
 
 class GetURLHandler(TuyaHeadersHandler):
-    def initialize(self, ipaddr: str):
+    def initialize(self, ipaddr: str, verbose_output: bool):
         self.ipaddr = ipaddr
+        self.verbose_output = verbose_output
 
     def post(self):
-        log_request(self.request, self.request.body)
+        log_request(self.request.uri, self.request, self.request.body, self.verbose_output)
         response = {"caArr": None, "httpUrl": {"addr": f"http://{self.ipaddr}/d.json", "ips": [self.ipaddr]}, "mqttUrl": {"addr": f"{self.ipaddr}:1883", "ips": [self.ipaddr]}, "ttl": 600}
         response = object_to_json(response)
-        log_response(response)
+        log_response(response, self.verbose_output)
         self.finish(response)
 
 
 class OldSDKGetURLHandler(TuyaHeadersHandler):
-    def initialize(self, ipaddr: str):
+    def initialize(self, ipaddr: str, verbose_output: bool):
         self.ipaddr = ipaddr
+        self.verbose_output = verbose_output
 
     def post(self):
-        log_request(self.request, self.request.body)
+        log_request(self.get_query_argument("a"), self.request, self.request.body, self.verbose_output)
         response = {"caArr": None, "httpUrl": f"http://{self.ipaddr}/d.json", "mqttUrl": f"{self.ipaddr}:1883"}
         response = object_to_json(response)
-        log_response(response)
+        log_response(response, self.verbose_output)
         self.finish(response)
 
 
 class OTAFilesHandler(tornado.web.StaticFileHandler):
+    def initialize(self, path: str, graceful_exit_timeout: int, verbose_output: bool):
+        self.root = self.path = self.absolute_path = path
+        self.graceful_exit_timeout = graceful_exit_timeout
+        self.verbose_output = verbose_output
+
     def prepare(self):
-        log_request(self.request, self.request.body)
-        range_value = self.request.headers.get("Range", "bytes 0-0")
+        log_request(self.request.uri, self.request, self.request.body, self.verbose_output)
+        range_value = self.request.headers.get("Range", "bytes=0-0")
         # get_content_size() is not available in prepare without a lot of overriding work
         # total = self.get_content_size()
-        log_response(range_value)
+        log_response(range_value, self.verbose_output)
 
     def on_finish(self):
-        range_value = self.request.headers.get("Range", "bytes 0-0")
+        range_value = self.request.headers.get("Range", "bytes=0-0")
+        if range_value[:8].startswith('bytes=0-'):
+            global file_send_finished
+            file_send_finished = True
+            # File send will always finish before mqtt sends a status of nearly complete
+            # Leave all logic for shutting down in the mqtt progress check
         total = self.get_content_size()
-        print(f"[{datetime.datetime.now().time()} DEVICE OTA] Responding to device OTA HTTP request range: {range_value}/{total}")
+        timestamp = ""
+        if self.verbose_output:
+            timestamp = datetime.datetime.now().time() + " "
+        print(f"[{timestamp}Firmware Upload] {self.request.uri} send complete, request range: {range_value}/{total}")
 
 
 class DetachHandler(TuyaServerHandler):
     AUTHKEY_ENDPOINTS = ["tuya.device.active", "tuya.device.uuid.pskkey.get"]
 
-    def initialize(self, schema_directory: os.PathLike, config: DeviceConfig, response_transformers: List[ResponseTransformer], endpoint_hooks=None):
+    def initialize(self, schema_directory: os.PathLike, config: DeviceConfig, response_transformers: List[ResponseTransformer], endpoint_hooks, verbose_output: bool):
         super().initialize(config=config)
         self.schema_directory = schema_directory
         self.endpoint_hooks = endpoint_hooks
         self.response_transformers = response_transformers
+        self.verbose_output = verbose_output
 
     def post(self):
         endpoint = self.get_query_argument("a")
         key_choice = TuyaCipherKeyChoice.AUTHKEY if endpoint in self.AUTHKEY_ENDPOINTS else TuyaCipherKeyChoice.SECKEY
         request_body = self.__decrypt_request_body(key_choice)
-        log_request(self.request, request_body)
+        log_request(endpoint, self.request, request_body, self.verbose_output)
+        request_body = json.dumps(request_body)
         response = self.__rework_endpoint_response(endpoint, request_body)
         default_response = {"success": True, "t": int(time.time())}
         if not response:
             response = default_response
-        log_response(response)
+        log_response(response, self.verbose_output)
         self.reply(key_choice, response)
 
     def __rework_endpoint_response(self, endpoint, request_body):
@@ -134,7 +176,7 @@ class DetachHandler(TuyaServerHandler):
                 with open(endpoint_response_path, "r") as responsefs:
                     response = json.load(responsefs)
             else:
-                print(f"!!! Endpoint default response not found - {endpoint}")
+                print(f"!!! Endpoint response not found, using default response - {endpoint} (This is usually okay and safe to ignore unless something isn't working)")
 
         if response is None:
             return None
@@ -152,4 +194,4 @@ class DetachHandler(TuyaServerHandler):
         except:
             print(f"[!] Unable to decrypt device reponse.  PSKKEY/AUTHKEY do not match device.")
             exit(90)
-        return json.loads(decrypted)
+        return decrypted

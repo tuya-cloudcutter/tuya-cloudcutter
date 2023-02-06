@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 TIMESTAMP=`date +%s`
 LOGFILE="logs/log-${TIMESTAMP}.log"
+FLASH_TIMEOUT=15
 
 function getopts-extra () {
     declare i=1
@@ -11,15 +12,17 @@ function getopts-extra () {
     done
 }
 
-while getopts "hrnw:p:f:d:l:s::" flag; do
+while getopts "hrntvw:p:f:d:l:s::" flag; do
 	case "$flag" in
 		r)	RESETNM="true";;
 		n)  DISABLE_RESCAN="true";;
+		v)  VERBOSE_OUTPUT="true";;
 		w)	WIFI_ADAPTER=${OPTARG};;
 		p)	PROFILE=${OPTARG};;
 		f)	FIRMWARE=${OPTARG}
             METHOD_FLASH="true"
             ;;
+		t)  FLASH_TIMEOUT=${OPTARG};;
 		d)	DEVICEID=${OPTARG};;
 		l)	LOCALKEY=${OPTARG};;
 		s)	getopts-extra "$@"
@@ -34,6 +37,7 @@ while getopts "hrnw:p:f:d:l:s::" flag; do
             echo "  -h                Show this message"
             echo "  -r                Reset NetworkManager"
 			echo "  -n				  No Rescan (for older versions of nmcli that don't support it)"
+			echo "  -v				  Verbose log output"
             echo "  -w TEXT           WiFi adapter name (optional, auto-selected if not supplied)"
             echo "  -p TEXT           Device profile name (optional)"
 			echo ""
@@ -44,6 +48,7 @@ while getopts "hrnw:p:f:d:l:s::" flag; do
 			echo ""
             echo "==== 3rd Party Firmware Flashing Only: ===="
             echo "  -f TEXT           Firmware file name (optional)"
+			echo "  -t SECONDS        Timeout in seconds for how long to wait before exiting after receiving firmware update information.  Default is 15"
 			
 			exit 0
 	esac
@@ -98,8 +103,13 @@ source common_run.sh
 
 if [ $METHOD_DETACH ]; then
 	# Cutting device from cloud, allowing local-tuya access still
-	echo "Cutting device off from cloud.."
-	echo "==> Wait for up to 60 seconds for the device to connect to 'cloudcutterflash'. This script will then show the activation requests sent by the device, and tell you whether local activation was successful."
+	echo "Cutting device off from cloud..."
+	echo ""
+	echo "================================================================================"
+	echo "Wait for up to 60 seconds for the device to connect to 'cloudcutterflash'. This script will then show the activation requests sent by the device, and tell you whether local activation was successful."
+	echo "================================================================================"
+	echo ""
+
 	nmcli device set ${WIFI_ADAPTER} managed no; service NetworkManager stop;
 	trap "service NetworkManager start; nmcli device set ${WIFI_ADAPTER} managed yes" EXIT  # Set WiFi adapter back to managed when the script exits
 	INNER_SCRIPT=$(xargs -0 <<- EOF
@@ -109,26 +119,36 @@ if [ $METHOD_DETACH ]; then
 		# with this janky substitutions so that it doesn't break this heredoc script.
 		SSID='${SSID/\'/\'\"\'\"\'}'
 		SSID_PASS='${SSID_PASS/\'/\'\"\'\"\'}'
-		bash /src/setup_apmode.sh ${WIFI_ADAPTER}
-		pipenv run python3 -m cloudcutter configure_local_device --ssid "\${SSID}" --password "\${SSID_PASS}" "${PROFILE}" "/work/device-profiles/schema" "${CONFIG_DIR}"
+		bash /src/setup_apmode.sh ${WIFI_ADAPTER} ${VERBOSE_OUTPUT}
+		pipenv run python3 -m cloudcutter configure_local_device --ssid "\${SSID}" --password "\${SSID_PASS}" "${PROFILE}" "/work/device-profiles/schema" "${CONFIG_DIR}" "${VERBOSE_OUTPUT}"
 	EOF
 	)
 	run_in_docker bash -c "$INNER_SCRIPT"
 	if [ ! $? -eq 0 ]; then
-		echo "Oh no, something went wrong with detaching from the cloud! Try again I guess.."
+		echo "Oh no, something went wrong with detaching from the cloud! Try again I guess..."
+		if [ ! $VERBOSE_OUTPUT ]; then
+			echo "If you need to report an issue, please run with the -v flag and supply the full log of that attempt."
+		fi
 		exit 1
 	fi
 fi
 
 if [ $METHOD_FLASH ]; then
 	# Flash custom firmware to device
-	echo "Flashing custom firmware .."
-	echo "==> Wait for up to 60 seconds for the device to connect to 'cloudcutterflash'. This script will then show the firmware upgrade requests sent by the device."
+	echo "Flashing custom firmware..."
+	echo ""
+	echo "================================================================================"
+	echo "Wait for up to 10-120 seconds for the device to connect to 'cloudcutterflash'. This script will then show the firmware upgrade requests sent by the device."
+	echo "================================================================================"
+	echo ""
 	nmcli device set "${WIFI_ADAPTER}" managed no
 	trap "nmcli device set ${WIFI_ADAPTER} managed yes" EXIT  # Set WiFi adapter back to managed when the script exits
-	run_in_docker bash -c "bash /src/setup_apmode.sh ${WIFI_ADAPTER} && pipenv run python3 -m cloudcutter update_firmware \"${PROFILE}\" \"/work/device-profiles/schema\" \"${CONFIG_DIR}\" \"/work/custom-firmware/\" \"${FIRMWARE}\""
+	run_in_docker bash -c "bash /src/setup_apmode.sh ${WIFI_ADAPTER} ${VERBOSE_OUTPUT} && pipenv run python3 -m cloudcutter update_firmware \"${PROFILE}\" \"/work/device-profiles/schema\" \"${CONFIG_DIR}\" \"/work/custom-firmware/\" \"${FIRMWARE}\" \"${FLASH_TIMEOUT}\" \"${VERBOSE_OUTPUT}\""
 	if [ ! $? -eq 0 ]; then
-		echo "Oh no, something went wrong with updating firmware! Try again I guess.."
+		echo "Oh no, something went wrong with updating firmware! Try again I guess..."
+		if [ ! $VERBOSE_OUTPUT ]; then
+			echo "If you need to report an issue, please run with the -v flag and supply the full log of that attempt."
+		fi
 		exit 1
 	fi
 fi

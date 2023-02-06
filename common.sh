@@ -76,7 +76,7 @@ wifi_connect () {
             AP_MATCHED_NAME=$(nmcli -t -f SSID,SECURITY dev wifi list ${RESCAN_ARG} ifname ${WIFI_ADAPTER} | grep -E ^.*${SSID_REGEX}:$ | awk -F ':' '{print $1}' | head -n1)
         done
 
-        echo -e "\nFound access point name: \"${AP_MATCHED_NAME}\", trying to connect.."
+        echo -e "\nFound access point name: \"${AP_MATCHED_NAME}\", trying to connect..."
         nmcli dev wifi connect "${AP_MATCHED_NAME}" ifname ${WIFI_ADAPTER} name "${AP_MATCHED_NAME}"
 
         # Check if successfully connected
@@ -114,6 +114,6 @@ run_in_docker () {
 }
 
 # Docker prep
-echo "Building cloudcutter docker image.."
+echo "Building cloudcutter docker image"
 build_docker
 echo "Successfully built docker image"

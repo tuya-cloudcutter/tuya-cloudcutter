@@ -2,6 +2,7 @@
 
 GATEWAY=10.42.42.1
 WLAN=${1:-UNKNOWN}
+VERBOSE_OUTPUT=${2:-"false"}
 
 echo "Using WLAN adapter: ${WLAN}"
 
@@ -10,13 +11,11 @@ ip link set dev $WLAN down
 ip addr add $GATEWAY/24 dev $WLAN
 ip link set dev $WLAN up
 
-dnsmasq --no-resolv --interface=$WLAN --bind-interfaces \
-        --listen-address=$GATEWAY --except-interface=lo \
-        --log-dhcp \
-        --log-queries \
-        --log-facility=/dev/stdout \
-        --dhcp-range=10.42.42.10,10.42.42.40,12h \
-        --address=/#/${GATEWAY} -x $(pwd)/dnsmasq.pid
+LOG_OPTIONS=""
+if [ "${VERBOSE_OUTPUT}" == "true" ]; then
+        LOG_OPTIONS="--log-dhcp --log-queries --log-facility=/dev/stdout"
+fi
+dnsmasq --no-resolv --interface=$WLAN --bind-interfaces --listen-address=$GATEWAY --except-interface=lo --dhcp-range=10.42.42.10,10.42.42.40,12h --address=/#/${GATEWAY} -x $(pwd)/dnsmasq.pid $LOG_OPTIONS
 
 mkdir /run/mosquitto
 chown mosquitto /run/mosquitto

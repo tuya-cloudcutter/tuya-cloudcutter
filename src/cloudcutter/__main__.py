@@ -20,15 +20,10 @@ from .crypto.pskcontext import PSKContext
 from .device import DEFAULT_AUTH_KEY, DeviceConfig
 from .exploit import (build_network_config_packet, exploit_device_with_config,
                       send_network_config_datagram)
-from .protocol import mqtt
-from .protocol.handlers import (DetachHandler, GetURLHandler,
-                                OldSDKGetURLHandler, OTAFilesHandler)
+from .protocol import handlers, mqtt
 from .protocol.transformers import ResponseTransformer
 
-# Enable tornado pretty logging for more verbose output by default
-enable_pretty_logging()
-
-dynamic_config_endpoint_hook_triggered = False
+pskkey_endpoint_hook_triggered = False
 
 
 def __configure_local_device_response_transformers(config):
@@ -45,7 +40,6 @@ def __configure_ssid_on_device(ip: str, config: DeviceConfig, ssid: str, passwor
     try:
         device_id = config.get(DeviceConfig.DEVICE_ID)
         local_key = config.get(DeviceConfig.LOCAL_KEY)
-        print(f"{device_id=}, {ip=}, {local_key=}")
         device = tinytuya.Device(device_id, ip, local_key)
         device.connection_timeout = 0.2
 
@@ -65,24 +59,32 @@ def __configure_ssid_on_device(ip: str, config: DeviceConfig, ssid: str, passwor
             time.sleep(0.2)
 
         if trials >= 5:
+            print(f"Device Id: {device_id}")
+            print(f"Local Key: {local_key}")
             print("Failed to set the WiFi AP creds on the device, latest error:")
             print(parsed_data)
             sys.exit(80)
 
         print(f"Device should be successfully onboarded on WiFi AP!  Please allow up to 2 minutes for the device to connect to your specified network.")
+        print(f"Device MAC address: {handlers.device_mac}")
+        print(f"Device Id: {device_id}")
+        print(f"Local Key: {local_key}")
+
         sys.exit(0)
     except Exception:
         print_exc()
         sys.exit(90)
 
 
-def __trigger_firmware_update(config: DeviceConfig):
+def __trigger_firmware_update(config: DeviceConfig, args):
     device_id = config.get(DeviceConfig.DEVICE_ID)
     local_key = config.get(DeviceConfig.LOCAL_KEY)
 
-    mqtt.trigger_firmware_update(device_id=device_id, local_key=local_key, protocol="2.2", broker="127.0.0.1")
-    print(f"[{datetime.datetime.now().time()} MQTT Sending] Triggering firmware update message. Device will download and reset. Exiting in 40 seconds.")
-    tornado.ioloop.IOLoop.current().call_later(40.0, lambda: sys.exit(0))
+    mqtt.trigger_firmware_update(device_id=device_id, local_key=local_key, protocol="2.2", broker="127.0.0.1", verbose_output=args.verbose_output)
+    timestamp = ""
+    if args.verbose_output:
+        timestamp = datetime.datetime.now().time() + " "
+    print(f"[{timestamp}MQTT Sending] Triggering firmware update message.")
 
 
 def __configure_local_device_or_update_firmware(args, update_firmware: bool = False):
@@ -98,7 +100,10 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
     authkey, uuid = config.get_bytes(DeviceConfig.AUTH_KEY, default=DEFAULT_AUTH_KEY), config.get_bytes(DeviceConfig.UUID)
     context = PSKContext(authkey=authkey, uuid=uuid)
     device_id, local_key = config.get(DeviceConfig.DEVICE_ID), config.get(DeviceConfig.LOCAL_KEY)
-    mqtt.mqtt_connect(device_id, local_key)
+    flash_timeout = 15
+    if args.flash_timeout is not None:
+        flash_timeout = args.flash_timeout
+    mqtt.mqtt_connect(device_id, local_key, tornado.ioloop.IOLoop.current(), graceful_exit_timeout=flash_timeout, verbose_output=args.verbose_output)
 
     with open(args.profile, "r") as f:
         combined = json.load(f)
@@ -112,17 +117,17 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
         to either change device SSID or update firmware. Hence, return None.
         """
 
-        global dynamic_config_endpoint_hook_triggered
-        if dynamic_config_endpoint_hook_triggered == False:
-            dynamic_config_endpoint_hook_triggered = True
+        global pskkey_endpoint_hook_triggered
+        if pskkey_endpoint_hook_triggered == False:
+            pskkey_endpoint_hook_triggered = True
             if update_firmware:
                 task_function = __trigger_firmware_update
-                task_args = (config, )
+                task_args = (config, args)
             else:
                 task_args = (handler.request.remote_ip, config, args.ssid, args.password)
                 task_function = __configure_ssid_on_device
 
-            tornado.ioloop.IOLoop.current().call_later(5.0, task_function, *task_args)
+            tornado.ioloop.IOLoop.current().call_later(0, task_function, *task_args)
 
         return None
 
@@ -181,12 +186,12 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
         })
 
     application = tornado.web.Application([
-        (r'/v1/url_config', GetURLHandler, dict(ipaddr=args.ip)),
-        (r'/v2/url_config', GetURLHandler, dict(ipaddr=args.ip)),
+        (r'/v1/url_config', handlers.GetURLHandler, dict(ipaddr=args.ip, verbose_output=args.verbose_output)),
+        (r'/v2/url_config', handlers.GetURLHandler, dict(ipaddr=args.ip, verbose_output=args.verbose_output)),
         # 2018 SDK specific endpoint
-        (r'/device/url_config', OldSDKGetURLHandler, dict(ipaddr=args.ip)),
-        (r'/d.json', DetachHandler, dict(schema_directory=args.schema, response_transformers=response_transformers, config=config, endpoint_hooks=endpoint_hooks)),
-        (f'/files/(.*)', OTAFilesHandler, dict(path="/work/custom-firmware/")),
+        (r'/device/url_config', handlers.OldSDKGetURLHandler, dict(ipaddr=args.ip, verbose_output=args.verbose_output)),
+        (r'/d.json', handlers.DetachHandler, dict(schema_directory=args.schema, response_transformers=response_transformers, config=config, endpoint_hooks=endpoint_hooks, verbose_output=args.verbose_output)),
+        (f'/files/(.*)', handlers.OTAFilesHandler, dict(path="/work/custom-firmware/", graceful_exit_timeout=args.flash_timeout, verbose_output=args.verbose_output)),
     ])
 
     http_server = tornado.httpserver.HTTPServer(application)
@@ -200,6 +205,7 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
     dns_https_server.listen(4433)
 
     tornado.ioloop.IOLoop.current().start()
+    sys.exit(0)
 
 
 def __update_firmware(args):
@@ -311,6 +317,7 @@ def parse_args():
     parser_configure.add_argument("profile", help="Device profile directory to use for detaching")
     parser_configure.add_argument("schema", help="Endpoint schemas directory to use for detaching")
     parser_configure.add_argument("config", help="Device configuration file")
+    parser_configure.add_argument("verbose_output", help="Flag for more verbose output, 'true' for verbose output", type=bool)
     parser_configure.add_argument(
         "--ip",
         dest="ip",
@@ -336,6 +343,8 @@ def parse_args():
     parser_update_firmware.add_argument("config", help="Device configuration file")
     parser_update_firmware.add_argument("firmware_dir", help="Directory containing firmware images")
     parser_update_firmware.add_argument("firmware", help="OTA firmware image to update the device to")
+    parser_update_firmware.add_argument("flash_timeout", help="Number of seconds to wait before exiting after receiving flash", type=int)
+    parser_update_firmware.add_argument("verbose_output", help="Flag for more verbose output, 'true' for verbose output", type=bool)
     parser_update_firmware.add_argument(
         "--ip",
         dest="ip",
@@ -349,6 +358,7 @@ def parse_args():
         help="Exploit a device - requires that the attacking system is on the device's AP"
     )
     parser_exploit_device.add_argument("profile", help="Device profile JSON file (combined)")
+    parser_exploit_device.add_argument("verbose_output", help="Flag for more verbose output, 'true' for verbose output", type=bool)
     parser_exploit_device.add_argument(
         "--output-directory",
         dest="output_directory",
@@ -380,6 +390,7 @@ def parse_args():
     )
     parser_configure_wifi.add_argument("SSID", help="WiFi access point name to make the device join")
     parser_configure_wifi.add_argument("password", help="WiFi access point password")
+    parser_configure_wifi.add_argument("verbose_output", help="Flag for more verbose output, 'true' for verbose output", type=bool)
     parser_configure_wifi.set_defaults(handler=__configure_wifi)
 
     return parser.parse_args()
@@ -387,3 +398,7 @@ def parse_args():
 
 args = parse_args()
 args.handler(args)
+
+if args.verbose_output:
+    # Enable tornado pretty logging for more verbose output by default
+    enable_pretty_logging()
