@@ -1,14 +1,17 @@
 [[package]]
 name = "bk7231tools"
-version = "1.1.9"
+version = "1.3.0"
 description = "Tools to interact with and analyze artifacts for BK7231 MCUs"
 category = "main"
 optional = false
 python-versions = ">=3.7,<4.0"
 
 [package.dependencies]
-pycryptodomex = ">=3.16.0,<4.0.0"
+pycryptodomex = {version = ">=3.16.0,<4.0.0", optional = true, markers = "extra == \"cli\""}
 pyserial = ">=3.5,<4.0"
+
+[package.extras]
+cli = ["pycryptodomex (>=3.16.0,<4.0.0)"]
 
 [[package]]
 name = "pycryptodomex"
@@ -40,12 +43,12 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7,<4.0"
-content-hash = "79b4cd5c2708b4a0137d98d7d2c7aa923d52576a9ba5b5b0f2a6b3e0e2956392"
+content-hash = "d5ad744732feaeb3c5874aa3aa27d5a746fe373d089ea11c688c0fd46ed9244c"
 
 [metadata.files]
 bk7231tools = [
-    {file = "bk7231tools-1.1.9-py3-none-any.whl", hash = "sha256:ca666e703b15bebb6126f30abb96235f692cc3b1b37546a7640dd3392087df13"},
-    {file = "bk7231tools-1.1.9.tar.gz", hash = "sha256:02c8cdc8a7c5af21a5b4ed62db94dd8586f06bc09ef651b81067968841344b5c"},
+    {file = "bk7231tools-1.3.0-py3-none-any.whl", hash = "sha256:0a6786d90cb7a2c3b208d1011c9db980ff5e43e533ffb1a48692a2b1c4a1f531"},
+    {file = "bk7231tools-1.3.0.tar.gz", hash = "sha256:43153d2707c319631b59bc56225df6b904da82ac2ec88b76238c32db9e87eae6"},
 ]
 pycryptodomex = [
     {file = "pycryptodomex-3.16.0-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:b3d04c00d777c36972b539fb79958790126847d84ec0129fce1efef250bfe3ce"},

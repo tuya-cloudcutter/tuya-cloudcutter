@@ -2,6 +2,15 @@
 
 You can now generate universal and classic profile by using a series of scripts that will build working profiles provided enough information is present in the dumped bins.  You will need a full 2M bin dump, including storage in order to properly build profiles.  Decrypted app-only or bins without storage are no longer acceptible, as they are missing crucial parts for building a complete profile.
 
+## Requirements
+
+Profile building requires the following packages:
+* python 3.7 or greater
+* bk7231tools[cli] (bk7231tools with cli extras package)
+* sslpsk2
+
+You can install the packages using the command `pip install .` from the profile-building directory.
+
 ## Usage
 
 The only file you should need to run is `build_profile.py`, all other necessary scripts will be called from that script, and will properly guide you through making a complete and usable profile, should all necessary data be present.
