@@ -99,7 +99,7 @@ class OldSDKGetURLHandler(TuyaHeadersHandler):
         self.verbose_output = verbose_output
 
     def post(self):
-        log_request(self.get_query_argument("a"), self.request, self.request.body, self.verbose_output)
+        log_request(self.request.uri, self.request, self.request.body, self.verbose_output)
         response = {"caArr": None, "httpUrl": f"http://{self.ipaddr}/d.json", "mqttUrl": f"{self.ipaddr}:1883"}
         response = object_to_json(response)
         log_response(response, self.verbose_output)
