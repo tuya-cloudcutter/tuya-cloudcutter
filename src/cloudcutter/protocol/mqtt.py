@@ -9,6 +9,7 @@ import base64
 import binascii
 import datetime
 import json
+import os
 import sys
 import time
 from hashlib import md5
@@ -108,9 +109,13 @@ def on_message(client, userdata, message):
             print("Flashing should be complete.  It takes about 15 seconds for the device to reboot and verify the flash was valid.")
             print("Please wait about 30 seconds then look for signs of activity from the firmware you supplied (either watch for AP mode or check if it joined your network).")
             print(f"Device MAC address: {handlers.device_mac}")
-            client.tornadoIoLoop.stop()
-            client.disconnect()
-            sys.exit(0)
+            try:
+                client.tornadoIoLoop.stop()
+                client.loop_stop()
+                client.disconnect()
+                sys.exit(0)
+            finally:
+                os._exit(0)
 
 
 def trigger_firmware_update(device_id, local_key, protocol="2.2", broker="127.0.0.1", verbose_output: bool = False):
