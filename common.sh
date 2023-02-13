@@ -12,8 +12,8 @@ fi
 
 if [ "${WIFI_ADAPTER}" == "" ]; then
 	echo "[!] Unable to auto-detect wifi adapter.  Please use the '-w' argument to pass in a wifi adapter."
-	echo "See '{$0} -h' for more information."
-	return 0
+	echo "See '$0 -h' for more information."
+	exit 1
 fi
 
 SUPPORTS_AP=$(nmcli -f wifi-properties device show ${WIFI_ADAPTER} | grep WIFI-PROPERTIES.AP | awk -F ' ' '{print $2}')
