@@ -18,6 +18,13 @@ Additionally, please be aware that this software is experimental and provided wi
 ## How does it work?
 If you're curious about the vulnerability and how the exploit chain works, here's the [detailed writeup](https://rb9.nl/posts/2022-03-29-light-jailbreaking-exploiting-tuya-iot-devices/) and the [proof of concept script](./proof-of-concept/poc.py).
 
+## Requirements
+* A device with a stand-alone wifi adapter (but not be your primary source of networking, ethernet is preferred for that)
+* An account with sudo / elevated privlidges - An account capable of making network setting changes.
+* NetworkManager / nmcli - This is used to scan for Tuya APs, connect to them, and host a CloudCutter AP to run the exploit.  If you run into issues, make sure your NetworkManager service is started.  You may need to use the `-r` parameter if you continue to have issues.
+* Docker / Docker CLI package - This is used to create a controlled python environment to handle and run the exploit
+* An active internet connection (Somewhat optional) - This is used to download the packages to build the docker container and to download new device profiles.
+
 ## Usage
 Check out [usage instructions](./INSTRUCTIONS.md) for info about **flashing custom firmware** and local **cloud-less usage (detaching)**. There are also [some host specific instructions for setups on devices like a Raspberry Pi](./HOST_SPECIFIC_INSTRUCTIONS.md).
 
