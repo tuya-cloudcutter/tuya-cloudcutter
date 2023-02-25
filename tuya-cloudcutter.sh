@@ -100,6 +100,7 @@ if [ $METHOD_FLASH ]; then
 fi
 
 source common_run.sh
+source safety_checks.sh
 
 if [ $METHOD_DETACH ]; then
 	# Cutting device from cloud, allowing local-tuya access still

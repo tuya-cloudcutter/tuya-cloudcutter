@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-source safety_checks.sh
-
 AP_MATCHED_NAME=""
 AP_CONNECTED_ENDING=""
 FIRST_WIFI=$(nmcli device status | grep " wifi " | head -n1 | awk -F ' ' '{print $1}')
