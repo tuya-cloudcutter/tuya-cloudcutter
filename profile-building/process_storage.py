@@ -14,6 +14,7 @@ def dump(file):
         global base_name, base_folder
         base_name = os.path.basename(file)[:-13]
         base_folder = os.path.dirname(file)
+        hasProductKey = False
         print(f"[+] uuid: {storage['gw_bi']['uuid']}")
         write_file("uuid", storage['gw_bi']['uuid'])
         print(f"[+] auth_key: {storage['gw_bi']['auth_key']}")
@@ -36,6 +37,7 @@ def dump(file):
             if 'pk' in storage['gw_di'] and storage['gw_di']['pk'] is not None:
                 print(f"[+] product key: {storage['gw_di']['pk']}")
                 write_file("product_key", storage['gw_di']['pk'])
+                hasProductKey = True
             if 's_id' in storage['gw_di'] and storage['gw_di']['s_id'] is not None:
                 schema_id = storage['gw_di']['s_id']
                 if schema_id in storage:
@@ -43,6 +45,11 @@ def dump(file):
                     print(f"[+] schema {schema_id}:")
                     write_file("schema_id", schema_id)
                     write_file("schema", json.dumps(storage[schema_id]))
+        if not hasProductKey and 'gw_bi' in storage:
+            if 'fac_pin' in storage['gw_bi']:
+                print(f"[+] product key: {storage['gw_bi']['fac_pin']}")
+                write_file("product_key", storage['gw_bi']['fac_pin'])
+                hasProductKey = True
         else:
             print("[!] No gw_di, No version or key stored, manual lookup required")
             write_file("manually_process", "No version or key stored, manual lookup required")
