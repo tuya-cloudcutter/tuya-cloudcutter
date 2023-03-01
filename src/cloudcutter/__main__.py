@@ -83,7 +83,7 @@ def __trigger_firmware_update(config: DeviceConfig, args):
     mqtt.trigger_firmware_update(device_id=device_id, local_key=local_key, protocol="2.2", broker="127.0.0.1", verbose_output=args.verbose_output)
     timestamp = ""
     if args.verbose_output:
-        timestamp = datetime.datetime.now().time() + " "
+        timestamp = str(datetime.datetime.now().time()) + " "
     print(f"[{timestamp}MQTT Sending] Triggering firmware update message.")
 
 
