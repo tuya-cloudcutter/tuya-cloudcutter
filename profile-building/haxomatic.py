@@ -130,7 +130,7 @@ def process_generic(chipset, pattern_version, payload_type, payload_padding, pay
     print(f"[+] Matched pattern for {chipset} version {pattern_version}, payload type {payload_type}")
 
     patch_patterns = [
-        "2d6811226b1dff33181c002103930bf0f3fb301c0bf054fb1022904200d8021c",  # BK7231N 2.3.3 Patched
+        "2d6811226b1dff33181c002103930bf0",  # BK7231N 2.3.3 Patched
     ]
 
     for patch_pattern in patch_patterns:
