@@ -83,7 +83,7 @@ def get_new_token():
     print("[!]  Note: no real device should currently be in pairing mode, or the instructions below may not match.")
     print("[!]  - Start the add device procedure (hit '+' in the upper-right and select 'Add Device')")
     print("[!]  - Under 'Add Manually' select 'Socket (Wi-Fi)'")
-    print("[!}  - Enter your network credentials as instructed")
+    print("[!]  - Enter your network credentials as instructed")
     print("[!]  - Do not follow any of the instructions about putting a device into pairing mode, instead select 'next' until it asks the status of the indicator and select 'Blink Slowly'")
     print("[!]  - Select 'Go to Connect', then in your wifi selection screen, hit the back button to return to Smart Life.")
     print("[!] A new token should be sent to your network, and this script will continue.")
