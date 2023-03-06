@@ -129,7 +129,7 @@ class OTAFilesHandler(tornado.web.StaticFileHandler):
         total = self.get_content_size()
         timestamp = ""
         if self.verbose_output:
-            timestamp = datetime.datetime.now().time() + " "
+            timestamp = str(datetime.datetime.now().time()) + " "
         print(f"[{timestamp}Firmware Upload] {self.request.uri} send complete, request range: {range_value}/{total}")
 
 
