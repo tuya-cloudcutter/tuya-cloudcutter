@@ -31,8 +31,8 @@ cancel_thread = False
 
 
 def print_help():
-    print('Usage: python pull_schema.py --input <uuid> <auth_key> <product_key or empty string ""> <firmware_key or empty string ""> <software_version> <baseline_version> <token>')
-    print('   or: python pull_schema.py --directory <directory> <token>')
+    print('Usage: python check_upgrade.py --input <uuid> <auth_key> <dev_id> <sec_key> <token>')
+    print('   or: python check_upgrade.py --directory <directory> <token>')
     sys.exit(1)
 
 
@@ -49,29 +49,22 @@ def print_and_exit(printText):
     sys.exit(2)
 
 
-def build_params(epoch_time, uuid):
+def build_params(epoch_time, devId):
     params = {
-        "a": "tuya.device.active",
+        "a": "tuya.device.upgrade.get",
         "et": 1,
         "t": epoch_time,
-        "uuid": uuid,
-        "v": "4.4",
+        "devId": devId,
+        "v": "4.3",
     }
 
     return params
 
 
-def build_data(epoch_time, reduced_token, product_key, software_version, baseline_version='40.00', cad_version='1.0.2', cd_version='1.0.0', protocol_version='2.2', is_fk: bool = True):
+def build_data(epoch_time):
     data = {
-        'token': reduced_token,
-        'softVer': software_version,
-        'productKey': product_key,
-        'protocolVer': protocol_version,
-        'baselineVer': baseline_version,
-        'cadVer': cad_version,
-        'cdVer': cd_version,
-        'options': '{"isFK":' + str(is_fk).lower() + '}',
-        't': epoch_time,
+        'type': '0',
+        't': epoch_time
     }
 
     return data
@@ -128,22 +121,15 @@ def receive_token():
             pass
 
 
-def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, product_key: str, firmware_key: str, software_version: str, baseline_version: str = '40.00', cad_version: str = '1.0.2', cd_version: str = '1.0.0', protocol_version='2.2', token: str = None):
+def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, dev_id: str, sec_key: str, token: str = None):
     if uuid is None or len(uuid) != 16:
-        if product_key is not None and len(product_key) == 16:
-            uuid = product_key
-        else:
-            print_and_exit('required uuid was not found or was invalid (expected 16 characters)')
+        print_and_exit('required uuid was not found or was invalid (expected 16 characters)')
     if auth_key is None or len(auth_key) != 32:
         print_and_exit('required auth_key was not found or was invalid (expected 32 characters)')
-    if (product_key is None or len(product_key) == 0) and (firmware_key is None or len(firmware_key) == 0):
-        print_and_exit('required product_key or firmware_key was not found or was invalid (expected 16 characters)')
-    if software_version is None or len(software_version) < 5:
-        print_and_exit('required softVer was not found or was invalid (expected >= 5 characters)')
-    if cad_version is None or len(cad_version) < 5:
-        print_and_exit('required cadVer was not found or was invalid (expected >= 5 characters)')
-    if baseline_version is None or len(baseline_version) < 5:
-        print_and_exit('required baselineVer was not found or was invalid (expected 5 characters)')
+    if dev_id is None or len(dev_id) != 22:
+        print_and_exit('required dev_id was not found or was invalid (expected 22 characters)')
+    if sec_key is None or len(sec_key) != 16:
+        print_and_exit('required sec_key was not found or was invalid (expected 16 characters)')
 
     if token is None or len(token) != 14:
         token = get_new_token()
@@ -174,65 +160,44 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, produ
     reduced_token = token[2:]
     reduced_token = reduced_token[:8]
     assert len(reduced_token) == 8
-    print(f'Using token: {token} product_key: {product_key} firmware_key: {firmware_key}')
-    # tuya.device.active encrypts with auth_key
-    connection = TuyaAPIConnection(uuid, auth_key)
+    print(f'Using token: {token} uuid: {uuid} sec_key: {sec_key}')
+    # tuya.device.upgrade.get encrypts with sec_key
+    connection = TuyaAPIConnection(uuid, sec_key)
     url = f"http://a.tuya{region}.com/d.json"
     epoch_time = int(time.time())
-    params = build_params(epoch_time, uuid)
+    params = build_params(epoch_time, dev_id)
     response = None
     requestType = "POST"
 
-    responseCodesToContinueAter = ['FIRMWARE_NOT_MATCH', 'APP_PRODUCT_UNSUPPORT', 'NOT_EXISTS']
-
-    if product_key is not None:
-        data = build_data(epoch_time, reduced_token, product_key, software_version, baseline_version, cad_version, cd_version, protocol_version, False)
-        response = connection.request(url, params, data, requestType)
-
-        if response["success"] == False and response["errorCode"] in responseCodesToContinueAter:
-            data = build_data(epoch_time, reduced_token, product_key, software_version, baseline_version, cad_version, cd_version, protocol_version, True)
-            response = connection.request(url, params, data, requestType)
-
-    if product_key != firmware_key:
-        if (response is None or (response is not None and response["success"] == False and response["errorCode"] != "EXPIRE")) and firmware_key is not None:
-            data = build_data(epoch_time, reduced_token, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, True)
-            response = connection.request(url, params, data, requestType)
-
-            if response["success"] == False and response["errorCode"] in responseCodesToContinueAter:
-                data = build_data(epoch_time, reduced_token, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, False)
-                response = connection.request(url, params, data, requestType)
+    data = build_data(epoch_time)
+    response = connection.request(url, params, data, requestType)
 
     if response["success"] == True:
-        print(f"[+] Schema Id: {response['result']['schemaId']}")
-        print(f"[+] Schema: {response['result']['schema']}")
-        with open(os.path.join(directory, output_file_prefix + "_schema_id.txt"), 'w') as f:
-            f.write(response['result']['schemaId'])
-        with open(os.path.join(directory, output_file_prefix + "_schema.txt"), 'w') as f:
-            f.write(response['result']['schema'])
-        with open(os.path.join(directory, output_file_prefix + "_dev_id.txt"), 'w') as f:
-            f.write(response['result']['devId'])
-        with open(os.path.join(directory, output_file_prefix + "_sec_key.txt"), 'w') as f:
-            f.write(response['result']['secKey'])
+        if response.get('result') is not None:
+            version = response['result']['version']
+            url = response['result']['url']
+            print("[+] Firmware update available:")
+            print(f"[+] Version: {version}")
+            print(f"[+] Url: {url}")
+            with open(os.path.join(directory, output_file_prefix + f"_firmware_{version}.txt"), 'w') as f:
+                f.write(url)
+        else:
+            print("[+] No firmware update available.")
     elif response["success"] == False and response["errorCode"] == 'EXPIRE':
         print("[!] The token provided has either expired, or you are connected to the wrong region")
     else:
         print(response)
 
 
-def run_input(uuid, auth_key, product_key, firmware_key, software_version, baseline_version='40.00', cad_version='1.0.2', cd_version='1.0.0', protocol_version='2.2', token=None):
-    run('.\\', 'device', uuid, auth_key, product_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, token)
+def run_input(uuid, auth_key, dev_id, sec_key, token=None):
+    run('.\\', 'device', uuid, auth_key, dev_id, sec_key, token)
 
 
 def run_directory(directory, token=None):
     uuid = None
     auth_key = None
-    product_key = None
-    firmware_key = None
-    software_version = None
-    baseline_version = '40.00'
-    cad_version = '1.0.2'
-    cd_version = '1.0.0'
-    protocol_version = '2.2'
+    dev_id = None
+    sec_key = None
     output_file_prefix = None
 
     dirListing = os.listdir(f'{directory}')
@@ -242,14 +207,10 @@ def run_directory(directory, token=None):
             uuid = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_auth_key.txt'):
             auth_key = read_single_line_file(os.path.join(directory, file))
-        elif file.endswith('_product_key.txt'):
-            product_key = read_single_line_file(os.path.join(directory, file))
-        elif file.endswith('_firmware_key.txt'):
-            firmware_key = read_single_line_file(os.path.join(directory, file))
-        elif file.endswith('_swv.txt'):
-            software_version = read_single_line_file(os.path.join(directory, file))
-        elif file.endswith('_bv.txt'):
-            baseline_version = read_single_line_file(os.path.join(directory, file))
+        elif file.endswith('_dev_id.txt'):
+            dev_id = read_single_line_file(os.path.join(directory, file))
+        elif file.endswith('_sec_key.txt'):
+            sec_key = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_chip.txt'):
             output_file_prefix = file.replace('_chip.txt', '')
 
@@ -259,17 +220,14 @@ def run_directory(directory, token=None):
     if auth_key is None:
         print('[!] auth_key was not found')
         return
-    if (product_key is None or product_key == '') and (firmware_key is None or firmware_key == ''):
-        print('[!] product_key or firmware_key was not found, at least one must be provided')
+    if dev_id is None:
+        print('[!] dev_id was not found')
         return
-    if software_version is None:
-        print('[!] software_version was not found')
-        return
-    if baseline_version is None:
-        print('[!] baseline_version was not found')
+    if sec_key is None:
+        print('[!] sec_key was not found')
         return
 
-    run(directory, output_file_prefix, uuid, auth_key, product_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, token)
+    run(directory, output_file_prefix, uuid, auth_key, dev_id, sec_key, token)
 
 
 if __name__ == '__main__':
@@ -281,13 +239,10 @@ if __name__ == '__main__':
                 print_help()
             uuid = sys.argv[2]
             auth_key = sys.argv[3]
-            product_key = sys.argv[4]
-            firmware_key = sys.argv[5]
-            software_version = sys.argv[6]
-            cad_version = ('1.0.2' if sys.argv[7] is None else sys.argv[7])
-            baseline_version = ('40.00' if sys.argv[8] is None else sys.argv[8])
+            dev_id = sys.argv[4]
+            sec_key = sys.argv[5]
             token = sys.argv[9]
-            run_input(uuid, auth_key, product_key, firmware_key, software_version, cad_version, baseline_version, token)
+            run_input(uuid, auth_key, dev_id, sec_key, token)
         elif sys.argv[1] == '--directory':
             if not sys.argv[2:]:
                 print('Unrecognized input.')

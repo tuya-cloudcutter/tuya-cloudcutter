@@ -45,7 +45,11 @@ if __name__ == '__main__':
     haxomatic.run(app_file)
     process_storage.run(storage_file)
     process_app.run(app_file)
-    pull_schema.run_directory(extracted_location, token)
+
+    if not os.path.exists(schema_id_file):
+        pull_schema.run_directory(extracted_location, token)
+    else:
+        print('[+] Schema already present')
 
     if not os.path.exists(schema_id_file):
         print("[!] Unable to build complete profile as schema remains missing.")
