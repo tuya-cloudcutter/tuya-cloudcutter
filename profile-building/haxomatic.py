@@ -42,8 +42,17 @@ def walk_app_code():
     if b'TUYA' not in appcode:
         raise RuntimeError('[!] App binary does not appear to be correctly decrypted, or has no Tuya references.')
 
-    # Older versions of BK7231T, BS version 30.0x, SDK 2.0.0
-    if b'TUYA IOT SDK V:2.0.0' in appcode and b'AT 8710_2M' in appcode:
+    # Older versions of BK7231T, BS version 30.04, SDK 2.0.0
+    if b'TUYA IOT SDK V:2.0.0 BS:30.04' in appcode and b'AT 8710_2M' in appcode:
+        # 04 1e 2c d1 11 9b is the byte pattern for datagram payload
+        # 3 matches, 2nd is correct
+        # 2b 68 30 1c 98 47 is the byte pattern for finish addess
+        # 1 match should be found
+        process_generic("BK7231T", "SDK 2.0.0 8710_2M", "datagram", 0, "041e2cd1119b", 1, 0, "2b68301c9847", 1, 0)
+        return
+
+    # Older versions of BK7231T, BS version 30.05/30.06, SDK 2.0.0
+    if (b'TUYA IOT SDK V:2.0.0 BS:30.05' in appcode or b'TUYA IOT SDK V:2.0.0 BS:30.06' in appcode) and b'AT 8710_2M' in appcode:
         # 04 1e 07 d1 11 9b 21 1c 00 is the byte pattern for datagram payload
         # 3 matches, 2nd is correct
         # 2b 68 30 1c 98 47 is the byte pattern for finish addess
