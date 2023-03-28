@@ -120,6 +120,11 @@ def walk_app_code():
         process_generic("BK7231N", "SDK 2.3.3 LAN 3.4/CAD 1.0.5", "ssid", 4, "051e00d1fce6", 1, 0, "4368201c9847", 1, 0)
         return
 
+    # TuyaOS V3+, patched
+    if b'TuyaOS V:3' in appcode:
+        print("[!] The binary supplied appears to be patched and no longer vulnerable to the tuya-cloudcutter exploit.")
+        sys.exit(5)
+
     raise RuntimeError('Unknown pattern, please open a new issue and include the bin.')
 
 
