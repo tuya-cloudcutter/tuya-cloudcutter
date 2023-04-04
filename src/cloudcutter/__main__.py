@@ -41,7 +41,7 @@ def __configure_ssid_on_device(ip: str, config: DeviceConfig, ssid: str, passwor
         device_id = config.get(DeviceConfig.DEVICE_ID)
         local_key = config.get(DeviceConfig.LOCAL_KEY)
         device = tinytuya.Device(device_id, ip, local_key)
-        device.connection_timeout = 0.2
+        device.connection_timeout = 0.5
 
         payload = {"ssid": ssid}
         if password:
@@ -56,7 +56,7 @@ def __configure_ssid_on_device(ip: str, config: DeviceConfig, ssid: str, passwor
             # Once device joins SSID, we get a timeout / connection error, which adds "Err" attribute. We'll wait for that to happen.
             parsed_data = device._send_receive(device.generate_payload_raw(command=0x0f, retcode=0x0, data=payload, skip_header=False), minresponse=0)
             trials += 1
-            time.sleep(0.2)
+            time.sleep(0.5)
 
         if trials >= 5:
             print(f"Device Id: {device_id}")
