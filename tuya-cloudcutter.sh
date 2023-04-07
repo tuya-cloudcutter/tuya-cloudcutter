@@ -39,7 +39,7 @@ while getopts "hrntvw:p:f:d:l:s::" flag; do
 			echo "  -n				  No Rescan (for older versions of nmcli that don't support it)"
 			echo "  -v				  Verbose log output"
             echo "  -w TEXT           WiFi adapter name (optional, auto-selected if not supplied)"
-            echo "  -p TEXT           Device profile name (optional)"
+            echo "  -p TEXT           Device profile name, AKA Device Slug (optional)"
 			echo ""
             echo "==== Detaching Only: ===="
             echo "  -s SSID PASSWORD  Wifi SSID and Password to use for detaching.  Use quotes if either value contains spaces.  Certain special characters may need to be escaped with '\\'"
