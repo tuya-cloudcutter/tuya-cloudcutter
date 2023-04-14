@@ -57,9 +57,4 @@ Knowing this, you can run `sudo ./tuya-cloudcutter.sh` without any parameters. T
 
 ### Custom firmware options
 
-There are custom firmware projects already available for BK7231 (*in alphabetical order*):
-
-- [ESPHome](https://github.com/kuba2k2/libretuya-esphome), based on [LibreTuya core](https://github.com/kuba2k2/libretuya) / [docs](https://docs.libretuya.ml/docs/projects/esphome/) - ESPHome is a system to control your devices by simple yet powerful configuration files and control them remotely through Home Automation systems
-- [OpenBK7231T_App](https://github.com/openshwprojects/OpenBK7231T_App) (OpenBeken) / [wiki](https://github.com/openshwprojects/OpenBK7231T_App/wiki/Wiki-Home) - Tasmota/Esphome replacement for new Tuya modules featuring MQTT and Home Assistant compatibility
-
-If your app/project/firmware is not listed here, and you want it to be, feel free to submit a PR.
+Please see the [wiki](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/FAQ#what-custom-firmware-options-are-available) for information about available 3rd party firmware.

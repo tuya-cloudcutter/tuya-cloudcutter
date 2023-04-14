@@ -29,7 +29,7 @@ If you're curious about the vulnerability and how the exploit chain works, here'
 Check out [usage instructions](./INSTRUCTIONS.md) for info about **flashing custom firmware** and local **cloud-less usage (detaching)**. There are also [some host specific instructions for setups on devices like a Raspberry Pi](./HOST_SPECIFIC_INSTRUCTIONS.md).
 
 ## FAQ
-Please see the [FAQ](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/FAQ) section of the wiki for the most up-to-date questions and answers.
+Please see the [FAQ](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/FAQ) section of the wiki for the most up-to-date questions and answers.  This will cover many things like how to get your device into pairing mode, how to find more information about your device like the current firmware installed, and is expanding as new questions are asked/answered.  Additionally, you may want to consider searching [issues](https://github.com/tuya-cloudcutter/tuya-cloudcutter/issues?q=is%3Aissue);
 
 ## Contribution
 We'd be happy to receive your contributions! One way to contribute if you already know your way around some binary exploitation or would like to get your hands into it is by building device profiles to support more exploitable devices. Check out the [detailed writeup](https://rb9.nl/posts/2022-03-29-light-jailbreaking-exploiting-tuya-iot-devices/) for the information about the vulnerability and exploit chain.
