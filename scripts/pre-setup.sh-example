@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# If this script exists, it is called before the main script is run, after some initial basic checks have been performed.
+
+# This example turns on the device that is connected to a smart switch via MQTT
+# tuya-cloudcutter should be called, for example:
+# sudo MQTT_HOST=10.0.0.1 SWITCH_TOPIC=cmnd/flashing/power1 ./tuya-cloudcutter.sh
+# Or, for something more automatic, include the full configuration, eg:
+# sudo MQTT_HOST=10.0.0.1 SWITCH_TOPIC=cmnd/flashing/power1 ./tuya-cloudcutter.sh -f OpenBK7231N_UG_1.15.648.bin -p mirabella-genio-i003332-fancy-round-5w-rgbct-bulb -r
+
+# The script could also be called from another script to flash several devices at once, eg:
+# #!/usr/bin/env bash
+# # Flash 4 devices at once
+# echo Flashing via port 1
+# MQTT_HOST=10.0.0.1 SWITCH_TOPIC=cmnd/flashing/power1 ./tuya-cloudcutter.sh -f OpenBK7231N_UG_1.15.648.bin -p mirabella-genio-i003332-fancy-round-5w-rgbct-bulb -r
+#
+# echo Flashing via port 2
+# MQTT_HOST=10.0.0.1 SWITCH_TOPIC=cmnd/flashing/power2 ./tuya-cloudcutter.sh -f OpenBK7231N_UG_1.15.648.bin -p mirabella-genio-i003332-fancy-round-5w-rgbct-bulb -r
+#
+# echo Flashing via port 3
+# MQTT_HOST=10.0.0.1 SWITCH_TOPIC=cmnd/flashing/power3 ./tuya-cloudcutter.sh -f OpenBK7231N_UG_1.15.648.bin -p mirabella-genio-i003332-fancy-round-5w-rgbct-bulb -r
+#
+# echo Flashing via port 4
+# MQTT_HOST=10.0.0.1 SWITCH_TOPIC=cmnd/flashing/power4 ./tuya-cloudcutter.sh -f OpenBK7231N_UG_1.15.648.bin -p mirabella-genio-i003332-fancy-round-5w-rgbct-bulb -r
+
+
+# Turn on the device
+mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m ON

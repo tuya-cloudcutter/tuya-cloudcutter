@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# This runs after the device has been flashed
+# This example connects to the new AP it creates, and configures the device using
+# the configure-downlight.py script
+# It then restores and restarts the network services, used on Ubuntu 20.04
+
+python3 scripts/configure-downlight.py
+
+
+sudo cp -ra /root/system-connections/ /etc/NetworkManager/
+sudo systemctl restart NetworkManager
+sudo systemctl enable systemd-resolved.service
+sudo systemctl start systemd-resolved.service

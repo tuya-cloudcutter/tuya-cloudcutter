@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# If this script exists, it is called before the local safety checks, including checking 
+# if there are local services running on required ports.
+
+# This example forcebily shuts down systemd-resolved, and keeps it down, removing the
+# need to prompt the user to shut it down while running.
+
+sudo systemctl disable systemd-resolved.service
+sudo systemctl stop systemd-resolved.service

@@ -23,6 +23,15 @@ if [ "${SUPPORTS_AP}" != "yes" ]; then
 	read -n 1 -s -r -p "Press any key to continue, or CTRL+C to exit"
 fi
 
+function run_helper_script () {
+    if [ -f "scripts/${1}.sh" ]; then
+        echo "Running helper script '${1}'"
+        source "scripts/${1}.sh"
+    else
+        echo "Helper script '${1}' not found, skipping"
+    fi
+}
+
 reset_nm () {
 
 if [ -z ${RESETNM+x} ]; then

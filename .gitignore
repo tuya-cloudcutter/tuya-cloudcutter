@@ -151,3 +151,12 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 /actual-devices/
+
+
+# Don't add users sepecific scripts to the repo
+scripts/*.sh
+scripts/*.py
+
+
+
+.DS_Store
