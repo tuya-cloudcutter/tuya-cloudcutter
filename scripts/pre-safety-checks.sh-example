@@ -3,7 +3,8 @@
 # if there are local services running on required ports.
 
 # This example forcebily shuts down systemd-resolved, and keeps it down, removing the
-# need to prompt the user to shut it down while running.
-
-sudo systemctl disable systemd-resolved.service
+# need to prompt the user to shut it down while running. 
+# Note if using this script, you will need to manually enable systemd-resolved.service
+# after the device has been flashed.
+# sudo systemctl disable systemd-resolved.service
 sudo systemctl stop systemd-resolved.service
