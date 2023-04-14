@@ -191,9 +191,12 @@ def write_profile(ctx, slug: str):
     profiles_dir = ctx.obj["profiles_dir"]
     profile_dir = join(profiles_dir, device_slug)
     # try to find device and profile JSON files
+    device, profile = None, None
     if isdir(profile_dir):
         device, profile = load_profile(profile_dir)
-    else:
+        if device is None or profile is None:
+            print("Custom device or profile is not present, attempting to download from API.")
+    if device is None or profile is None:
         device, profile = download_profile(device_slug)
         save_profile(profile_dir, device, profile)
     # write profile data if found
