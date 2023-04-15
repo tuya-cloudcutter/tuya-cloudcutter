@@ -6,7 +6,7 @@ OpenBK7231N_App firmware.
 It was used on a Ubuntu 20.04 machine, but should be customized for your own use case.
 Search this file for "here>" to find the places that need to be customized.
 
-See pre-setup.sh-example for example usage
+See scripts/README.md for example usage
 
 
 You will need to install requests and paho-mqtt:
