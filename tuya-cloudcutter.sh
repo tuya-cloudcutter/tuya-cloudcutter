@@ -62,6 +62,8 @@ fi
 
 source common.sh
 
+run_helper_script "pre-setup"
+
 if [ ! $METHOD_DETACH ] && [ ! $METHOD_FLASH ]; then
     PS3="[?] Select your desired operation [1/2]: "
     select method in "Detach from the cloud and run Tuya firmware locally" "Flash 3rd Party Firmware"; do
@@ -100,6 +102,8 @@ if [ $METHOD_FLASH ]; then
 fi
 
 source common_run.sh
+
+run_helper_script "pre-safety-checks"
 source safety_checks.sh
 
 if [ $METHOD_DETACH ]; then
@@ -153,3 +157,5 @@ if [ $METHOD_FLASH ]; then
 		exit 1
 	fi
 fi
+
+run_helper_script "post-flash"

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# If this script exists, it is called before the main script is run, after some initial basic checks have been performed.
+
+# This example turns on the device that is connected to a smart switch via MQTT
+# See pre-setup.sh-example for example usage
+
+# Turn on the device
+mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m ON

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# This runs before the second time we attempt to connect to the AP on the device
+# This example uses a smart plug running via MQTT to put the device into AP mode automatically
+# See scripts/README.md for example usage
+
+mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m OFF
+sleep 5
+mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m ON
+sleep 5
+
+mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m OFF; sleep 1.4; mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m ON; sleep 1.4
+mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m OFF; sleep 1.4; mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m ON; sleep 1.4
+mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m OFF; sleep 1.4; mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m ON; sleep 1.4
+mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m OFF; sleep 1.4; mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m ON; sleep 1.4
+mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m ON
+
+sleep 10
+mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m OFF; sleep 1.4; mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m ON; sleep 1.4
+mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m OFF; sleep 1.4; mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m ON; sleep 1.4
+mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m OFF; sleep 1.4; mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m ON; sleep 1.4
+mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m OFF; sleep 1.4; mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m ON; sleep 1.4
+mosquitto_pub -h $MQTT_HOST -t $SWITCH_TOPIC -m ON
+
