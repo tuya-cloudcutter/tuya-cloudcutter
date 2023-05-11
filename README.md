@@ -31,6 +31,9 @@ Check out [usage instructions](./INSTRUCTIONS.md) for info about **flashing cust
 ## FAQ
 Please see the [FAQ](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/FAQ) section of the wiki for the most up-to-date questions and answers.  This will cover many things like how to get your device into pairing mode, how to find more information about your device like the current firmware installed, and is expanding as new questions are asked/answered.  Additionally, you may want to consider searching [issues](https://github.com/tuya-cloudcutter/tuya-cloudcutter/issues?q=is%3Aissue).
 
+## Patched devices
+Tuya has patched their SDK as of February 2022.  Any device with a firmware compiled against a patched SDK will not be exploitable, but you can still apply 3rd party firmware via serial.  For a list of known patched firmware/devices, see the [known patched firmware](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/Known-Patched-Firmware) wiki page.
+
 ## Contribution
 We'd be happy to receive your contributions! One way to contribute if you already know your way around some binary exploitation or would like to get your hands into it is by building device profiles to support more exploitable devices. Check out the [detailed writeup](https://rb9.nl/posts/2022-03-29-light-jailbreaking-exploiting-tuya-iot-devices/) for the information about the vulnerability and exploit chain.
 
