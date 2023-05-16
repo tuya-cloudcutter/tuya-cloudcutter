@@ -25,6 +25,9 @@ if ! [ -z "${SLUGS}" ]; then
 	fi
 fi
 
+run_helper_script "pre-safety-checks"
+source safety_checks.sh
+
 echo "Selected Device Slug: ${DEVICESLUG}"
 echo "Selected Profile: ${PROFILESLUG}"
 if ! [ -z "${FIRMWARE}" ]; then

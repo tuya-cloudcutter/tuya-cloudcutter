@@ -103,9 +103,6 @@ fi
 
 source common_run.sh
 
-run_helper_script "pre-safety-checks"
-source safety_checks.sh
-
 if [ $METHOD_DETACH ]; then
 	# Cutting device from cloud, allowing local-tuya access still
 	echo "Cutting device off from cloud..."
