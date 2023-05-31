@@ -2,13 +2,17 @@
 
 # Select the right device
 if [ "${PROFILE}" == "" ]; then
-  run_in_docker pipenv run python3 get_input.py -w /work -o /work/profile.txt choose-profile
+	if [ $METHOD_FLASH ]; then
+		run_in_docker pipenv run python3 get_input.py -w /work -o /work/profile.txt choose-profile -f
+	else
+		run_in_docker pipenv run python3 get_input.py -w /work -o /work/profile.txt choose-profile
+	fi
 else
-  run_in_docker pipenv run python3 get_input.py -w /work -o /work/profile.txt write-profile $PROFILE
+	run_in_docker pipenv run python3 get_input.py -w /work -o /work/profile.txt write-profile $PROFILE
 fi
 if [ ! $? -eq 0 ]; then
-  echo "Failed to choose a profile, please run this script again"
-  exit 1
+	echo "Failed to choose a profile, please run this script again"
+	exit 1
 fi
 
 PROFILE=$(cat profile.txt)

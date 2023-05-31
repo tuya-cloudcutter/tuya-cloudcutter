@@ -36,7 +36,7 @@ def api_get(path):
 
 
 def ask_options(text, options):
-    return inquirer.prompt(
+    res = inquirer.prompt(
         [
             inquirer.List(
                 "result",
@@ -45,7 +45,11 @@ def ask_options(text, options):
                 choices=options,
             )
         ]
-    )["result"]
+    )
+    if res is None:
+        # Ctrl+C
+        exit(1)
+    return res["result"]
 
 
 def ask_files(text, dir):
@@ -269,8 +273,13 @@ def write_profile(ctx, slug: str):
 
 
 @cli.command()
+@click.option(
+    "-f",
+    "--flashing",
+    is_flag=True,
+)
 @click.pass_context
-def choose_profile(ctx):
+def choose_profile(ctx, flashing: bool = False):
     profiles_dir = ctx.obj["profiles_dir"]
     device_slug = None
     opts = [
@@ -289,7 +298,10 @@ def choose_profile(ctx):
         profile_slug = ask_profile_base(api_get("profiles.json"))["slug"]
         profile = api_get(f"profiles/{profile_slug}.json")
         devices = profile["devices"]
-        device_slug = ask_device_base(devices)["slug"]
+        if flashing:
+            device_slug = devices[0]["slug"]
+        else:
+            device_slug = ask_device_base(devices)["slug"]
         device = api_get(f"devices/{device_slug}.json")
     elif mode == opts[2]:
         profile_dir = ask_dirs("Select device profile", profiles_dir)
