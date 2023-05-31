@@ -89,18 +89,6 @@ fi
 
 echo "Loading options, please wait..."
 
-if [ $METHOD_FLASH ]; then
-	# Select the right device
-	if [ "${FIRMWARE}" == "" ]; then
-		run_in_docker pipenv run python3 get_input.py -w /work -o /work/firmware.txt choose-firmware
-		if [ ! $? -eq 0 ]; then
-			exit 1
-		fi
-		FIRMWARE=$(cat firmware.txt)
-		rm -f firmware.txt
-	fi
-fi
-
 source common_run.sh
 
 if [ $METHOD_DETACH ]; then

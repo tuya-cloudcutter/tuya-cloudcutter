@@ -1,5 +1,6 @@
 import json
 import sys
+from enum import Enum
 from glob import glob
 from os import listdir, makedirs
 from os.path import abspath, basename, isdir, isfile, join
@@ -7,6 +8,20 @@ from os.path import abspath, basename, isdir, isfile, join
 import click
 import inquirer
 import requests
+
+
+class FirmwareType(Enum):
+    INVALID = 0
+    IGNORED = 1
+    VALID_UG = 2
+    VALID_UF2 = 3
+
+
+UF2_UG_SUFFIX = "-extracted.ug.bin"
+UF2_FAMILY_MAP = {
+    "bk7231t": 0x675A40B0,
+    "bk7231n": 0x7B3EF230,
+}
 
 
 def api_get(path):
@@ -105,7 +120,10 @@ def load_profile(profile_dir):
             try:
                 data = json.load(f)
             except:
-                print(f"File {file} does not contain valid JSON.  Please update your file and try again.")
+                print(
+                    f"File {file} does not contain valid JSON. "
+                    "Please update your file and try again."
+                )
                 exit(53)
         # match characteristic keys
         if "profiles" in data:
@@ -132,34 +150,77 @@ def save_combined_profile(profile_dir, device, profile):
     return abspath(combined_path)
 
 
-def validate_firmware_file(firmware):
-    UG_FILE_MAGIC = b"\x55\xAA\x55\xAA"
+def validate_firmware_file(firmware: str, chip: str = None) -> FirmwareType:
     FILE_MAGIC_DICT = {
         b"RBL\x00": "RBL",
         b"\x43\x09\xb5\x96": "QIO",
         b"\x2f\x07\xb5\x94": "UA",
+        b"\x55\xAA\x55\xAA": "UG",
+        b"UF2\x0A": "UF2",
     }
 
+    base = basename(firmware)
     with open(firmware, "rb") as fs:
-        magic = fs.read(4)
-        error_code = 0
-        if magic in FILE_MAGIC_DICT:
+        header = fs.read(512)
+
+    magic = header[0:4]
+    if magic not in FILE_MAGIC_DICT or len(header) < 512:
+        print(
+            f"!!! Unrecognized file type - '{base}' is not a UG or UF2 file.",
+            file=sys.stderr,
+        )
+        return FirmwareType.INVALID
+    file_type = FILE_MAGIC_DICT[magic]
+
+    if file_type not in ["UG", "UF2"]:
+        print(
+            f"!!! File {base} is a '{file_type}' file! Please provide an UG file.",
+            file=sys.stderr,
+        )
+        return FirmwareType.INVALID
+
+    if file_type == "UG":
+        # check LibreTiny UG version tag (chip type)
+        rbl_ver = header[32 + 12 + 16 : 32 + 12 + 16 + 24]
+        if b"bk7231" in rbl_ver:
+            if chip and chip.encode() not in rbl_ver:
+                # wrong chip type
+                return FirmwareType.IGNORED
+            # correct chip type
+            return FirmwareType.VALID_UG
+        # check chip by filename
+        if "bk7231" in base.lower():
+            if chip and chip not in base.lower():
+                # wrong chip type
+                return FirmwareType.IGNORED
+            # correct chip type
+            return FirmwareType.VALID_UG
+        print(
+            f"!!! Can't verify chip type of UG file '{base}' - "
+            "make sure that BK7231T or BK7231N is present in the filename!",
+            file=sys.stderr,
+        )
+        return FirmwareType.INVALID
+
+    if file_type == "UF2":
+        if not chip:
+            return FirmwareType.IGNORED
+        try:
+            from ltchiptool import get_version
+            from uf2tool.models import Block
+        except (ImportError, ModuleNotFoundError) as e:
             print(
-                f"Firmware {firmware} is an {FILE_MAGIC_DICT[magic]} file! Please provide a UG file.",
+                f"!!! Can't read file '{base}' because ltchiptool is not installed. "
+                "Ignoring UF2 file.",
                 file=sys.stderr,
             )
-            error_code = 51
-        elif magic != UG_FILE_MAGIC:
-            print(f"Firmware {firmware} is not a UG file.", file=sys.stderr)
-            error_code = 52
-        else:
-            # File is a UG file
-            error_code = 0
-            pass
-
-        if error_code != 0:
-            exit(error_code)
-    return firmware
+            return FirmwareType.INVALID
+        get_version()
+        block = Block()
+        block.decode(header)
+        if UF2_FAMILY_MAP[chip] != block.family.id:
+            return FirmwareType.IGNORED
+        return FirmwareType.VALID_UF2
 
 
 @click.group()
@@ -195,7 +256,10 @@ def write_profile(ctx, slug: str):
     if isdir(profile_dir):
         device, profile = load_profile(profile_dir)
         if device is None or profile is None:
-            print("Custom device or profile is not present, attempting to download from API.")
+            print(
+                "Custom device or profile is not present, "
+                "attempting to download from API."
+            )
     if device is None or profile is None:
         device, profile = download_profile(device_slug)
         save_profile(profile_dir, device, profile)
@@ -242,11 +306,78 @@ def choose_profile(ctx):
 
 
 @cli.command()
+@click.option(
+    "-c",
+    "--chip",
+    type=click.Choice(["bk7231t", "bk7231n"], case_sensitive=False),
+    default=None,
+)
 @click.pass_context
-def choose_firmware(ctx):
+def choose_firmware(ctx, chip: str = None):
+    chip = chip and chip.upper()
     firmware_dir = ctx.obj["firmware_dir"]
-    path = ask_files("Select your custom firmware file", firmware_dir)
-    validate_firmware_file(path)
+    files = listdir(firmware_dir)
+    options = {}
+    for file in files:
+        if file.startswith("."):
+            continue
+        if file.endswith(UF2_UG_SUFFIX):
+            continue
+        path = join(firmware_dir, file)
+        fw_type = validate_firmware_file(path, chip and chip.lower())
+        if fw_type in [FirmwareType.VALID_UG, FirmwareType.VALID_UF2]:
+            options[file] = fw_type
+
+    if not options:
+        print(
+            "No valid custom firmware files were found!\n"
+            "Add files to the custom-firmware/ directory first.",
+            file=sys.stderr,
+        )
+        exit(1)
+
+    prompt = "Select your custom firmware file"
+    if chip:
+        prompt += f" for {chip} chip"
+
+    file = ask_options(prompt, sorted(options.keys(), key=str.casefold))
+    path = abspath(join(firmware_dir, file))
+    fw_type = options[file]
+
+    if fw_type == FirmwareType.VALID_UF2:
+        target = file + "-" + chip.lower() + UF2_UG_SUFFIX
+        print(f"Extracting UF2 package as '{target}'")
+
+        from ltchiptool.util.intbin import inttobe32
+        from uf2tool import OTAScheme, UploadContext
+        from uf2tool.models import UF2
+
+        with open(path, "rb") as f:
+            uf2 = UF2(f)
+            uf2.read()
+            uctx = UploadContext(uf2)
+
+        # BK7231 is single-OTA
+        data = uctx.collect_data(OTAScheme.DEVICE_SINGLE)
+        if len(data) != 1:
+            print("!!! Incompatible UF2 package - got too many chunks!")
+            exit(2)
+        _, io = data.popitem()
+        rbl = io.read()
+
+        path = abspath(join(firmware_dir, target))
+        with open(path, "wb") as f:
+            # build Tuya UG header
+            header = b"\x55\xAA\x55\xAA"
+            header += b"1.0.0".ljust(12, b"\x00")
+            header += inttobe32(len(rbl))
+            header += inttobe32(sum(rbl))
+            header += inttobe32(sum(header))
+            header += b"\xAA\x55\xAA\x55"
+            f.write(header)
+            # write RBL data
+            f.write(rbl)
+
     ctx.obj["output"].write(path)
 
 

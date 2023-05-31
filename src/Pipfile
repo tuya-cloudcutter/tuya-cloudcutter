@@ -15,6 +15,7 @@ requests = "*"
 pycryptodome = "*"
 paho-mqtt = "*"
 click = "*"
+ltchiptool = "*"
 
 [requires]
 python_version = "3"
