@@ -225,6 +225,41 @@ def validate_firmware_file_internal(firmware: str, chip: str = None) -> Firmware
         if UF2_FAMILY_MAP[chip] != block.family.id:
             return FirmwareType.IGNORED_HEADER
         return FirmwareType.VALID_UF2
+    
+def extract_uf2(file_with_path: str, firmware_dir: str, chip: str) -> str:
+    target = file_with_path + "-" + chip.lower() + UF2_UG_SUFFIX
+    print(f"Extracting UF2 package as '{target}'")
+
+    from ltchiptool.util.intbin import inttobe32
+    from uf2tool import OTAScheme, UploadContext
+    from uf2tool.models import UF2
+
+    with open(file_with_path, "rb") as f:
+        uf2 = UF2(f)
+        uf2.read()
+        uctx = UploadContext(uf2)
+
+    # BK7231 is single-OTA
+    data = uctx.collect_data(OTAScheme.DEVICE_SINGLE)
+    if len(data) != 1:
+        print("!!! Incompatible UF2 package - got too many chunks!")
+        exit(2)
+    _, io = data.popitem()
+    rbl = io.read()
+
+    file_with_path = abspath(join(firmware_dir, target))
+    with open(file_with_path, "wb") as f:
+        # build Tuya UG header
+        header = b"\x55\xAA\x55\xAA"
+        header += b"1.0.0".ljust(12, b"\x00")
+        header += inttobe32(len(rbl))
+        header += inttobe32(sum(rbl))
+        header += inttobe32(sum(header))
+        header += b"\xAA\x55\xAA\x55"
+        f.write(header)
+        # write RBL data
+        f.write(rbl)
+    return file_with_path
 
 
 @click.group()
@@ -362,44 +397,13 @@ def choose_firmware(ctx, chip: str = None):
         prompt += f" for {chip} chip"
 
     file = ask_options(prompt, sorted(options.keys(), key=str.casefold))
-    path = abspath(join(firmware_dir, file))
+    file_with_path = abspath(join(firmware_dir, file))
     fw_type = options[file]
 
     if fw_type == FirmwareType.VALID_UF2:
-        target = file + "-" + chip.lower() + UF2_UG_SUFFIX
-        print(f"Extracting UF2 package as '{target}'")
+        file_with_path = extract_uf2(file_with_path, firmware_dir, chip)
 
-        from ltchiptool.util.intbin import inttobe32
-        from uf2tool import OTAScheme, UploadContext
-        from uf2tool.models import UF2
-
-        with open(path, "rb") as f:
-            uf2 = UF2(f)
-            uf2.read()
-            uctx = UploadContext(uf2)
-
-        # BK7231 is single-OTA
-        data = uctx.collect_data(OTAScheme.DEVICE_SINGLE)
-        if len(data) != 1:
-            print("!!! Incompatible UF2 package - got too many chunks!")
-            exit(2)
-        _, io = data.popitem()
-        rbl = io.read()
-
-        path = abspath(join(firmware_dir, target))
-        with open(path, "wb") as f:
-            # build Tuya UG header
-            header = b"\x55\xAA\x55\xAA"
-            header += b"1.0.0".ljust(12, b"\x00")
-            header += inttobe32(len(rbl))
-            header += inttobe32(sum(rbl))
-            header += inttobe32(sum(header))
-            header += b"\xAA\x55\xAA\x55"
-            f.write(header)
-            # write RBL data
-            f.write(rbl)
-
-    ctx.obj["output"].write(basename(path))
+    ctx.obj["output"].write(basename(file_with_path))
 
 @cli.command()
 @click.argument("filename", type=str)
@@ -421,7 +425,12 @@ def validate_firmware_file(ctx, filename: str, chip: str = None):
         )
         exit(1)
 
-    ctx.obj["output"].write(filename)
+    file_with_path = abspath(join(firmware_dir, filename))
+
+    if fw_type == FirmwareType.VALID_UF2:
+        file_with_path = extract_uf2(file_with_path, firmware_dir, chip)
+
+    ctx.obj["output"].write(basename(file_with_path))
 
 if __name__ == "__main__":
     cli(obj={})
