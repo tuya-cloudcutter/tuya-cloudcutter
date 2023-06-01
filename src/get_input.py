@@ -340,7 +340,7 @@ def choose_firmware(ctx, chip: str = None):
         fw_type = validate_firmware_file_internal(path, chip and chip.lower())
         if fw_type in [FirmwareType.VALID_UG, FirmwareType.VALID_UF2]:
             options[file] = fw_type
-        elif fw_type in [FirmwareType.IGNORED_FILENAME]:
+        elif fw_type in [FirmwareType.INVALID]:
             invalid_filenames[file] = file
 
     if not options:
