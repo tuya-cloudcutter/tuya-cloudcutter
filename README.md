@@ -48,10 +48,12 @@ You can also contribute device dumps by [making an issue](https://github.com/tuy
 Flash dumps of devices that have never been joined to Smart Life (or disconnected with a data wipe) are now generally acceptable. In order to not potentially leak personal information, that may be the preferred way.
 
 Tools to dump flash from devices:
-- https://github.com/tuya-cloudcutter/bk7231tools
-- https://github.com/tuya-cloudcutter/lightleak (wireless dumping, still in development; testing is appreciated)
+- [ltchiptool](https://docs.libretiny.eu/docs/flashing/tools/ltchiptool/) - universal flashing/dumping GUI tool
+- [BK7231Flasher](https://github.com/openshwprojects/BK7231GUIFlashTool) - GUI tool for firmware backup and flashing OpenBeken
+- [bk7231tools](https://github.com/tuya-cloudcutter/bk7231tools) - original toolset for dumping and analyzing Beken binaries
+- [Lightleak](https://github.com/tuya-cloudcutter/lightleak) - wireless dumping, still in development; testing is appreciated
 
-**Note:** other tools, such as hid_download_py or BkWriter, create incomplete dumps, or have data out-of-order which makes processing more difficult.  Please use bk7231tools instead.
+**Note:** other tools, such as hid_download_py or BkWriter, create incomplete dumps, or have data out-of-order which makes processing more difficult.  Please use the tools outlined above instead.
 
 - **Example dump command:** `bk7231tools read_flash -d COM5 device-make-and-model.bin`
 - Since bk7231tools v1.0.0, the `-s` and `-c` parameters are not needed (additionally, `-c` is deprecated in favor of `-l/--length <bytes>`). The program now reads the entire flash contents by default.
