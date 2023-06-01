@@ -228,7 +228,7 @@ def validate_firmware_file_internal(firmware: str, chip: str = None) -> Firmware
     
 def extract_uf2(file_with_path: str, firmware_dir: str, chip: str) -> str:
     target = file_with_path + "-" + chip.lower() + UF2_UG_SUFFIX
-    print(f"Extracting UF2 package as '{target}'")
+    print(f"Extracting UF2 package as '{basename(target)}'")
 
     from ltchiptool.util.intbin import inttobe32
     from uf2tool import OTAScheme, UploadContext
