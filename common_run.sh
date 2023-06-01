@@ -37,12 +37,14 @@ if [ $METHOD_FLASH ]; then
 	# Select the right firmware
 	if [ "${FIRMWARE}" == "" ]; then
 		run_in_docker pipenv run python3 get_input.py -w /work -o /work/firmware.txt choose-firmware -c "${CHIP}"
-		if [ ! $? -eq 0 ]; then
-			exit 1
-		fi
-		FIRMWARE=$(cat firmware.txt)
-		rm -f firmware.txt
+	else
+		run_in_docker pipenv run python3 get_input.py -w /work -o /work/firmware.txt validate-firmware-file "${FIRMWARE}" -c "${CHIP}"
 	fi
+	if [ ! $? -eq 0 ]; then
+		exit 1
+	fi
+	FIRMWARE=$(cat firmware.txt)
+	rm -f firmware.txt
 fi
 
 echo "Selected Device Slug: ${DEVICESLUG}"

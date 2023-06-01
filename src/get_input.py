@@ -12,9 +12,10 @@ import requests
 
 class FirmwareType(Enum):
     INVALID = 0
-    IGNORED = 1
-    VALID_UG = 2
-    VALID_UF2 = 3
+    IGNORED_HEADER = 1
+    IGNORED_FILENAME = 2
+    VALID_UG = 3
+    VALID_UF2 = 4
 
 
 UF2_UG_SUFFIX = "-extracted.ug.bin"
@@ -153,8 +154,7 @@ def save_combined_profile(profile_dir, device, profile):
         json.dump(combined, f, indent="\t")
     return abspath(combined_path)
 
-
-def validate_firmware_file(firmware: str, chip: str = None) -> FirmwareType:
+def validate_firmware_file_internal(firmware: str, chip: str = None) -> FirmwareType:
     FILE_MAGIC_DICT = {
         b"RBL\x00": "RBL",
         b"\x43\x09\xb5\x96": "QIO",
@@ -189,14 +189,14 @@ def validate_firmware_file(firmware: str, chip: str = None) -> FirmwareType:
         if b"bk7231" in rbl_ver:
             if chip and chip.encode() not in rbl_ver:
                 # wrong chip type
-                return FirmwareType.IGNORED
+                return FirmwareType.IGNORED_HEADER
             # correct chip type
             return FirmwareType.VALID_UG
         # check chip by filename
         if "bk7231" in base.lower():
             if chip and chip not in base.lower():
                 # wrong chip type
-                return FirmwareType.IGNORED
+                return FirmwareType.IGNORED_FILENAME
             # correct chip type
             return FirmwareType.VALID_UG
         print(
@@ -208,7 +208,7 @@ def validate_firmware_file(firmware: str, chip: str = None) -> FirmwareType:
 
     if file_type == "UF2":
         if not chip:
-            return FirmwareType.IGNORED
+            return FirmwareType.IGNORED_HEADER
         try:
             from ltchiptool import get_version
             from uf2tool.models import Block
@@ -223,7 +223,7 @@ def validate_firmware_file(firmware: str, chip: str = None) -> FirmwareType:
         block = Block()
         block.decode(header)
         if UF2_FAMILY_MAP[chip] != block.family.id:
-            return FirmwareType.IGNORED
+            return FirmwareType.IGNORED_HEADER
         return FirmwareType.VALID_UF2
 
 
@@ -330,15 +330,18 @@ def choose_firmware(ctx, chip: str = None):
     firmware_dir = ctx.obj["firmware_dir"]
     files = listdir(firmware_dir)
     options = {}
+    invalid_filenames = {}
     for file in files:
-        if file.startswith("."):
+        if file.startswith(".") or file.endswith(".md"):
             continue
         if file.endswith(UF2_UG_SUFFIX):
             continue
         path = join(firmware_dir, file)
-        fw_type = validate_firmware_file(path, chip and chip.lower())
+        fw_type = validate_firmware_file_internal(path, chip and chip.lower())
         if fw_type in [FirmwareType.VALID_UG, FirmwareType.VALID_UF2]:
             options[file] = fw_type
+        elif fw_type in [FirmwareType.IGNORED_FILENAME]:
+            invalid_filenames[file] = file
 
     if not options:
         print(
@@ -347,6 +350,12 @@ def choose_firmware(ctx, chip: str = None):
             file=sys.stderr,
         )
         exit(1)
+        
+    if invalid_filenames:
+        print("\nThe following files were ignored because they do not meet naming requirements and the chip type could not be determined:")
+        for invalid_filename in invalid_filenames:
+            print(invalid_filename)
+        print("Please see https://github.com/tuya-cloudcutter/tuya-cloudcutter/tree/main/custom-firmware#naming-rules for more information.\n")
 
     prompt = "Select your custom firmware file"
     if chip:
@@ -390,8 +399,29 @@ def choose_firmware(ctx, chip: str = None):
             # write RBL data
             f.write(rbl)
 
-    ctx.obj["output"].write(path)
+    ctx.obj["output"].write(basename(path))
 
+@cli.command()
+@click.argument("filename", type=str)
+@click.option(
+    "-c",
+    "--chip",
+    type=click.Choice(["bk7231t", "bk7231n"], case_sensitive=False),
+    default=None,
+)
+@click.pass_context
+def validate_firmware_file(ctx, filename: str, chip: str = None):
+    chip = chip and chip.upper()
+    firmware_dir = ctx.obj["firmware_dir"]
+    fw_type = validate_firmware_file_internal(join(firmware_dir, filename), chip and chip.lower())
+    if fw_type not in [FirmwareType.VALID_UG, FirmwareType.VALID_UF2]:
+        print(
+            f"The firmware file supplied ({filename}) is not valid for the chosen profile type of {chip}",
+            file=sys.stderr,
+        )
+        exit(1)
+
+    ctx.obj["output"].write(filename)
 
 if __name__ == "__main__":
     cli(obj={})

@@ -49,12 +49,13 @@ Knowing this, you can run `sudo ./tuya-cloudcutter.sh` without any parameters. T
 
 
 ## Flashing custom firmware
-* Copy your new firmware .bin file (UG only!) to ./custom-firmware
+* Copy your new firmware .bin file (UG or UF2 files only!) to ./custom-firmware
 * Find your device name, as instructed in the steps above.
-* Run `sudo ./tuya-cloudcutter.sh`. You can specify device profile name and firmware file using `-p` and `-f`, respectively (this is optional). Example: `sudo ./tuya-cloudcutter.sh -p avatar-asl04-tv-backlight -f custom_firmware_UG_file.bin`
+* Run `sudo ./tuya-cloudcutter.sh`. You can specify device profile name and firmware file using `-p` and `-f`, respectively (this is optional). Example: `sudo ./tuya-cloudcutter.sh -p avatar-asl04-tv-backlight -f custom_firmware_file.bin`
 * Follow the instructions from the script to turn off/on your device 6 times during 2 steps (similar to the steps above)
 * If all goes well, your device is now running your custom firmware, enjoy!
 
 ### Custom firmware options
 
-Please see the [wiki](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/FAQ#what-custom-firmware-options-are-available) for information about available 3rd party firmware.
+Some common 3rd party firmware files have been included by default. See [custom-firmware](https://github.com/tuya-cloudcutter/tuya-cloudcutter/tree/main/custom-firmware) for further information.
+For user-supplied custom options, please see the [wiki](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/FAQ#what-custom-firmware-options-are-available) for information about available 3rd party firmware.
