@@ -64,6 +64,8 @@ check_blacklist () {
 	fi
 }
 
+echo ""
+echo "Performing safety checks to make sure all required ports are available"
 check_port udp 53 "resolve DNS queries"
 check_port udp 67 "offer DHCP leases"
 check_port tcp 80 "answer HTTP requests"
@@ -74,3 +76,5 @@ check_port tcp 1883 "run MQTT"
 check_port tcp 8886 "run MQTTS"
 check_firewall
 check_blacklist
+echo "Safety checks complete."
+echo ""
