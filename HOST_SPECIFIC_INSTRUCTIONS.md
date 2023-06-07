@@ -11,6 +11,7 @@ Steps:
 
 1. Use Raspberry Pi Imager to burn "Raspberry Pi OS Lite (32 Bit)" to an SD card
 	- As of this note, 2022-04-04 build of Bullseye
+	- A 4GB SD card is required to have enough space for the OS and building the Docker image.
 	- If using SSH, enable it (using the installer or making an empty file `ssh` on the boot partition)
 2. Access the pi (SSH or keyboard + monitor)
 3. Install Network Manager (only reboot once all files are in place)
@@ -42,6 +43,7 @@ Steps:
 
 1. Use Raspberry Pi Imager to burn "Raspberry Pi OS Lite (32 Bit)" to an SD card
 	- As of this note, 2022-04-04 build of Bullseye
+ 	- A 4GB SD card is required to have enough space for the OS and building the Docker image.
 	- Set a hostname like `piusb` (something you'll remember)
 	- Enable SSH (using the installer or making an empty file `ssh` on the boot partition)
 2. Edit `config.txt` and `cmdline.txt` on the boot partition to enable USB SSG (Gadget Mode)
