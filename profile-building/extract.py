@@ -75,6 +75,16 @@ def run(full_encrypted_file: str):
         if schema is not None:
             with open(os.path.join(extractfolder, foldername + "_schema.txt"), 'w') as schemaFile:
                 schemaFile.write(schema)
+
+        storage = load_file("storage.json")
+        if storage is not None:
+            with open(os.path.join(extractfolder, foldername + "_storage.json"), 'w') as storageFile:
+                storageFile.write(storage)
+
+        user_param_key = load_file("user_param_key.json")
+        if user_param_key is not None:
+            with open(os.path.join(extractfolder, foldername + "_user_param_key.json"), 'w') as userParamKeyFile:
+                userParamKeyFile.write(user_param_key)
     else:
         print('[+] Encrypted bin has already been extracted')
         return

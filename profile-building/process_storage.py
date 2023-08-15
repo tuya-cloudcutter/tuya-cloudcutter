@@ -4,9 +4,11 @@ import sys
 
 
 def write_file(key, value):
-    with open(os.path.join(base_folder, base_name + "_" + key + ".txt"), "w") as file:
-        file.write(value)
-
+    try:
+        with open(os.path.join(base_folder, base_name + "_" + key + ".txt"), "x") as file:
+            file.write(value)
+    except:
+        return
 
 def dump(file):
     with open(file, "r") as storage_file:
@@ -41,10 +43,10 @@ def dump(file):
             if 's_id' in storage['gw_di'] and storage['gw_di']['s_id'] is not None:
                 schema_id = storage['gw_di']['s_id']
                 if schema_id in storage:
-                    print(f"[+] schema: {storage[schema_id]}")
-                    print(f"[+] schema {schema_id}:")
-                    write_file("schema_id", schema_id)
-                    write_file("schema", json.dumps(storage[schema_id]))
+                    if write_file("schema_id", schema_id):
+                        print(f"[+] schema: {storage[schema_id]}")
+                    if write_file("schema", json.dumps(storage[schema_id])):
+                        print(f"[+] schema {schema_id}:")
         if not hasProductKey and 'gw_bi' in storage:
             if 'fac_pin' in storage['gw_bi']:
                 print(f"[+] product key: {storage['gw_bi']['fac_pin']}")
