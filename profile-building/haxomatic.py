@@ -60,6 +60,15 @@ def walk_app_code():
         process_generic("BK7231T", "SDK 2.0.0 8710_2M", "datagram", 0, "041e07d1119b211c00", 3, 1, "2b68301c9847", 1, 0)
         return
 
+    # Newer versions of BK7231T, BS 40.00, SDK 1.0.x, nobt
+    if b'TUYA IOT SDK V:1.0.' in appcode and b'AT bk7231t_nobt' in appcode:
+        # b5 4f 06 1e 07 d1 is the byte pattern for datagram payload
+        # 1 match should be found
+        # 23 68 38 1c 98 47 is the byte pattern for finish addess
+        # 2 matches should be found, 1st is correct
+        process_generic("BK7231T", "SDK 1.0.# nobt", "datagram", 0, "b54f061e07d1", 1, 0, "2368381c9847", 2, 0)
+        return
+
     # Newer versions of BK7231T, BS 40.00, SDK 1.0.x
     if b'TUYA IOT SDK V:1.0.' in appcode and b'AT bk7231t' in appcode:
         # a1 4f 06 1e is the byte pattern for datagram payload
