@@ -118,7 +118,7 @@ build_docker () {
 }
 
 run_in_docker () {
-    docker run --network=host -ti --privileged -v "$(pwd):/work" cloudcutter "${@}"
+    docker run --name cloudcutter --network=host -ti --privileged -v "$(pwd):/work" cloudcutter "${@}"
 }
 
 # Docker prep
