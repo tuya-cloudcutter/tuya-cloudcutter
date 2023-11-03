@@ -80,13 +80,32 @@ class TuyaServerHandler(TuyaHeadersHandler):
         self.finish(response)
 
 
-class GetURLHandler(TuyaHeadersHandler):
+class GetURLHandlerV1(TuyaHeadersHandler):
     def initialize(self, ipaddr: str, verbose_output: bool):
         self.ipaddr = ipaddr
         self.verbose_output = verbose_output
 
     def post(self):
         log_request(self.request.uri, self.request, self.request.body, self.verbose_output)
+        # The following is the full response, but firmware flashing via mqtt fails when the full response is sent.
+        # This is just for reference in case there are any future adjustments that might need to know this data.
+        #response = {"caArr": None, "httpUrl": {"addr": f"http://{self.ipaddr}/d.json", "ips": [self.ipaddr]}, "mqttUrl": {"addr": f"{self.ipaddr}:1883", "ips": [self.ipaddr]}, "httpsPSKUrl": {"addr": f"https://{self.ipaddr}/d.json", "ips": [self.ipaddr]}, "mqttsPSKUrl": {"addr": f"{self.ipaddr}:8886", "ips": [self.ipaddr]}, "ttl": 600}
+        response = {"caArr": None, "httpUrl": {"addr": f"http://{self.ipaddr}/d.json", "ips": [self.ipaddr]}, "mqttUrl": {"addr": f"{self.ipaddr}:1883", "ips": [self.ipaddr]}, "ttl": 600}
+        response = object_to_json(response)
+        log_response(response, self.verbose_output)
+        self.finish(response)
+
+
+class GetURLHandlerV2(TuyaHeadersHandler):
+    def initialize(self, ipaddr: str, verbose_output: bool):
+        self.ipaddr = ipaddr
+        self.verbose_output = verbose_output
+
+    def post(self):
+        log_request(self.request.uri, self.request, self.request.body, self.verbose_output)
+        # The following is the full response, but firmware flashing via mqtt fails when the full response is sent.
+        # This is just for reference in case there are any future adjustments that might need to know this data.
+        #response = {"caArr": None, "httpUrl": {"addr": f"http://{self.ipaddr}/d.json", "ips": [self.ipaddr]}, "mqttUrl": {"addr": f"{self.ipaddr}:1883", "ips": [self.ipaddr]}, "httpsPSKUrl": {"addr": f"https://{self.ipaddr}/d.json", "ips": [self.ipaddr]}, "mqttsPSKUrl": {"addr": f"{self.ipaddr}:8886", "ips": [self.ipaddr]}, "psk_key": "", "ttl": 600}
         response = {"caArr": None, "httpUrl": {"addr": f"http://{self.ipaddr}/d.json", "ips": [self.ipaddr]}, "mqttUrl": {"addr": f"{self.ipaddr}:1883", "ips": [self.ipaddr]}, "ttl": 600}
         response = object_to_json(response)
         log_response(response, self.verbose_output)
@@ -100,6 +119,9 @@ class OldSDKGetURLHandler(TuyaHeadersHandler):
 
     def post(self):
         log_request(self.request.uri, self.request, self.request.body, self.verbose_output)
+        # The following is the full response, but firmware flashing via mqtt fails when the full response is sent.
+        # This is just for reference in case there are any future adjustments that might need to know this data.
+        #response = {"caArr": None, "httpUrl": f"http://{self.ipaddr}/d.json", "mqttUrl": f"{self.ipaddr}:1883", "httpPSKUrl": f"https://{self.ipaddr}/d.json", "mqttPSKUrl": f"{self.ipaddr}:8886"}
         response = {"caArr": None, "httpUrl": f"http://{self.ipaddr}/d.json", "mqttUrl": f"{self.ipaddr}:1883"}
         response = object_to_json(response)
         log_response(response, self.verbose_output)

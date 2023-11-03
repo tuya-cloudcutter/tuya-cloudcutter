@@ -1,5 +1,5 @@
 import argparse
-import datetime
+from datetime import datetime, timedelta
 import hmac
 import json
 import os
@@ -23,7 +23,7 @@ from .exploit import (build_network_config_packet, exploit_device_with_config,
 from .protocol import handlers, mqtt
 from .protocol.transformers import ResponseTransformer
 
-pskkey_endpoint_hook_triggered = False
+pskkey_endpoint_hook_trigger_time = None
 
 
 def __configure_local_device_response_transformers(config):
@@ -83,7 +83,7 @@ def __trigger_firmware_update(config: DeviceConfig, args):
     mqtt.trigger_firmware_update(device_id=device_id, local_key=local_key, protocol="2.2", broker="127.0.0.1", verbose_output=args.verbose_output)
     timestamp = ""
     if args.verbose_output:
-        timestamp = str(datetime.datetime.now().time()) + " "
+        timestamp = str(datetime.now().time()) + " "
     print(f"[{timestamp}MQTT Sending] Triggering firmware update message.")
 
 
@@ -117,9 +117,10 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
         to either change device SSID or update firmware. Hence, return None.
         """
 
-        global pskkey_endpoint_hook_triggered
-        if pskkey_endpoint_hook_triggered == False:
-            pskkey_endpoint_hook_triggered = True
+        global pskkey_endpoint_hook_trigger_time
+        # Don't allow duplicates in a short period of time, but allow re-triggering if a new connection is made.
+        if pskkey_endpoint_hook_trigger_time is None or pskkey_endpoint_hook_trigger_time + timedelta(minutes=1) < datetime.now():
+            pskkey_endpoint_hook_trigger_time = datetime.now()
             if update_firmware:
                 task_function = __trigger_firmware_update
                 task_args = (config, args)
@@ -186,8 +187,8 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
         })
 
     application = tornado.web.Application([
-        (r'/v1/url_config', handlers.GetURLHandler, dict(ipaddr=args.ip, verbose_output=args.verbose_output)),
-        (r'/v2/url_config', handlers.GetURLHandler, dict(ipaddr=args.ip, verbose_output=args.verbose_output)),
+        (r'/v1/url_config', handlers.GetURLHandlerV1, dict(ipaddr=args.ip, verbose_output=args.verbose_output)),
+        (r'/v2/url_config', handlers.GetURLHandlerV2, dict(ipaddr=args.ip, verbose_output=args.verbose_output)),
         # 2018 SDK specific endpoint
         (r'/device/url_config', handlers.OldSDKGetURLHandler, dict(ipaddr=args.ip, verbose_output=args.verbose_output)),
         (r'/d.json', handlers.DetachHandler, dict(schema_directory=args.schema, response_transformers=response_transformers, config=config, endpoint_hooks=endpoint_hooks, verbose_output=args.verbose_output)),
