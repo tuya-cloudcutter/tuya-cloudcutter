@@ -93,7 +93,9 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
         sys.exit(30)
 
     config = DeviceConfig.read(args.config)
-    authkey, uuid, pskkey = config.get_bytes(DeviceConfig.AUTH_KEY, default=DEFAULT_AUTH_KEY), config.get_bytes(DeviceConfig.UUID), config.get_bytes(DeviceConfig.PSK, default=None)
+    authkey, uuid, pskkey = config.get_bytes(DeviceConfig.AUTH_KEY, default=DEFAULT_AUTH_KEY), config.get_bytes(DeviceConfig.UUID), config.get_bytes(DeviceConfig.PSK, default="")
+    if len(pskkey) == 0:
+        pskkey = None
     context = PSKContext(authkey=authkey, uuid=uuid, psk=pskkey)
     device_id, local_key = config.get(DeviceConfig.DEVICE_ID), config.get(DeviceConfig.LOCAL_KEY)
     flash_timeout = 15
