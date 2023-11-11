@@ -12,7 +12,7 @@ function getopts-extra () {
     done
 }
 
-while getopts "hrntvw:p:f:d:l:s::" flag; do
+while getopts "hrntvw:p:f:d:l:s::a:k:u:" flag; do
 	case "$flag" in
 		r)	RESETNM="true";;
 		n)  DISABLE_RESCAN="true";;
@@ -25,6 +25,9 @@ while getopts "hrntvw:p:f:d:l:s::" flag; do
 		t)  FLASH_TIMEOUT=${OPTARG};;
 		d)	DEVICEID=${OPTARG};;
 		l)	LOCALKEY=${OPTARG};;
+		a)  AUTHKEY=${OPTARG};;
+		k)  PSKKEY=${OPTARG};;
+		u)  UUID=${OPTARG};;
 		s)	getopts-extra "$@"
             METHOD_DETACH="true"
 			HAVE_SSID="true"
@@ -40,6 +43,9 @@ while getopts "hrntvw:p:f:d:l:s::" flag; do
 			echo "  -v				  Verbose log output"
             echo "  -w TEXT           WiFi adapter name (optional, auto-selected if not supplied)"
             echo "  -p TEXT           Device profile name, AKA Device Slug (optional)"
+			echo "  -a TEXT           AuthKey of the device (optional, requires UUID and PSKKey accompanied with it)"
+			echo "  -k TEXT           PSKKey of the device (optinal, requires AuthKey and UUID accompanied with it)"
+			echo "  -u TEXT           UUID of the device (optional, requires AuthKey and PSKKey accompanied with it)"
 			echo ""
             echo "==== Detaching Only: ===="
             echo "  -s SSID PASSWORD  Wifi SSID and Password to use for detaching.  Use quotes if either value contains spaces.  Certain special characters may need to be escaped with '\\'"

@@ -19,11 +19,11 @@ import tinytuya.tinytuya as tinytuya
 from .crypto.pskcontext import PSKContext
 from .device import DEFAULT_AUTH_KEY, DeviceConfig
 from .exploit import (build_network_config_packet, exploit_device_with_config,
-                      send_network_config_datagram)
+                      create_device_specific_config, send_network_config_datagram)
 from .protocol import handlers, mqtt
 from .protocol.transformers import ResponseTransformer
 
-pskkey_endpoint_hook_trigger_time = None
+payload_trigger_time = None
 
 
 def __configure_local_device_response_transformers(config):
@@ -81,10 +81,6 @@ def __trigger_firmware_update(config: DeviceConfig, args):
     local_key = config.get(DeviceConfig.LOCAL_KEY)
 
     mqtt.trigger_firmware_update(device_id=device_id, local_key=local_key, protocol="2.2", broker="127.0.0.1", verbose_output=args.verbose_output)
-    timestamp = ""
-    if args.verbose_output:
-        timestamp = str(datetime.now().time()) + " "
-    print(f"[{timestamp}MQTT Sending] Triggering firmware update message.")
 
 
 def __configure_local_device_or_update_firmware(args, update_firmware: bool = False):
@@ -97,8 +93,8 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
         sys.exit(30)
 
     config = DeviceConfig.read(args.config)
-    authkey, uuid = config.get_bytes(DeviceConfig.AUTH_KEY, default=DEFAULT_AUTH_KEY), config.get_bytes(DeviceConfig.UUID)
-    context = PSKContext(authkey=authkey, uuid=uuid)
+    authkey, uuid, pskkey = config.get_bytes(DeviceConfig.AUTH_KEY, default=DEFAULT_AUTH_KEY), config.get_bytes(DeviceConfig.UUID), config.get_bytes(DeviceConfig.PSK, default=None)
+    context = PSKContext(authkey=authkey, uuid=uuid, psk=pskkey)
     device_id, local_key = config.get(DeviceConfig.DEVICE_ID), config.get(DeviceConfig.LOCAL_KEY)
     flash_timeout = 15
     if args.flash_timeout is not None:
@@ -109,30 +105,26 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
         combined = json.load(f)
         device = combined["device"]
 
-    def pskkey_endpoint_hook(handler, *_):
-        """
-        Hooks into an endpoint response for the device uuid pskkey get, the apparent last call in standard activation,
-        and less likely to double-trigger in firmware updates (where dynamic config usually gets called twice).
-        Standard response should not be overwritten, but needs to register a task
-        to either change device SSID or update firmware. Hence, return None.
-        """
+    def trigger_payload_endpoint_hook(handler, *_):
+        if update_firmware:
+            task_function = __trigger_firmware_update
+            task_args = (config, args)
+        else:
+            task_args = (handler.request.remote_ip, config, args.ssid, args.password)
+            task_function = __configure_ssid_on_device
 
-        global pskkey_endpoint_hook_trigger_time
-        # Don't allow duplicates in a short period of time, but allow re-triggering if a new connection is made.
-        if pskkey_endpoint_hook_trigger_time is None or pskkey_endpoint_hook_trigger_time + timedelta(minutes=1) < datetime.now():
-            pskkey_endpoint_hook_trigger_time = datetime.now()
-            if update_firmware:
-                task_function = __trigger_firmware_update
-                task_args = (config, args)
-            else:
-                task_args = (handler.request.remote_ip, config, args.ssid, args.password)
-                task_function = __configure_ssid_on_device
-
-            tornado.ioloop.IOLoop.current().call_later(0, task_function, *task_args)
+        tornado.ioloop.IOLoop.current().call_later(0, task_function, *task_args)
 
         return None
 
     def upgrade_endpoint_hook(handler, *_):
+        global payload_trigger_time
+        # Don't allow duplicates in a short period of time, but allow re-triggering if a new connection is made.
+        if payload_trigger_time is not None and payload_trigger_time + timedelta(minutes=1) > datetime.now():
+            print("Discarding duplicate upgrade request to avoid race condition.")
+            return { "result": { "success": True, "t": int(time.time()) }}
+        
+        payload_trigger_time = datetime.now()
         with open(args.firmware, "rb") as fs:
             upgrade_data = fs.read()
         sec_key = config.get_bytes(DeviceConfig.SEC_KEY)
@@ -153,7 +145,14 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
         }
 
     def active_endpoint_hook(handler, *_):
+        # active should reset payload trigger time, in case the device reconnected and asked to activate.
+        global payload_trigger_time
+        payload_trigger_time = None
         schema_id, schema = list(device["schemas"].items())[0]
+        
+        # Trigger the payload after active has fully registered.
+        tornado.ioloop.IOLoop.current().call_later(2, trigger_payload_endpoint_hook, *(handler, None))
+        
         return {
             "result": {
                 "schema": json.dumps(schema, separators=(',', ':')),
@@ -174,16 +173,12 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
     response_transformers = __configure_local_device_response_transformers(config)
     endpoint_hooks = {
         "tuya.device.active": active_endpoint_hook,
-        "tuya.device.uuid.pskkey.get": pskkey_endpoint_hook,
     }
 
     if update_firmware:
         endpoint_hooks.update({
             "tuya.device.upgrade.get": upgrade_endpoint_hook,
-            # Don't hook tuya.device.upgrade.silent.get as an actual upgrade path.  There is a schema which will respond with no upgrade instead.
-            # tuya.device.upgrade.silent.get is reliable/inconsistent, and may interfer with another upgrade already in progress.
-            # We trigger the non-silent variety by mqtt in a more controlled way.
-            # "tuya.device.upgrade.silent.get": upgrade_endpoint_hook,
+            "tuya.device.upgrade.silent.get": upgrade_endpoint_hook,
         })
 
     application = tornado.web.Application([
@@ -264,6 +259,29 @@ def __exploit_device(args):
     device_config.write(output_path)
 
     print("Exploit run, saved device config too!")
+
+    # To communicate with external scripts
+    print(f"output={output_path}")
+
+
+def __write_deviceconfig(args):
+    output_dir = args.output_directory
+    if not (os.path.exists(output_dir) and os.path.isdir(output_dir)):
+        print(f"Provided output directory {output_dir} does not exist or not a directory", file=sys.stderr)
+        sys.exit(60)
+
+    try:
+        with open(args.profile, "r") as fs:
+            combined = json.load(fs)
+    except (OSError, KeyError):
+        print(f"Could not load profile {args.profile}. Are you sure the profile file exists and is a valid combined JSON?", file=sys.stderr)
+        sys.exit(65)
+
+    device_config = create_device_specific_config(args, combined, args.uuid, args.auth_key, args.psk_key)
+    output_path = os.path.join(output_dir, f"{args.uuid}.deviceconfig")
+    device_config.write(output_path)
+
+    print("Saved device config.")
 
     # To communicate with external scripts
     print(f"output={output_path}")
@@ -385,6 +403,61 @@ def parse_args():
         type=__validate_localapicredential_arg(16),
     )
     parser_exploit_device.set_defaults(handler=__exploit_device)
+
+    parser_write_deviceconfig = subparsers.add_parser(
+        "write_deviceconfig",
+        help="Write the deviceconfig to use to for Tuya API emulation."
+    )
+    parser_write_deviceconfig.add_argument("profile", help="Device profile JSON file (combined)")
+    parser_write_deviceconfig.add_argument("verbose_output", help="Flag for more verbose output, 'true' for verbose output", type=bool)
+    parser_write_deviceconfig.add_argument(
+        "--output-directory",
+        dest="output_directory",
+        required=False,
+        default="/work/configured-devices",
+        help="A directory to which the modified device parameters file will be written (default: <workdir>/configured-devices)"
+    )
+    parser_write_deviceconfig.add_argument(
+        "--deviceid",
+        dest="device_id",
+        required=False,
+        default="",
+        help="deviceid assigned to the device (default: Random)",
+        type=__validate_localapicredential_arg(20),
+    )
+    parser_write_deviceconfig.add_argument(
+        "--localkey",
+        dest="local_key",
+        required=False,
+        default="",
+        help="localkey assigned to the device (default: Random)",
+        type=__validate_localapicredential_arg(16),
+    )
+    parser_write_deviceconfig.add_argument(
+        "--authkey",
+        dest="auth_key",
+        required=True,
+        default="",
+        help="authkey assigned to the device (default: Random)",
+        type=__validate_localapicredential_arg(32),
+    )
+    parser_write_deviceconfig.add_argument(
+        "--uuid",
+        dest="uuid",
+        required=True,
+        default="",
+        help="uuid assigned to the device (default: Random)",
+        type=__validate_localapicredential_arg(16),
+    )
+    parser_write_deviceconfig.add_argument(
+        "--pskkey",
+        dest="psk_key",
+        required=True,
+        default="",
+        help="pskkey assigned to the device (default: Random)",
+        type=__validate_localapicredential_arg(37),
+    )
+    parser_write_deviceconfig.set_defaults(handler=__write_deviceconfig)
 
     parser_configure_wifi = subparsers.add_parser(
         "configure_wifi",
