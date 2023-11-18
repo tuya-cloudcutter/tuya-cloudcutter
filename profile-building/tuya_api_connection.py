@@ -8,7 +8,7 @@ from hashlib import md5, sha256
 from urllib.parse import urlparse
 
 import Cryptodome.Util.Padding as padding
-import sslpsk2 as sslpsk
+import sslpsk3 as sslpsk
 from Cryptodome.Cipher import AES
 
 

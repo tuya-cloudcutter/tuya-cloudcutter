@@ -9,7 +9,7 @@ autopep8 = "*"
 [packages]
 pycryptodomex = "*"
 tornado = "*"
-sslpsk2 = "*"
+sslpsk3 = "*"
 inquirer = "*"
 requests = "*"
 pycryptodome = "*"
@@ -18,4 +18,4 @@ click = "*"
 ltchiptool = "*"
 
 [requires]
-python_version = "3"
+python_version = ">=3.8"

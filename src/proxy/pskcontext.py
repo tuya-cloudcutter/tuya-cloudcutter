@@ -1,6 +1,6 @@
 import secrets
 import ssl
-import sslpsk2 as sslpsk
+import sslpsk3 as sslpsk
 
 from Cryptodome.Cipher import AES
 from hashlib import md5, sha256
