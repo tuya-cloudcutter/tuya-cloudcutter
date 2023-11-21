@@ -1,4 +1,4 @@
-FROM python:3.9.12-slim-buster AS base
+FROM python:3.9.18-slim-bullseye AS base
 
 RUN apt-get -qq update && apt-get install -qy --no-install-recommends git hostapd rfkill dnsmasq build-essential libssl-dev iproute2 mosquitto
 
