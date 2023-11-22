@@ -79,9 +79,11 @@ def search_device_class_after_chipid(chipid: str):
     if offset == -1:
         return ''
     offset += len(chipid_string) + 1
-    after = read_between_null_or_newline(offset)
-    if after.count('_') > 0:
-        return after
+    for _ in range(3):
+        after = read_between_null_or_newline(offset)
+        offset += len(after) + 1
+        if after.count('_') > 0 and after.count('__') == 0:
+            return after
     return ''
 
 
