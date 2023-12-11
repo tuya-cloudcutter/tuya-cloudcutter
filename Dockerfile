@@ -6,9 +6,8 @@ FROM base AS python-deps
 
 RUN pip install --upgrade pipenv
 
-COPY src/Pipfile /src/
-COPY src/Pipfile.lock /src/
-RUN cd /src && PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+COPY src/requirements.txt /src/
+RUN cd /src && pip install -r requirements.txt
 
 FROM python-deps AS cloudcutter
 
