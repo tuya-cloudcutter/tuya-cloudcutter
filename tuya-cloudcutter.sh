@@ -53,7 +53,7 @@ while getopts "hrntvw:p:f:d:l:s::a:k:u:" flag; do
 			echo "  -l TEXT           New local key (optional)"
 			echo ""
             echo "==== 3rd Party Firmware Flashing Only: ===="
-            echo "  -f TEXT           Firmware file name (optional)"
+            echo "  -f TEXT           Firmware file name without path as it exists in /custom-firmware/ (optional)"
 			echo "  -t SECONDS        Timeout in seconds for how long to wait before exiting after receiving firmware update information.  Default is 15"
 			
 			exit 0
