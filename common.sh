@@ -88,7 +88,7 @@ wifi_connect () {
         # Note, we were previously checking GENERAL.STATE and comparing to != "activated" but that has internationalization problems
         # There does not appear to be a numeric status code we can check
         # This may need updating if Tuya or one of their sub-vendors ever change their AP mode gateway IP
-        AP_GATEWAY=$(nmcli -f IP4.GATEWAY con show "${AP_MATCHED_NAME}" | awk -F ' ' '{print $2}' | grep 192\.168\.17[65]\.1)
+        AP_GATEWAY=$(nmcli -f IP4.GATEWAY con show "${AP_MATCHED_NAME}" | awk -F ' ' '{print $2}' | grep -o 192\.168\.17[65]\.1)
         if [ "${AP_GATEWAY}" != "192.168.175.1" ] && [ "${AP_GATEWAY}" != "192.168.176.1" ]; then
             if [ "${AP_GATEWAY}" != "" ]; then
                 echo "Expected AP gateway = 192.168.175.1 or 192.168.176.1 but got ${AP_GATEWAY}"
