@@ -33,7 +33,6 @@ ssid=cloudcutterflash
 channel=1
 logger_stdout_level=4
 hw_mode=g
-ieee80211n=1
 wmm_enabled=1
 interface=$WLAN
 auth_algs=1
