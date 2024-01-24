@@ -105,7 +105,8 @@ echo "Long press the power/reset button on the device until it starts fast-blink
 echo "See https://support.tuya.com/en/help/_detail/K9hut3w10nby8 for more information."
 echo "================================================================================"
 echo ""
-sleep 5
+echo "Press ENTER when ready..." && read
+
 run_helper_script "pre-wifi-config"
 wifi_connect
 if [ ! $? -eq 0 ]; then

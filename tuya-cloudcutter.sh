@@ -106,8 +106,8 @@ if [ $METHOD_DETACH ]; then
 	echo "================================================================================"
 	echo ""
 
-	nmcli device set ${WIFI_ADAPTER} managed no; service NetworkManager stop;
-	trap "service NetworkManager start; nmcli device set ${WIFI_ADAPTER} managed yes" EXIT  # Set WiFi adapter back to managed when the script exits
+	#nmcli device set ${WIFI_ADAPTER} managed no; service NetworkManager stop;
+	#trap "service NetworkManager start; nmcli device set ${WIFI_ADAPTER} managed yes" EXIT  # Set WiFi adapter back to managed when the script exits
 	INNER_SCRIPT=$(xargs -0 <<- EOF
 		# This janky looking string substitution is because of double evaluation.
 		# Once in the parent shell script, and once in this heredoc used as a shell script.
@@ -137,8 +137,8 @@ if [ $METHOD_FLASH ]; then
 	echo "Wait for up to 10-120 seconds for the device to connect to 'cloudcutterflash'. This script will then show the firmware upgrade requests sent by the device."
 	echo "================================================================================"
 	echo ""
-	nmcli device set "${WIFI_ADAPTER}" managed no
-	trap "nmcli device set ${WIFI_ADAPTER} managed yes" EXIT  # Set WiFi adapter back to managed when the script exits
+	#nmcli device set "${WIFI_ADAPTER}" managed no
+	#trap "nmcli device set ${WIFI_ADAPTER} managed yes" EXIT  # Set WiFi adapter back to managed when the script exits
 	run_in_docker bash -c "bash /src/setup_apmode.sh ${WIFI_ADAPTER} ${VERBOSE_OUTPUT} && pipenv run python3 -m cloudcutter update_firmware \"${PROFILE}\" \"/work/device-profiles/schema\" \"${CONFIG_DIR}\" \"/work/custom-firmware/\" \"${FIRMWARE}\" \"${FLASH_TIMEOUT}\" \"${VERBOSE_OUTPUT}\""
 	if [ ! $? -eq 0 ]; then
 		echo "Oh no, something went wrong with updating firmware! Try again I guess..."
