@@ -70,7 +70,7 @@ wifi_connect () {
                 SSID_REGEX="${AP_CONNECTED_ENDING}"
             fi
 
-            AP_MATCHED_NAME=$(sudo iw ${WIFI_ADAPTER} scan | grep -oP "SSID: \K.*$SSID_REGEX")
+            AP_MATCHED_NAME=$(sudo iw ${WIFI_ADAPTER} scan flush | grep -oP "SSID: \K.*$SSID_REGEX")
         done
 
         echo -e "\nFound access point name: \"${AP_MATCHED_NAME}\", trying to connect..."
