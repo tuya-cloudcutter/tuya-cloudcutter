@@ -168,7 +168,7 @@ def dump():
         if 'light_ty' in device_class:
             with open(name_output_file("icon"), 'w') as f:
                 f.write('lightbulb-outline')
-        elif '_plug' in device_class:
+        elif '_plug' in device_class or '_dltj' in device_class:
             with open(name_output_file("icon"), 'w') as f:
                 f.write('power-plug')
         elif 'strip' in device_class:
