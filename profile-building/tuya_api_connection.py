@@ -7,9 +7,9 @@ import sys
 from hashlib import md5, sha256
 from urllib.parse import urlparse
 
-import Cryptodome.Util.Padding as padding
-import sslpsk3 as sslpsk
-from Cryptodome.Cipher import AES
+import Crypto.Util.Padding as padding
+import ssl
+from Crypto.Cipher import AES
 
 
 class TuyaAPIConnection(object):
@@ -96,7 +96,7 @@ class TuyaAPIConnection(object):
         csocket = socket.create_connection((host, port))
         if encrypted:
             def x(hint): return self._psk_and_pskid(hint)
-            csocket = sslpsk.wrap_socket(csocket, ssl_version=ssl.PROTOCOL_TLSv1_2, ciphers='PSK-AES128-CBC-SHA256', psk=x)
+            csocket = ssl.wrap_socket(csocket, ssl_version=ssl.PROTOCOL_TLSv1_2, ciphers='PSK-AES128-CBC-SHA256', psk=x)
         return csocket
 
     def _psk_and_pskid(self, hint):
