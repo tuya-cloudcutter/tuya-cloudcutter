@@ -7,15 +7,15 @@ verify_ssl = true
 autopep8 = "2.0.4"
 
 [packages]
-pycryptodomex = "3.19.0"
-tornado = "6.4"
-sslpsk3 = "1.1.1"
-inquirer = "3.1.4"
-requests = "2.31.0"
-pycryptodome = "3.19.0"
-paho-mqtt = "1.6.1"
-click = "8.1.7"
+pycryptodomex = "==3.19.0"
+tornado = "==6.4"
+sslpsk3 = "==1.1.1"
+inquirer = "==3.1.4"
+requests = "==2.31.0"
+pycryptodome = "==3.19.0"
+paho-mqtt = "==1.6.1"
+click = "==8.1.7"
 ltchiptool = ">=4.9.2"
 
 [requires]
-python_version = "3"
+python_version = ">=3.9"
