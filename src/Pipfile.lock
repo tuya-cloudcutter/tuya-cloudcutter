@@ -1,11 +1,11 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "bc6f71618312ac1d1af07224821012d462520ec60d757cc7dbe69a6a82b0575c"
+            "sha256": "756e7d7e5abddbb2e84a725e595f68268987930d9e7a7b44153b20926d535756"
         },
         "pipfile-spec": 6,
         "requires": {
-            "python_version": ">=3.9"
+            "python_version": "3"
         },
         "sources": [
             {
@@ -62,7 +62,7 @@
                 "sha256:df74c72feba80014b05ab6f1e1a0bb90be9f9e7eb60a9bab1e00728f7f46d79d",
                 "sha256:f2fa607d111077145e6374d49be6098f33e7cee0967b42cfc117df53eee13332"
             ],
-            "markers": "python_full_version >= '3.7.0'",
+            "markers": "python_version >= '3.7'",
             "version": "==8.19.0"
         },
         "bk7231tools": {
@@ -70,7 +70,7 @@
                 "sha256:8d6f39fe4426ac0db1f68f1fb73fc36852999a30096779b7ec493f6bfeef6bc8",
                 "sha256:b26a2286938bf411073961554a51dd7af81a434ab28ba73835f5b918e6514ab7"
             ],
-            "markers": "python_version < '4.0' and python_full_version >= '3.7.0'",
+            "markers": "python_version >= '3.7' and python_version < '4.0'",
             "version": "==1.5.7"
         },
         "blessed": {
@@ -182,7 +182,7 @@
                 "sha256:fd1abc0d89e30cc4e02e4064dc67fcc51bd941eb395c502aac3ec19fab46b519",
                 "sha256:ff8fa367d09b717b2a17a052544193ad76cd49979c805768879cb63d9ca50561"
             ],
-            "markers": "python_full_version >= '3.7.0'",
+            "markers": "python_version >= '3.7'",
             "version": "==3.3.2"
         },
         "click": {
@@ -259,7 +259,7 @@
                 "sha256:4fb426956da3758f174054266cb100fb4d43907cf741b9890800aba4d6de8498",
                 "sha256:b606e6c2b83e8bb463ab42c375d01ff457cc2552b4326cd74897e7f3b96f1b6b"
             ],
-            "markers": "python_version < '4.0' and python_full_version >= '3.7.0'",
+            "markers": "python_version >= '3.7' and python_version < '4.0'",
             "version": "==1.0.0"
         },
         "pyaes": {
@@ -367,7 +367,7 @@
                 "sha256:08a456c2d7c1888cde3f4688b542621b676eb38cd6cfed7eb6cb2e2905ddc826",
                 "sha256:76ec784a5dd2afac3b7da8003329834cdd9824294c260027f8c8d2e4d0a78f43"
             ],
-            "markers": "python_full_version >= '3.7.0'",
+            "markers": "python_version >= '3.7'",
             "version": "==4.0.5"
         },
         "requests": {
