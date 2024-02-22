@@ -2,19 +2,17 @@
 
 AP_MATCHED_NAME=""
 AP_CONNECTED_ENDING=""
-FIRST_WIFI=$(nmcli device status | grep " wifi " | head -n1 | awk -F ' ' '{print $1}')
 
 if [ "${WIFI_ADAPTER}" == "" ]; then
-  WIFI_ADAPTER="${FIRST_WIFI}"
-fi
-
-if [ "${WIFI_ADAPTER}" == "" ]; then
+  WIFI_ADAPTER=$(sudo iw dev | grep -m 1 -oP "Interface \K.*")
+  if [ "${WIFI_ADAPTER}" == "" ]; then
 	echo "[!] Unable to auto-detect wifi adapter.  Please use the '-w' argument to pass in a wifi adapter."
 	echo "See '$0 -h' for more information."
 	exit 1
+  fi
 fi
 
-SUPPORTS_AP=$(nmcli -f wifi-properties device show ${WIFI_ADAPTER} | grep WIFI-PROPERTIES.AP | awk -F ' ' '{print $2}')
+SUPPORTS_AP=$(iw phy phy$(iw dev ${WIFI_ADAPTER} info | grep -oP "wiphy \K\d+") info | grep -q "AP" && echo "yes")
 
 # We don't want to hard stop here because localization could lead to false positives, but warn if AP mode does not appear supported.
 if [ "${SUPPORTS_AP}" != "yes" ]; then
@@ -54,10 +52,9 @@ wifi_connect () {
         reset_nm
         sleep 1
 
-        service NetworkManager start; nmcli device set ${WIFI_ADAPTER} managed yes  # Make sure we turn on managed mode again in case we didn't recover it in the trap below
-        nmcli radio wifi off
+        sudo ip link set dev ${WIFI_ADAPTER} down
         sleep 1
-        nmcli radio wifi on
+        sudo ip link set dev ${WIFI_ADAPTER} up
         while [ "${AP_MATCHED_NAME}" == "" ]
         do
             if [ ${FIRST_RUN} == true ]; then
@@ -66,11 +63,6 @@ wifi_connect () {
             else
                 echo -n "."
             fi
-            
-            RESCAN_ARG="--rescan yes"
-            if [ "${DISABLE_RESCAN}" == "true" ]; then
-                RESCAN_ARG=""
-            fi
 
             # Search for an AP ending with - and 4 hexidecimal characters that has no security mode, unless we've already connected to one, in which case we look for that specific one
             SSID_REGEX="-[A-F0-9]{4}"
@@ -78,17 +70,23 @@ wifi_connect () {
                 SSID_REGEX="${AP_CONNECTED_ENDING}"
             fi
 
-            AP_MATCHED_NAME=$(nmcli -t -f SSID,SECURITY dev wifi list ${RESCAN_ARG} ifname ${WIFI_ADAPTER} | grep -E ^.*${SSID_REGEX}:$ | awk -F ':' '{print $1}' | head -n1)
+            AP_MATCHED_NAME=$(sudo iw ${WIFI_ADAPTER} scan flush | grep -oP "SSID: \K.*$SSID_REGEX")
         done
 
         echo -e "\nFound access point name: \"${AP_MATCHED_NAME}\", trying to connect..."
-        nmcli dev wifi connect "${AP_MATCHED_NAME}" ifname ${WIFI_ADAPTER} name "${AP_MATCHED_NAME}"
+        sudo iw dev ${WIFI_ADAPTER} connect "${AP_MATCHED_NAME}"
+        until iw dev ${WIFI_ADAPTER} link | grep -qP "SSID: ${AP_MATCHED_NAME}"; do
+             echo -n "."
+             sleep 2
+        done
+        echo ""
+        sudo dhclient -v -1 ${WIFI_ADAPTER}
 
         # Check if successfully connected
         # Note, we were previously checking GENERAL.STATE and comparing to != "activated" but that has internationalization problems
         # There does not appear to be a numeric status code we can check
         # This may need updating if Tuya or one of their sub-vendors ever change their AP mode gateway IP
-        AP_GATEWAY=$(nmcli -f IP4.GATEWAY con show "${AP_MATCHED_NAME}" | awk -F ' ' '{print $2}' | grep -o 192\.168\.17[65]\.1)
+        AP_GATEWAY=$(ip route show dev ${WIFI_ADAPTER} | grep -oP "default via \K\S+")
         if [ "${AP_GATEWAY}" != "192.168.175.1" ] && [ "${AP_GATEWAY}" != "192.168.176.1" ]; then
             if [ "${AP_GATEWAY}" != "" ]; then
                 echo "Expected AP gateway = 192.168.175.1 or 192.168.176.1 but got ${AP_GATEWAY}"
