@@ -2,13 +2,13 @@
 
 [[package]]
 name = "bk7231tools"
-version = "1.5.7"
+version = "2.0.0"
 description = "Tools to interact with and analyze artifacts for BK7231 MCUs"
 optional = false
 python-versions = ">=3.7,<4.0"
 files = [
-    {file = "bk7231tools-1.5.7-py3-none-any.whl", hash = "sha256:b26a2286938bf411073961554a51dd7af81a434ab28ba73835f5b918e6514ab7"},
-    {file = "bk7231tools-1.5.7.tar.gz", hash = "sha256:8d6f39fe4426ac0db1f68f1fb73fc36852999a30096779b7ec493f6bfeef6bc8"},
+    {file = "bk7231tools-2.0.0-py3-none-any.whl", hash = "sha256:8ad3e65aa07dfbf8dd549d03791028ee7304f38c80eb4fe3b113d5e06e3c3daf"},
+    {file = "bk7231tools-2.0.0.tar.gz", hash = "sha256:27dc81ae33d61e2c5191794f2f174f3d7893d3a29f06960c920d068188c33efe"},
 ]
 
 [package.dependencies]
@@ -88,4 +88,4 @@ cp2110 = ["hidapi"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "33ba5d0b0a34ffcc9bdb2dbc2a2da94eeca559f1b6a902ca036e223559c45098"
+content-hash = "a522de938de15eb35fcdaf0192d1043b197535391791e52b8a13b1a72f5b41c6"
