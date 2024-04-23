@@ -45,7 +45,7 @@ def ask_options(text, options):
                 message=text,
                 choices=options,
             )
-        ]
+        ], theme=inquirer.themes.load_theme_from_dict({ "List": { "selection_color": "underline", "selection_cursor": "►" } })
     )
     if res is None:
         # Ctrl+C
