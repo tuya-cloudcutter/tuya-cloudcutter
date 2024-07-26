@@ -74,14 +74,14 @@ def ask_dirs(text, dir):
 
 
 def ask_device_base(devices):
-    brands = sorted(set(device["manufacturer"] for device in devices))
+    brands = sorted(set(device["manufacturer"] for device in devices), key=str.casefold)
     manufacturer = ask_options("Select the brand of your device", brands)
     names = sorted(
         set(
             device["name"]
             for device in devices
             if device["manufacturer"] == manufacturer
-        )
+        ), key=str.casefold
     )
     name = ask_options("Select the article number of your device", names)
     return next(
