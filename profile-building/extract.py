@@ -9,7 +9,7 @@ import bk7231tools
 def load_file(filename: str):
     global current_dir
     permission = 'r'
-    if filename.endswith(".jpg"):
+    if filename.endswith(".jpg") or filename.endswith(".bin"):
         permission += 'b'
     if os.path.exists(os.path.join(current_dir, filename)):
         with open(os.path.join(current_dir, filename), permission) as f:
@@ -85,6 +85,16 @@ def run(full_encrypted_file: str):
         if user_param_key is not None:
             with open(os.path.join(extractfolder, foldername + "_user_param_key.json"), 'w') as userParamKeyFile:
                 userParamKeyFile.write(user_param_key)
+        
+        decrypted_app_bin = load_file("app.bin")
+        if decrypted_app_bin is not None:
+            with open(os.path.join(extractfolder, foldername + "_app_1.00_decrypted.bin"), 'wb') as decryptedAppFile:
+                decryptedAppFile.write(decrypted_app_bin)
+
+        ap_ssid = load_file("ap_ssid.txt")
+        if ap_ssid is not None:
+            with open(os.path.join(extractfolder, foldername + "_ap_ssid.txt"), 'w') as apSsidFile:
+                apSsidFile.write(ap_ssid)
     else:
         print('[+] Encrypted bin has already been extracted')
         return
