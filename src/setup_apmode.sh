@@ -15,7 +15,7 @@ LOG_OPTIONS=""
 if [ "${VERBOSE_OUTPUT}" == "true" ]; then
         LOG_OPTIONS="--log-dhcp --log-queries --log-facility=/dev/stdout"
 fi
-dnsmasq --no-resolv --interface=$WLAN --bind-interfaces --listen-address=$GATEWAY --except-interface=lo --dhcp-range=10.42.42.10,10.42.42.40,12h --address=/#/${GATEWAY} -x $(pwd)/dnsmasq.pid $LOG_OPTIONS
+dnsmasq --no-resolv --interface=$WLAN --bind-interfaces --listen-address=$GATEWAY --except-interface=lo --dhcp-range=10.42.42.10,10.42.42.40,12h --address=/#/${GATEWAY} $LOG_OPTIONS
 
 mkdir /run/mosquitto
 chown mosquitto /run/mosquitto
@@ -28,7 +28,7 @@ rfkill unblock wifi
 # 1. 802.11n in 2.4GHz (hw_mode=g) - some devices scan for it
 # 2. WPA2-PSK - some devices do not connect otherwise
 # 3. Enforced WPA2 - same as above
-hostapd /dev/stdin -P $(pwd)/hostapd.pid -B <<- EOF
+hostapd /dev/stdin -B <<- EOF
 ssid=cloudcutterflash
 channel=1
 logger_stdout_level=4
