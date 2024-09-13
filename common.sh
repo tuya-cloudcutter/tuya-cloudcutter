@@ -5,75 +5,83 @@ AP_CONNECTED_ENDING=""
 FIRST_WIFI=$(nmcli device status | grep " wifi " | head -n1 | awk -F ' ' '{print $1}')
 
 if [ "${WIFI_ADAPTER}" == "" ]; then
-  WIFI_ADAPTER="${FIRST_WIFI}"
+    WIFI_ADAPTER="${FIRST_WIFI}"
 fi
 
 if [ "${WIFI_ADAPTER}" == "" ]; then
-	echo "[!] Unable to auto-detect wifi adapter.  Please use the '-w' argument to pass in a wifi adapter."
-	echo "See '$0 -h' for more information."
-	exit 1
+    echo "[!] Unable to auto-detect wifi adapter.  Please use the '-w' argument to pass in a wifi adapter."
+    echo "See '$0 -h' for more information."
+    exit 1
 fi
 
 SUPPORTS_AP=$(nmcli -f wifi-properties device show ${WIFI_ADAPTER} | grep WIFI-PROPERTIES.AP | awk -F ' ' '{print $2}')
 
 # We don't want to hard stop here because localization could lead to false positives, but warn if AP mode does not appear supported.
 if [ "${SUPPORTS_AP}" != "yes" ]; then
-	echo "[!] WARNING: Selected wifi AP support: ${SUPPORTS_AP}"
-	echo "AP support is manditory for tuya-cloudcutter to work.  If this is blank or 'no' your adapter doesn't support this feature."
-	read -n 1 -s -r -p "Press any key to continue, or CTRL+C to exit"
+    echo "[!] WARNING: Selected wifi AP support: ${SUPPORTS_AP}"
+    echo "AP support is manditory for tuya-cloudcutter to work.  If this is blank or 'no' your adapter doesn't support this feature."
+    read -n 1 -s -r -p "Press any key to continue, or CTRL+C to exit"
 fi
 
-function run_helper_script () {
+function run_helper_script() {
     if [ -f "scripts/${1}.sh" ]; then
         echo "Running helper script '${1}'"
         source "scripts/${1}.sh"
     fi
 }
 
-reset_nm () {
+reset_nm() {
 
-if [ -z ${RESETNM+x} ]; then
-    return 0
-else
-    echo "Wiping NetworkManager configs"
-    rm -f /etc/NetworkManager/system-connections/*.nmconnection*
-    service NetworkManager restart
-    return 0
-fi
+    if [ -z ${RESETNM+x} ]; then
+        return 0
+    else
+        echo "Wiping NetworkManager configs"
+        rm -f /etc/NetworkManager/system-connections/*.nmconnection*
+        service NetworkManager restart
+        return 0
+    fi
 
 }
 
-wifi_connect () {
+wifi_connect() {
     FIRST_RUN=true
 
-    for i in {1..5}
-    do
+    for i in {1..5}; do
         AP_MATCHED_NAME=""
 
         # Turn on WiFi, and wait for SSID to show up
         reset_nm
         sleep 1
 
-        service NetworkManager start; nmcli device set ${WIFI_ADAPTER} managed yes  # Make sure we turn on managed mode again in case we didn't recover it in the trap below
+        service NetworkManager start
+        nmcli device set ${WIFI_ADAPTER} managed yes # Make sure we turn on managed mode again in case we didn't recover it in the trap below
         nmcli radio wifi off
         sleep 1
         nmcli radio wifi on
-        while [ "${AP_MATCHED_NAME}" == "" ]
-        do
+        while [ "${AP_MATCHED_NAME}" == "" ]; do
             if [ ${FIRST_RUN} == true ]; then
-                echo "Scanning for open Tuya SmartLife AP"
+                SCAN_MESSAGE="Scanning for open Tuya SmartLife AP"
+                if [ "${OVERRIDE_SSID}" != "" ]; then
+                    SCAN_MESSAGE="${SCAN_MESSAGE} ${OVERRIDE_SSID}"
+                fi
+                echo ${SCAN_MESSAGE}
                 FIRST_RUN=false
             else
                 echo -n "."
             fi
-            
+
             RESCAN_ARG="--rescan yes"
             if [ "${DISABLE_RESCAN}" == "true" ]; then
                 RESCAN_ARG=""
             fi
 
-            # Search for an AP ending with - and 4 hexidecimal characters that has no security mode, unless we've already connected to one, in which case we look for that specific one
-            SSID_REGEX="-[A-F0-9]{4}"
+            if [ "${OVERRIDE_SSID}" != "" ]; then
+                SSID_REGEX="${OVERRIDE_SSID}"
+            else
+                # Search for an AP ending with - and 4 hexidecimal characters that has no security mode, unless we've already connected to one, in which case we look for that specific one
+                SSID_REGEX="-[A-F0-9]{4}"
+            fi
+
             if [ "${AP_CONNECTED_ENDING}" != "" ]; then
                 SSID_REGEX="${AP_CONNECTED_ENDING}"
             fi
@@ -109,7 +117,7 @@ wifi_connect () {
     return 0
 }
 
-build_docker () {
+build_docker() {
     export NO_COLOR=1
     docker build --network=host -t cloudcutter .
     if [ ! $? -eq 0 ]; then
@@ -118,7 +126,7 @@ build_docker () {
     fi
 }
 
-run_in_docker () {
+run_in_docker() {
     docker rm cloudcutter >/dev/null 2>&1
     docker run --rm --name cloudcutter --network=host -ti --privileged -v "$(pwd):/work" cloudcutter "${@}"
 }
