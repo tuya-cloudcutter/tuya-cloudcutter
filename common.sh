@@ -61,8 +61,8 @@ wifi_connect() {
         while [ "${AP_MATCHED_NAME}" == "" ]; do
             if [ ${FIRST_RUN} == true ]; then
                 SCAN_MESSAGE="Scanning for open Tuya SmartLife AP"
-                if [ "${OVERRIDE_SSID}" != "" ]; then
-                    SCAN_MESSAGE="${SCAN_MESSAGE} ${OVERRIDE_SSID}"
+                if [ "${OVERRIDE_AP_SSID}" != "" ]; then
+                    SCAN_MESSAGE="${SCAN_MESSAGE} ${OVERRIDE_AP_SSID}"
                 fi
                 echo ${SCAN_MESSAGE}
                 FIRST_RUN=false
@@ -75,8 +75,8 @@ wifi_connect() {
                 RESCAN_ARG=""
             fi
 
-            if [ "${OVERRIDE_SSID}" != "" ]; then
-                SSID_REGEX="${OVERRIDE_SSID}"
+            if [ "${OVERRIDE_AP_SSID}" != "" ]; then
+                SSID_REGEX="${OVERRIDE_AP_SSID}"
             else
                 # Search for an AP ending with - and 4 hexidecimal characters that has no security mode, unless we've already connected to one, in which case we look for that specific one
                 SSID_REGEX="-[A-F0-9]{4}"

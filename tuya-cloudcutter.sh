@@ -28,7 +28,7 @@ while getopts "hrntvw:p:f:d:l:s::a:k:u:o:" flag; do
         a)  AUTHKEY=${OPTARG};;
         k)  PSKKEY=${OPTARG};;
         u)  UUID=${OPTARG};;
-        o)  OVERRIDE_SSID=${OPTARG};;
+        o)  OVERRIDE_AP_SSID=${OPTARG};;
         s)	getopts-extra "$@"
             METHOD_DETACH="true"
             HAVE_SSID="true"
