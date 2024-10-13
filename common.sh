@@ -37,7 +37,7 @@ reset_nm() {
     else
         echo "Wiping NetworkManager configs"
         rm -f /etc/NetworkManager/system-connections/*.nmconnection*
-        service NetworkManager restart
+        systemctl restart NetworkManager
         return 0
     fi
 
@@ -53,7 +53,7 @@ wifi_connect() {
         reset_nm
         sleep 1
 
-        service NetworkManager start
+        systemctl start NetworkManager
         nmcli device set ${WIFI_ADAPTER} managed yes # Make sure we turn on managed mode again in case we didn't recover it in the trap below
         nmcli radio wifi off
         sleep 1

@@ -108,8 +108,8 @@ if [ $METHOD_DETACH ]; then
     echo "================================================================================"
     echo ""
 
-    nmcli device set ${WIFI_ADAPTER} managed no; service NetworkManager stop;
-    trap "service NetworkManager start; nmcli device set ${WIFI_ADAPTER} managed yes" EXIT  # Set WiFi adapter back to managed when the script exits
+    nmcli device set ${WIFI_ADAPTER} managed no; systemctl stop NetworkManager;
+    trap "systemctl start NetworkManager; nmcli device set ${WIFI_ADAPTER} managed yes" EXIT  # Set WiFi adapter back to managed when the script exits
     INNER_SCRIPT=$(xargs -0 <<- EOF
         # This janky looking string substitution is because of double evaluation.
         # Once in the parent shell script, and once in this heredoc used as a shell script.
