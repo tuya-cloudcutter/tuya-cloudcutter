@@ -61,16 +61,21 @@ def build_params(epoch_time, uuid):
     return params
 
 
-def build_data(epoch_time, reduced_token, product_key, software_version, baseline_version='40.00', cad_version='1.0.2', cd_version='1.0.0', protocol_version='2.2', is_fk: bool = True):
+def build_data(epoch_time, reduced_token, product_key, firmware_key, software_version, baseline_version='40.00', cad_version='1.0.2', cd_version='1.0.0', protocol_version='2.2', is_fk: bool = True):
     data = {
         'token': reduced_token,
         'softVer': software_version,
         'productKey': product_key,
         'protocolVer': protocol_version,
         'baselineVer': baseline_version,
+        'productKeyStr': firmware_key,
+        #'devId': '', # 20 char, is re-activating an already activated device, possibly prevents a devId change?
+        #'hid': '', # 12 char, unsure where it gets this value.  Possibly a TuyaMCU id of some sort.
+        #'devAttribute': 515,
+        #'modules': '[{"type":9,"softVer":"1.0.0","online":true}]', # for TuyaMCU devices, version varies.  Alternately "modules": "[{"otaChannel":9,"softVer":"1.0.0","online":true}]",
         'cadVer': cad_version,
         'cdVer': cd_version,
-        'options': '{"isFK":' + str(is_fk).lower() + '}',
+        'options': '{"isFK":' + str(is_fk).lower() + ',"otaChannel":0}',
         't': epoch_time,
     }
 
@@ -186,20 +191,20 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, produ
     responseCodesToContinueAter = ['FIRMWARE_NOT_MATCH', 'APP_PRODUCT_UNSUPPORT', 'NOT_EXISTS']
 
     if product_key is not None:
-        data = build_data(epoch_time, reduced_token, product_key, software_version, baseline_version, cad_version, cd_version, protocol_version, False)
+        data = build_data(epoch_time, reduced_token, product_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, False)
         response = connection.request(url, params, data, requestType)
 
         if response["success"] == False and response["errorCode"] in responseCodesToContinueAter:
-            data = build_data(epoch_time, reduced_token, product_key, software_version, baseline_version, cad_version, cd_version, protocol_version, True)
+            data = build_data(epoch_time, reduced_token, product_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, True)
             response = connection.request(url, params, data, requestType)
 
     if product_key != firmware_key:
         if (response is None or (response is not None and response["success"] == False and response["errorCode"] != "EXPIRE")) and firmware_key is not None:
-            data = build_data(epoch_time, reduced_token, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, True)
+            data = build_data(epoch_time, reduced_token, firmware_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, True)
             response = connection.request(url, params, data, requestType)
 
             if response["success"] == False and response["errorCode"] in responseCodesToContinueAter:
-                data = build_data(epoch_time, reduced_token, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, False)
+                data = build_data(epoch_time, reduced_token, firmware_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, False)
                 response = connection.request(url, params, data, requestType)
 
     if response["success"] == True:
