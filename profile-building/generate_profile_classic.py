@@ -58,6 +58,7 @@ def assemble():
     issue = load_file("issue.txt")
     image = load_file("image.jpg")
     device_configuration = load_file("user_param_key.json")
+    tuyamcu_baud = load_file("tuyamcu_baud.txt")
 
     profile = {}
     firmware = {}
@@ -138,6 +139,9 @@ def assemble():
 
     if device_configuration is not None:
         device["device_configuration"] = json.loads(device_configuration)
+
+    if tuyamcu_baud is not None:
+        device["tuyamcu_baud"] = tuyamcu_baud
 
     print(f"[+] Creating device profile {device_filename}")
     with open(os.path.join(full_path, "profile-classic", "devices", f"{device_filename}.json"), 'w') as f:

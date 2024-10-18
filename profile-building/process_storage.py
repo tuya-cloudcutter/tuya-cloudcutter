@@ -3,7 +3,7 @@ import os.path
 import sys
 
 
-def write_file(key, value):
+def write_file(key, value: str):
     try:
         with open(os.path.join(base_folder, base_name + "_" + key + ".txt"), "x") as file:
             file.write(value)
@@ -47,6 +47,12 @@ def dump(file):
                         print(f"[+] schema: {storage[schema_id]}")
                     if write_file("schema", json.dumps(storage[schema_id])):
                         print(f"[+] schema {schema_id}:")
+        if 'baud_cfg' in storage and 'baud' in storage['baud_cfg']:
+            print(f"[+] TuyaMCU baud: {storage['baud_cfg']['baud']}")
+            write_file("tuyamcu_baud", f"{storage['baud_cfg']['baud']}")
+        elif 'uart_adapt_params' in storage and 'uart_baud' in storage['uart_adapt_params']:
+            print(f"[+] TuyaMCU baud: {storage['uart_adapt_params']['uart_baud']}")
+            write_file("tuyamcu_baud", f"{storage['uart_adapt_params']['uart_baud']}")
         if not hasProductKey and 'gw_bi' in storage:
             if 'fac_pin' in storage['gw_bi']:
                 print(f"[+] product key: {storage['gw_bi']['fac_pin']}")
