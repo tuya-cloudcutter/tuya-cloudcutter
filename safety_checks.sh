@@ -64,6 +64,19 @@ check_blacklist () {
     fi
 }
 
+check_app_armor () {
+    if type "aa-enabled" &> /dev/null && aa-enabled | grep -qw Yes; then
+        echo "Detected app armour"
+        echo "This has been known to block hostapd, which is required to complete the exploit"
+        read -p "Do you wish to stop the app armour service? [y/N] " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            sudo aa-teardown
+            echo "AppArmour has been turned off.  You will need to manually restart it or reboot your OS for it to turn back on.
+        fi
+    fi
+}
+
 echo ""
 echo "Performing safety checks to make sure all required ports are available"
 check_port udp 53 "resolve DNS queries"
@@ -76,5 +89,6 @@ check_port tcp 1883 "run MQTT"
 check_port tcp 8886 "run MQTTS"
 check_firewall
 check_blacklist
+check_app_armor
 echo "Safety checks complete."
 echo ""
