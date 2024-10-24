@@ -72,7 +72,7 @@ check_app_armor () {
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             sudo aa-teardown
-            echo "AppArmour has been turned off.  You will need to manually restart it or reboot your OS for it to turn back on.
+            echo "AppArmour has been turned off.  You will need to manually restart it or reboot your OS for it to turn back on."
         fi
     fi
 }
