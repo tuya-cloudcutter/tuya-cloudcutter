@@ -131,8 +131,12 @@ def walk_app_code():
 
     # TuyaOS V3+, patched
     if b'TuyaOS V:3' in appcode:
+        with open(name_output_file('patched.txt'), 'w') as f:
+            f.write('patched')
+        print("==============================================================================================================")
         print("[!] The binary supplied appears to be patched and no longer vulnerable to the tuya-cloudcutter exploit.")
-        sys.exit(5)
+        print("==============================================================================================================")
+        return
 
     raise RuntimeError('Unknown pattern, please open a new issue and include the bin.')
 
@@ -144,11 +148,20 @@ def check_for_patched(known_patch_pattern):
     patched_matches = matcher.bytecode_search(patched_bytecode, stop_at_first=True)
 
     if patched_matches:
+        with open(name_output_file('patched.txt'), 'w') as f:
+            f.write('patched')
+        print("==============================================================================================================")
         print("[!] The binary supplied appears to be patched and no longer vulnerable to the tuya-cloudcutter exploit.")
-        sys.exit(5)
+        print("==============================================================================================================")
+        return True
+    
+    return False
 
 
 def process_generic(chipset, pattern_version, payload_type, payload_padding, payload_string, payload_count, payload_index, finish_string, finish_count, finish_index):
+    with open(name_output_file('chip.txt'), 'w') as f:
+        f.write(f'{chipset}')
+
     matcher = CodePatternFinder(appcode, 0x0)
     print(f"[+] Matched pattern for {chipset} version {pattern_version}, payload type {payload_type}")
 
@@ -159,7 +172,8 @@ def process_generic(chipset, pattern_version, payload_type, payload_padding, pay
     ]
 
     for patch_pattern in patch_patterns:
-        check_for_patched(patch_pattern)
+        if check_for_patched(patch_pattern):
+            return
 
     print(f"[+] Searching for {payload_type} payload address")
     payload_bytecode = bytes.fromhex(payload_string)
@@ -187,8 +201,6 @@ def process_generic(chipset, pattern_version, payload_type, payload_padding, pay
                 raise RuntimeError("[!] Finish address contains a null byte, unable to continue")
     print(f"[+] Finish address gadget (THUMB): 0x{finish_addr:X}")
 
-    with open(name_output_file('chip.txt'), 'w') as f:
-        f.write(f'{chipset}')
     with open(name_output_file('address_finish.txt'), 'w') as f:
         f.write(f'0x{finish_addr:X}')
 

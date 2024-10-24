@@ -17,22 +17,27 @@ def dump(file):
         base_name = os.path.basename(file)[:-13]
         base_folder = os.path.dirname(file)
         hasProductKey = False
-        print(f"[+] uuid: {storage['gw_bi']['uuid']}")
-        write_file("uuid", storage['gw_bi']['uuid'])
-        print(f"[+] auth_key: {storage['gw_bi']['auth_key']}")
-        write_file("auth_key", storage['gw_bi']['auth_key'])
-        print(f"[+] ap_ssid: {storage['gw_bi']['ap_ssid']}")
-        write_file("ap_ssid", storage['gw_bi']['ap_ssid'])
+        if 'gw_bi' in storage and storage['gw_bi']:
+            print(f"[+] uuid: {storage['gw_bi']['uuid']}")
+            write_file("uuid", storage['gw_bi']['uuid'])
+            print(f"[+] auth_key: {storage['gw_bi']['auth_key']}")
+            write_file("auth_key", storage['gw_bi']['auth_key'])
+            print(f"[+] ap_ssid: {storage['gw_bi']['ap_ssid']}")
+            write_file("ap_ssid", storage['gw_bi']['ap_ssid'])
         # Not all firmwares have version information in storage
         if 'gw_di' in storage:
             if 'swv' in storage['gw_di']:
-                print(f"[+] swv: {storage['gw_di']['swv']}")
+                print(f"[+] storage swv: {storage['gw_di']['swv']}")
                 write_file("swv", storage['gw_di']['swv'])
             else:
-                print(f"[+] swv: 0.0.0")
+                print(f"[+] storage swv: 0.0.0")
                 write_file("swv", "0.0.0")
-            print(f"[+] bv: {storage['gw_di']['bv']}")
-            write_file("bv", storage['gw_di']['bv'])
+            if 'bv' in storage['gw_di']:
+                print(f"[+] storage bv: {storage['gw_di']['bv']}")
+                write_file("bv", storage['gw_di']['bv'])
+            else:
+                print(f"[+] storage bv: 0.0.0")
+                write_file("bv", "0.0.0")
             if 'firmk' in storage['gw_di'] and storage['gw_di']['firmk'] is not None:
                 print(f"[+] firmware key: {storage['gw_di']['firmk']}")
                 write_file("firmware_key", storage['gw_di']['firmk'])

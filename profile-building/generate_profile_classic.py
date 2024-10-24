@@ -23,6 +23,13 @@ def assemble():
         print("[!] Unable to find device directory name")
         return
 
+    patched = load_file("patched.txt")
+    if patched:
+        print("==============================================================================================================")
+        print("[!] The binary supplied appears to be patched and no longer vulnerable to the tuya-cloudcutter exploit.")
+        print("==============================================================================================================")
+        return
+
     # All should have these
     manufacturer = base_name.split('_')[0].replace('-', ' ').replace("   ", "-")
     name = base_name.split('_')[1].replace('-', ' ').replace("   ", "-")
