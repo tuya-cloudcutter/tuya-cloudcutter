@@ -212,7 +212,11 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, produ
         print(f"[+] Schema: {response['result']['schema']}")
         with open(os.path.join(directory, output_file_prefix + "_schema_id.txt"), 'w') as f:
             f.write(response['result']['schemaId'])
+        with open(os.path.join(os.path.join(directory, ".."), "schema_id.txt"), 'w') as f:
+            f.write(response['result']['schemaId'])
         with open(os.path.join(directory, output_file_prefix + "_schema.txt"), 'w') as f:
+            f.write(response['result']['schema'])
+        with open(os.path.join(os.path.join(directory, ".."), "schema.txt"), 'w') as f:
             f.write(response['result']['schema'])
         with open(os.path.join(directory, output_file_prefix + "_dev_id.txt"), 'w') as f:
             f.write(response['result']['devId'])
