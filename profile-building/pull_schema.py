@@ -249,6 +249,7 @@ def run_directory(directory, token=None):
     for file in dirListing:
         if file.endswith('_uuid.txt'):
             uuid = read_single_line_file(os.path.join(directory, file))
+            output_file_prefix = file.replace('_uuid.txt', '')
         elif file.endswith('_auth_key.txt'):
             auth_key = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_product_key.txt'):
@@ -259,8 +260,6 @@ def run_directory(directory, token=None):
             software_version = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_bv.txt'):
             baseline_version = read_single_line_file(os.path.join(directory, file))
-        elif file.endswith('_chip.txt'):
-            output_file_prefix = file.replace('_chip.txt', '')
 
     if uuid is None:
         print('[!] uuid was not found')
