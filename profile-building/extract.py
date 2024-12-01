@@ -47,7 +47,11 @@ def run(full_encrypted_file: str):
     input.storage = False
 
     if not os.path.exists(extractfolder) or not os.path.exists(os.path.join(extractfolder, foldername + "_app_1.00_decrypted.bin")):
-        bk7231tools.__main__.dissect_dump_file(input)
+        try:
+            bk7231tools.__main__.dissect_dump_file(input)
+        except Exception as ex:
+            print(ex)
+
         dirListing = os.listdir(extractfolder)
 
         for file in dirListing:
