@@ -33,8 +33,9 @@ managed=true
 7. Install Docker with `curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh`
 8. Install git `sudo apt install git`
 9. Clone tuya-cloudcutter repo `git clone https://github.com/tuya-cloudcutter/tuya-cloudcutter`
-10. (Optional as independent step) In the cloudcutter directory, build the docker image `sudo docker build --network=host -t cloudcutter .`
-11. Run cloudcutter with `sudo ./tuya-cloudcutter.sh -r ...` (refer to [usage instructions](./INSTRUCTIONS.md))
+10. Go to cloned tuya-cloudcutter repo `cd tuya-cloudcutter`
+11. (Optional as independent step) In the cloudcutter directory, build the docker image `sudo docker build --network=host -t cloudcutter .`
+12. Run cloudcutter with `sudo ./tuya-cloudcutter.sh -r ...` (refer to [usage instructions](./INSTRUCTIONS.md))
 
 ## Pi Zero 2W with SSH over USB
 
