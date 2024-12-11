@@ -84,14 +84,14 @@ def build_data(epoch_time, reduced_token, product_key, firmware_key, software_ve
 
 def get_new_token():
     print('[!] No token provided.')
-    print("[!] On any device on the same network as you're device running this script, please log into the Smart Life app ('Try as Guest' works fine if you do not already have an account)")
+    print("[!] On any device on the same network/vlan as your device running this script, please log into the Smart Life app ('Try as Guest' works fine if you do not already have an account)")
     print("[!]  Note: no real device should currently be in pairing mode, or the instructions below may not match.")
     print("[!]  - Start the add device procedure (hit '+' in the upper-right and select 'Add Device')")
     print("[!]  - Under 'Add Manually' select 'Socket (Wi-Fi)'")
     print("[!]  - Enter your network credentials as instructed")
     print("[!]  - Do not follow any of the instructions about putting a device into pairing mode, instead select 'next' until it asks the status of the indicator and select 'Blink Slowly'")
     print("[!]  - Select 'Go to Connect', then in your wifi selection screen, hit the back button to return to Smart Life.")
-    print("[!] A new token should be sent to your network, and this script will continue.")
+    print("[!] A new token should be sent to your network (make sure your firewall is not blocking port 6669), and this script will continue.")
     print('[!] Note: this will join an unresponsive device to your account.  You can safely delete it afterwards.')
     print('[+] Waiting for multicast token from app...')
 
