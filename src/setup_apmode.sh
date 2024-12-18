@@ -42,3 +42,4 @@ wpa_passphrase=abcdabcd
 rsn_pairwise=CCMP
 EOF
 
+echo "If your device gets stuck here with no progress after several (at least two) minutes, see https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/FAQ#my-device-gets-stuck-after-dhcp-what-can-i-do for additional steps"
