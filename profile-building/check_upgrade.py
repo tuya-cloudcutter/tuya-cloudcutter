@@ -61,9 +61,9 @@ def build_params(epoch_time, devId):
     return params
 
 
-def build_data(epoch_time):
+def build_data(epoch_time, fwtype = '0'):
     data = {
-        'type': '0',
+        'type': fwtype,
         't': epoch_time
     }
 
@@ -169,25 +169,45 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, dev_i
     response = None
     requestType = "POST"
 
-    data = build_data(epoch_time)
+    # Wifi firmware, type 0
+    data = build_data(epoch_time, 0)
     response = connection.request(url, params, data, requestType)
 
     if response["success"] == True:
         if response.get('result') is not None:
-            version = response['result']['version']
-            url = response['result']['url']
-            print("[+] Firmware update available:")
-            print(f"[+] Version: {version}")
-            print(f"[+] Url: {url}")
-            with open(os.path.join(directory, output_file_prefix + f"_firmware_{version}.txt"), 'w') as f:
+            wifi_version = response['result']['version']
+            firmware_wifi_upgrade_url = response['result']['url']
+            print("[+] Wifi Firmware update available:")
+            print(f"[+] Version: {wifi_version}")
+            print(f"[+] Url: {firmware_wifi_upgrade_url}")
+            with open(os.path.join(directory, output_file_prefix + f"_firmware_wifi_{wifi_version}.txt"), 'w') as f:
                 f.write(url)
         else:
-            print("[+] No firmware update available.")
+            print("[+] No Wifi firmware update available.")
     elif response["success"] == False and response["errorCode"] == 'EXPIRE':
         print("[!] The token provided has either expired, or you are connected to the wrong region")
     else:
         print(response)
+        
+    # MCU firmware, type 9
+    data = build_data(epoch_time, 9)
+    response = connection.request(url, params, data, requestType)
 
+    if response["success"] == True:
+        if response.get('result') is not None:
+            mcu_version = response['result']['version']
+            firmware_mcu_upgrade_url = response['result']['url']
+            print("[+] MCU Firmware update available:")
+            print(f"[+] Version: {mcu_version}")
+            print(f"[+] Url: {firmware_mcu_upgrade_url}")
+            with open(os.path.join(directory, output_file_prefix + f"_firmware_mcu_{mcu_version}.txt"), 'w') as f:
+                f.write(url)
+        else:
+            print("[+] No MCU firmware update available.")
+    elif response["success"] == False and response["errorCode"] == 'EXPIRE':
+        print("[!] The token provided has either expired, or you are connected to the wrong region")
+    else:
+        print(response)
 
 def run_input(uuid, auth_key, dev_id, sec_key, token=None):
     run('.\\', 'device', uuid, auth_key, dev_id, sec_key, token)
@@ -205,14 +225,13 @@ def run_directory(directory, token=None):
     for file in dirListing:
         if file.endswith('_uuid.txt'):
             uuid = read_single_line_file(os.path.join(directory, file))
+            output_file_prefix = file.replace('_uuid.txt', '')
         elif file.endswith('_auth_key.txt'):
             auth_key = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_dev_id.txt'):
             dev_id = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_sec_key.txt'):
             sec_key = read_single_line_file(os.path.join(directory, file))
-        elif file.endswith('_chip.txt'):
-            output_file_prefix = file.replace('_chip.txt', '')
 
     if uuid is None:
         print('[!] uuid was not found')

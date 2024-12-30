@@ -32,6 +32,12 @@ def dump(file):
             else:
                 print(f"[+] storage swv: 0.0.0")
                 write_file("swv", "0.0.0")
+            if 'dev_swv' in storage['gw_di']:
+                print(f"[+] storage dev_swv: {storage['gw_di']['dev_swv']}")
+                write_file("mcuswv", storage['gw_di']['dev_swv'])
+            else:
+                print(f"[+] storage dev_swv: 0.0.0")
+                write_file("mcuswv", "0.0.0")
             if 'bv' in storage['gw_di']:
                 print(f"[+] storage bv: {storage['gw_di']['bv']}")
                 write_file("bv", storage['gw_di']['bv'])

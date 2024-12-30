@@ -25,7 +25,9 @@ class TuyaAPIConnection(object):
         port = parsed_url.port or (443 if psk_wrapped else 80)
         querystring = self._build_querystring(params)
         requestline = f"{parsed_url.path}{querystring}"
+        # print(requestline)
         body = self._encrypt_data(data)
+        # print(data)
         http_request = self._build_request(method, hostname, requestline, body)
 
         with self._make_socket(hostname, port, psk_wrapped) as socket:
@@ -45,11 +47,11 @@ class TuyaAPIConnection(object):
             except Exception as exception:
                 print("[!] Unable to get a response from Tuya API, or response was malformed.")
                 print(f"[!] {url} must not be blocked in order to pull data from the Tuya API.")
-                if (response_body_json is not None):
+                if (response_body_json is not None and 'errorCode' in response_body_json):
                     print(f"[!] Error message: {response_body_json['errorCode']}")
                 else:
-                    print(f"[!] Error message: {response_body}")
-                    print(f"[!] Error message: {exception}")
+                    print(f"[!] Response Body: {response_body}")
+                    print(f"[!] Exception: {exception}")
                 sys.exit(3)
 
     def _encrypt_data(self, data: dict):

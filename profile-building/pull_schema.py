@@ -61,7 +61,7 @@ def build_params(epoch_time, uuid):
     return params
 
 
-def build_data(epoch_time, reduced_token, product_key, firmware_key, software_version, baseline_version='40.00', cad_version='1.0.2', cd_version='1.0.0', protocol_version='2.2', is_fk: bool = True):
+def build_data(epoch_time, reduced_token, product_key, firmware_key, software_version, mcu_software_version, baseline_version='40.00', cad_version='1.0.2', cd_version='1.0.0', protocol_version='2.2', is_fk: bool = True):
     data = {
         'token': reduced_token,
         'softVer': software_version,
@@ -72,7 +72,7 @@ def build_data(epoch_time, reduced_token, product_key, firmware_key, software_ve
         #'devId': '', # 20 char, is re-activating an already activated device, possibly prevents a devId change?
         #'hid': '', # 12 char, unsure where it gets this value.  Possibly a TuyaMCU id of some sort.
         #'devAttribute': 515,
-        #'modules': '[{"type":9,"softVer":"1.0.0","online":true}]', # for TuyaMCU devices, version varies.  Alternately "modules": "[{"otaChannel":9,"softVer":"1.0.0","online":true}]",
+        'modules': '[{"type":9,"softVer":"' + mcu_software_version + '","online":true}]', # for TuyaMCU devices, version varies.  Alternately "modules": "[{"otaChannel":9,"softVer":"1.0.0","online":true}]",
         'cadVer': cad_version,
         'cdVer': cd_version,
         'options': '{"isFK":' + str(is_fk).lower() + ',"otaChannel":0}',
@@ -133,7 +133,7 @@ def receive_token():
             pass
 
 
-def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, product_key: str, firmware_key: str, software_version: str, baseline_version: str = '40.00', cad_version: str = '1.0.2', cd_version: str = '1.0.0', protocol_version='2.2', token: str = None):
+def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, product_key: str, firmware_key: str, software_version: str, mcu_software_version: str, baseline_version: str = '40.00', cad_version: str = '1.0.2', cd_version: str = '1.0.0', protocol_version='2.2', token: str = None):
     if uuid is None or len(uuid) != 16:
         if product_key is not None and len(product_key) == 16:
             uuid = product_key
@@ -145,6 +145,8 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, produ
         print_and_exit('required product_key or firmware_key was not found or was invalid (expected 16 characters)')
     if software_version is None or len(software_version) < 5:
         print_and_exit('required softVer was not found or was invalid (expected >= 5 characters)')
+    if mcu_software_version is None or len(mcu_software_version) < 5:
+        print_and_exit('required MCUsoftVer was not found or was invalid (expected >= 5 characters)')
     if cad_version is None or len(cad_version) < 5:
         print_and_exit('required cadVer was not found or was invalid (expected >= 5 characters)')
     if baseline_version is None or len(baseline_version) < 5:
@@ -191,20 +193,20 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, produ
     responseCodesToContinueAter = ['FIRMWARE_NOT_MATCH', 'APP_PRODUCT_UNSUPPORT', 'NOT_EXISTS']
 
     if product_key is not None:
-        data = build_data(epoch_time, reduced_token, product_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, False)
+        data = build_data(epoch_time, reduced_token, product_key, firmware_key, software_version, mcu_software_version, baseline_version, cad_version, cd_version, protocol_version, False)
         response = connection.request(url, params, data, requestType)
 
         if response["success"] == False and response["errorCode"] in responseCodesToContinueAter:
-            data = build_data(epoch_time, reduced_token, product_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, True)
+            data = build_data(epoch_time, reduced_token, product_key, firmware_key, software_version, mcu_software_version, baseline_version, cad_version, cd_version, protocol_version, True)
             response = connection.request(url, params, data, requestType)
 
     if product_key != firmware_key:
         if (response is None or (response is not None and response["success"] == False and response["errorCode"] != "EXPIRE")) and firmware_key is not None:
-            data = build_data(epoch_time, reduced_token, firmware_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, True)
+            data = build_data(epoch_time, reduced_token, firmware_key, firmware_key, software_version, mcu_software_version, baseline_version, cad_version, cd_version, protocol_version, True)
             response = connection.request(url, params, data, requestType)
 
             if response["success"] == False and response["errorCode"] in responseCodesToContinueAter:
-                data = build_data(epoch_time, reduced_token, firmware_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, False)
+                data = build_data(epoch_time, reduced_token, firmware_key, firmware_key, software_version, mcu_software_version, baseline_version, cad_version, cd_version, protocol_version, False)
                 response = connection.request(url, params, data, requestType)
 
     if response["success"] == True:
@@ -228,8 +230,8 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, produ
         print(response)
 
 
-def run_input(uuid, auth_key, product_key, firmware_key, software_version, baseline_version='40.00', cad_version='1.0.2', cd_version='1.0.0', protocol_version='2.2', token=None):
-    run('.\\', 'device', uuid, auth_key, product_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, token)
+def run_input(uuid, auth_key, product_key, firmware_key, software_version, mcu_software_version, baseline_version='40.00', cad_version='1.0.2', cd_version='1.0.0', protocol_version='2.2', token=None):
+    run('.\\', 'device', uuid, auth_key, product_key, firmware_key, software_version, mcu_software_version, baseline_version, cad_version, cd_version, protocol_version, token)
 
 
 def run_directory(directory, token=None):
@@ -238,6 +240,7 @@ def run_directory(directory, token=None):
     product_key = None
     firmware_key = None
     software_version = None
+    mcu_software_version = None
     baseline_version = '40.00'
     cad_version = '1.0.2'
     cd_version = '1.0.0'
@@ -258,6 +261,8 @@ def run_directory(directory, token=None):
             firmware_key = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_swv.txt'):
             software_version = read_single_line_file(os.path.join(directory, file))
+        elif file.endswith('_mcuswv.txt'):
+            mcu_software_version = read_single_line_file(os.path.join(directory, file))
         elif file.endswith('_bv.txt'):
             baseline_version = read_single_line_file(os.path.join(directory, file))
 
@@ -273,11 +278,14 @@ def run_directory(directory, token=None):
     if software_version is None:
         print('[!] software_version was not found')
         return
+    if mcu_software_version is None:
+        print('[!] mcu_software_version was not found')
+        return
     if baseline_version is None:
         print('[!] baseline_version was not found')
         return
 
-    run(directory, output_file_prefix, uuid, auth_key, product_key, firmware_key, software_version, baseline_version, cad_version, cd_version, protocol_version, token)
+    run(directory, output_file_prefix, uuid, auth_key, product_key, firmware_key, software_version, mcu_software_version, baseline_version, cad_version, cd_version, protocol_version, token)
 
 
 if __name__ == '__main__':
@@ -292,10 +300,11 @@ if __name__ == '__main__':
             product_key = sys.argv[4]
             firmware_key = sys.argv[5]
             software_version = sys.argv[6]
-            cad_version = ('1.0.2' if sys.argv[7] is None else sys.argv[7])
-            baseline_version = ('40.00' if sys.argv[8] is None else sys.argv[8])
+            mcu_software_version = sys.argv[7]
+            cad_version = ('1.0.2' if sys.argv[8] is None else sys.argv[8])
+            baseline_version = ('40.00' if sys.argv[9] is None else sys.argv[9])
             token = sys.argv[9]
-            run_input(uuid, auth_key, product_key, firmware_key, software_version, cad_version, baseline_version, token)
+            run_input(uuid, auth_key, product_key, firmware_key, software_version, mcu_software_version, cad_version, baseline_version, token)
         elif sys.argv[1] == '--directory':
             if not sys.argv[2:]:
                 print('Unrecognized input.')
