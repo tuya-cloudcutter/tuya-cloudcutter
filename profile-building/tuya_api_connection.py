@@ -36,6 +36,7 @@ class TuyaAPIConnection(object):
                 datas = socket.recv(10000)
                 response_body = datas.split(b"\r\n\r\n")[1].decode("utf-8").strip()
                 # print(response_body)
+                response_body_json = None
                 response_body_json = json.loads(response_body)
                 result = response_body_json["result"]
                 result = base64.b64decode(result)
