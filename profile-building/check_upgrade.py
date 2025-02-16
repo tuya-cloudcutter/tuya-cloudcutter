@@ -181,7 +181,7 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, dev_i
             print(f"[+] Version: {wifi_version}")
             print(f"[+] Url: {firmware_wifi_upgrade_url}")
             with open(os.path.join(directory, output_file_prefix + f"_firmware_wifi_{wifi_version}.txt"), 'w') as f:
-                f.write(url)
+                f.write(firmware_wifi_upgrade_url)
         else:
             print("[+] No Wifi firmware update available.")
     elif response["success"] == False and response["errorCode"] == 'EXPIRE':
@@ -201,7 +201,7 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, dev_i
             print(f"[+] Version: {mcu_version}")
             print(f"[+] Url: {firmware_mcu_upgrade_url}")
             with open(os.path.join(directory, output_file_prefix + f"_firmware_mcu_{mcu_version}.txt"), 'w') as f:
-                f.write(url)
+                f.write(firmware_mcu_upgrade_url)
         else:
             print("[+] No MCU firmware update available.")
     elif response["success"] == False and response["errorCode"] == 'EXPIRE':
