@@ -68,7 +68,7 @@ def search_device_class_after_compiled_line():
     for _ in range(4):
         after = read_between_null_or_newline(offset)
         offset += len(after) + 1
-        if after.count('_') > 0:
+        if after.count('_') > 0 and after.count(' ') == 0:
             return after
     return ''
 
