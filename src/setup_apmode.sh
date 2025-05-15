@@ -64,9 +64,13 @@ rfkill unblock wifi
 # 2. WPA2-PSK - some devices do not connect otherwise
 # 3. Enforced WPA2 - same as above
 # 4. Channel parsed from wlan device info or 1 as fallback
-
 AP_CHANNEL=$(get_ap_channel "$WLAN")
-echo "Using hostapd channel $AP_CHANNEL parsed from $WLAN info (\`iw $WLAN info\`)."
+if [[ $? -eq 0 ]]; then
+        echo "Using hostapd channel $AP_CHANNEL parsed from wlan info."
+else
+        AP_CHANNEL="1"
+        echo "Unable to get channel from wlan info. Using $AP_CHANNEL as fallback."
+fi
 hostapd /dev/stdin -P $(pwd)/hostapd.pid -B <<- EOF
 ssid=cloudcutterflash
 channel=$AP_CHANNEL
