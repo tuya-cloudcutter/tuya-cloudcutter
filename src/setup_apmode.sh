@@ -4,6 +4,41 @@ GATEWAY=10.42.42.1
 WLAN=${1:-UNKNOWN}
 VERBOSE_OUTPUT=${2:-"false"}
 
+get_channel() {
+        iw dev "$1" info 2>/dev/null | awk '/channel/ {if ($2 ~ /^[0-9]+$/) print $2}'
+}
+get_wiphy() {
+        iw dev "$1" info | awk '/wiphy/ {print $2}'
+}
+get_ap_channel() {
+        local iface="$1"
+        local channel=$(get_channel "$iface" 2>/dev/null) 
+        if [[ -n "$channel" ]]; then
+                # Found channel directly from the wanted interface info
+                echo "$channel"
+                return 0
+        fi
+
+		# Find the "parent" interface i.e. the one for which this is an additional virtual interface
+        # to get channel.
+        local wiphy=$(get_wiphy "$iface") || return 1
+
+        for other_iface in $(iw dev | awk '/Interface/ {print $2}'); do
+                [[ "$other_iface" == "$iface" ]] && continue
+                local other_wiphy=$(get_wiphy "$other_iface")
+                if [[ "$other_wiphy" == "$wiphy" ]]; then
+                        channel=$(get_channel "$other_iface")
+                        if [[ -n "$channel" ]]; then
+                                echo "$channel"
+                                return 0
+                        fi
+                fi
+        done
+
+        echo "Unable to find channel for $iface"
+        return 1
+}
+
 echo "Using WLAN adapter: ${WLAN}"
 
 ip addr flush dev $WLAN
@@ -28,9 +63,13 @@ rfkill unblock wifi
 # 1. 802.11n in 2.4GHz (hw_mode=g) - some devices scan for it
 # 2. WPA2-PSK - some devices do not connect otherwise
 # 3. Enforced WPA2 - same as above
+# 4. Channel parsed from wlan device info or 1 as fallback
+
+AP_CHANNEL=$(get_ap_channel "$WLAN")
+echo "Using hostapd channel $AP_CHANNEL parsed from $WLAN info (\`iw $WLAN info\`)."
 hostapd /dev/stdin -P $(pwd)/hostapd.pid -B <<- EOF
 ssid=cloudcutterflash
-channel=1
+channel=$AP_CHANNEL
 logger_stdout_level=4
 hw_mode=g
 wmm_enabled=1
