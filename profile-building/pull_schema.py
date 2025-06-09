@@ -286,8 +286,8 @@ def run_directory(directory, token=None):
         print('[!] software_version was not found')
         return
     if mcu_software_version is None:
-        print('[!] mcu_software_version was not found')
-        return
+        print('[!] mcu_software_version was not found, falling back to 1.0.0')
+        mcu_software_version = "1.0.0"
     if baseline_version is None:
         print('[!] baseline_version was not found')
         return
