@@ -66,7 +66,7 @@ else
     echo "================================================================================"
     echo "Place your device in AP (slow blink) mode.  This can usually be accomplished by either:"
     echo "Power cycling off/on - 3 times and wait for the device to fast-blink, then repeat 3 more times.  Some devices need 4 or 5 times on each side of the pause"
-    echo "Long press the power/reset button on the device until it starts fast-blinking, then releasing, and then holding the power/reset button again until the device starts slow-blinking."
+    echo "Long press the power/reset button on the device until it starts fast-blinking, then release, and then hold the power/reset button again until the device starts slow-blinking."
     echo "See https://support.tuya.com/en/help/_detail/K9hut3w10nby8 for more information."
     echo "================================================================================"
     echo ""

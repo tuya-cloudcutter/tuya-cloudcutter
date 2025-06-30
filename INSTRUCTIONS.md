@@ -31,7 +31,9 @@ Knowing this, you can run `sudo ./tuya-cloudcutter.sh` without any parameters. T
   * You can specify the device profile name using `-p my-device-name`; otherwise an interactive menu will be shown.
   * **If your SSID and/or password have special characters like $ ! or @, make sure to pass them with ' characters, e.g. 'P@$$W0rD!'. If it has the ' character then also make sure to escape that, with bash that'd be `'P@$$W0rD!'"'"' 1234'` to use the password `P@$$W0rD!' 1234`** **Optionally run with parameter -r to reset NetworkManager connections, which may help with some wifi adaptors ( sudo ./tuya-cloudcutter.sh -r -s <SSID> <SSID password> )**
   * If you wish to set a custom deviceid or localkey, prepend these parameters like so: `sudo ./tuya-cloudcutter.sh -d 20characterdeviceid -l 16characterlocalkey -s <SSID> <SSID password>`, Note, localtuya in homeassistant currently requires unique deviceid to work.
-* When instructed, put your Tuya device in _AP Mode_ by toggling it off and on again 6 times, with around 1 second in between each toggle. If it's a light bulb, it will blink _slowly_. If it blinks _quickly_, power cycle it 3 more times.
+* When instructed, put your Tuya device in _AP Mode_.  This can usually be accomplished by either:
+  * Toggling it off and on again 6 times, with around 1 second in between each toggle. If it's a light bulb, it will blink _slowly_. If it blinks _quickly_, power cycle it 3 more times.
+  * Long pressing the power/reset button on the device until it starts fast-blinking, then releasing, and then holding the power/reset button again until the device starts slow-blinking.
 * The script will automatically connect to your light (assuming it creates a "SmartLife-*" SSID. If not, let us know.) and run the exploit that replaces the security keys (now it can't connect to the cloud anymore)
 * The exploit freezes the light. It will reboot back into AP mode if left alone, and you can speed this up by power cycling it yourself one time
 * The script will start up an access point of its own called "cloudcutterflash", using your WiFi adapter
