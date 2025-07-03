@@ -8,6 +8,7 @@ from os.path import abspath, basename, isdir, isfile, join
 import click
 import inquirer
 import requests
+from pyfzf.pyfzf import FzfPrompt
 
 
 class FirmwareType(Enum):
@@ -37,20 +38,38 @@ def api_get(path):
 
 
 def ask_options(text, options):
-    res = inquirer.prompt(
-        [
-            inquirer.List(
-                "result",
-                carousel=True,
-                message=text,
-                choices=options,
-            )
-        ], theme=inquirer.themes.load_theme_from_dict({ "List": { "selection_color": "underline", "selection_cursor": "►" } })
-    )
-    if res is None:
-        # Ctrl+C
-        exit(1)
-    return res["result"]
+    try:
+        fzf = FzfPrompt()
+        # new fzf suppors --header-first after 0.28, but current base
+        # image of python:3.9.18-slim-bullseye only has 0.24.
+        print("")
+        print("█ " + text)
+        print()
+        res = fzf.prompt(options,
+                         '--cycle --border --height=50% --no-color --no-info'
+                         ' --pointer=►'
+                         ' --header="\nType to filter. Use ↑ and ↓ to move.  Enter to select."')
+        if len(res) == 0 or res is None:
+            # Ctrl+C or other reason to not return anything.
+            exit(1)
+        print(res[0])
+        return res[0]
+    except SystemError as e:
+        # Fallback to inquirer
+        res = inquirer.prompt(
+            [
+                inquirer.List(
+                    "result",
+                    carousel=True,
+                    message=text,
+                    choices=options,
+                )
+            ], theme=inquirer.themes.load_theme_from_dict({ "List": { "selection_color": "underline", "selection_cursor": "►" } })
+        )
+        if res is None:
+            # Ctrl+C
+            exit(1)
+        return res["result"]
 
 
 def ask_files(text, dir):
