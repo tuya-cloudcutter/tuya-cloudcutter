@@ -236,7 +236,7 @@ def validate_firmware_file_internal(firmware: str, chip: str = None) -> Firmware
             return FirmwareType.IGNORED_HEADER
         return FirmwareType.VALID_UF2
 
-    if file_type == "RTL8720CF":
+    if file_type == "RTL8720CF_OTA":
         return FirmwareType.VALID_RTL8720CF_OTA
     
 def extract_uf2(file_with_path: str, firmware_dir: str, chip: str) -> str:
@@ -386,7 +386,7 @@ def choose_firmware(ctx, chip: str = None):
             continue
         path = join(firmware_dir, file)
         fw_type = validate_firmware_file_internal(path, chip and chip.lower())
-        if fw_type in [FirmwareType.VALID_UG, FirmwareType.VALID_UF2]:
+        if fw_type in [FirmwareType.VALID_UG, FirmwareType.VALID_UF2, FirmwareType.VALID_RTL8720CF_OTA]:
             options[file] = fw_type
         elif fw_type in [FirmwareType.INVALID]:
             invalid_filenames[file] = file
