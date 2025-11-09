@@ -16,6 +16,7 @@ class FirmwareType(Enum):
     IGNORED_FILENAME = 2
     VALID_UG = 3
     VALID_UF2 = 4
+    VALID_RTL8720CF_OTA = 5
 
 
 UF2_UG_SUFFIX = "-extracted.ug.bin"
@@ -161,22 +162,31 @@ def validate_firmware_file_internal(firmware: str, chip: str = None) -> Firmware
         b"\x2f\x07\xb5\x94": "UA",
         b"\x55\xAA\x55\xAA": "UG",
         b"UF2\x0A": "UF2",
+        b"\x99\x99\x96\x96": "RTL8720CF_UART",
+        b"\x68\x51\x3e\xf8\x3e\x39\x6b\x12\xba\x05\x9a\x90\x0f\x36\xb6\xd3": "RTL8720CF_OTA",
     }
 
     base = basename(firmware)
     with open(firmware, "rb") as fs:
         header = fs.read(512)
 
-    magic = header[0:4]
-    if magic not in FILE_MAGIC_DICT or len(header) < 512:
+    magic4 = header[0:4]
+    magic16 = header[32:48]
+
+    if (magic4 not in FILE_MAGIC_DICT and magic16 not in FILE_MAGIC_DICT) or len(header) < 512:
         print(
-            f"!!! Unrecognized file type - '{base}' is not a UG or UF2 file.",
+            f"!!! Unrecognized file type - '{base}' is not a UG, UF2, or RTL8720CF OTA file.",
             file=sys.stderr,
         )
         return FirmwareType.INVALID
-    file_type = FILE_MAGIC_DICT[magic]
 
-    if file_type not in ["UG", "UF2"]:
+    file_type = ""
+    if magic4 in FILE_MAGIC_DICT:
+        file_type = FILE_MAGIC_DICT[magic4]
+    elif magic16 in FILE_MAGIC_DICT:
+        file_type = FILE_MAGIC_DICT[magic16]
+
+    if file_type not in ["UG", "UF2", "RTL8720CF_OTA"]:
         print(
             f"!!! File {base} is a '{file_type}' file! Please provide an UG file.",
             file=sys.stderr,
@@ -225,6 +235,9 @@ def validate_firmware_file_internal(firmware: str, chip: str = None) -> Firmware
         if UF2_FAMILY_MAP[chip] != block.family.id:
             return FirmwareType.IGNORED_HEADER
         return FirmwareType.VALID_UF2
+
+    if file_type == "RTL8720CF":
+        return FirmwareType.VALID_RTL8720CF_OTA
     
 def extract_uf2(file_with_path: str, firmware_dir: str, chip: str) -> str:
     target = file_with_path + "-" + chip.lower() + UF2_UG_SUFFIX
@@ -356,7 +369,7 @@ def choose_profile(ctx, flashing: bool = False):
 @click.option(
     "-c",
     "--chip",
-    type=click.Choice(["bk7231t", "bk7231n"], case_sensitive=False),
+    type=click.Choice(["bk7231t", "bk7231n", "rtl8720cf"], case_sensitive=False),
     default=None,
 )
 @click.pass_context
@@ -410,7 +423,7 @@ def choose_firmware(ctx, chip: str = None):
 @click.option(
     "-c",
     "--chip",
-    type=click.Choice(["bk7231t", "bk7231n"], case_sensitive=False),
+    type=click.Choice(["bk7231t", "bk7231n", "rtl8720cf"], case_sensitive=False),
     default=None,
 )
 @click.pass_context
@@ -418,7 +431,7 @@ def validate_firmware_file(ctx, filename: str, chip: str = None):
     chip = chip and chip.upper()
     firmware_dir = ctx.obj["firmware_dir"]
     fw_type = validate_firmware_file_internal(join(firmware_dir, filename), chip and chip.lower())
-    if fw_type not in [FirmwareType.VALID_UG, FirmwareType.VALID_UF2]:
+    if fw_type not in [FirmwareType.VALID_UG, FirmwareType.VALID_UF2, FirmwareType.VALID_RTL8720CF_OTA]:
         print(
             f"The firmware file supplied ({filename}) is not valid for the chosen profile type of {chip}",
             file=sys.stderr,

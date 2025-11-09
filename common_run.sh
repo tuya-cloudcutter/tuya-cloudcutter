@@ -53,8 +53,8 @@ if ! [ -z "${FIRMWARE}" ]; then
     echo "Selected Firmware: ${FIRMWARE}"
 fi
 
-if ! [ -z "${AUTHKEY}" ] && ! [ -z "${UUID}" ] && ! [ -z "${PSKKEY}" ]; then
-    echo "Using AuthKey ${AUTHKEY} , UUID ${UUID} , and PSKKey ${PSKKEY}"
+if ! [ -z "${AUTHKEY}" ] && ! [ -z "${UUID}" ]; then
+    echo "Using AuthKey ${AUTHKEY} , UUID ${UUID}"
     if ! [ -z "${DEVICEID}" ] && ! [ -z "${LOCALKEY}" ]; then
         echo "Using DeviceId ${DEVICEID} and LocalKey ${LOCALKEY}"
     fi
@@ -105,6 +105,15 @@ echo "Long press the power/reset button on the device until it starts fast-blink
 echo "See https://support.tuya.com/en/help/_detail/K9hut3w10nby8 for more information."
 echo "================================================================================"
 echo ""
+
+if [ "${CHIP}" == "rtl8720cf" ]; then
+    echo "${CHIP} *MUST* be rebooted before we even begin the next scan or you will receive false-positives about the status of the device."
+    echo ""
+    read -n 1 -s -r -p "Press any key to confirm you have completed power cycling the device and continue."
+    echo ""
+    echo "Continuing..."
+fi
+
 sleep 5
 run_helper_script "pre-wifi-config"
 wifi_connect
