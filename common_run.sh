@@ -106,8 +106,8 @@ echo "See https://support.tuya.com/en/help/_detail/K9hut3w10nby8 for more inform
 echo "================================================================================"
 echo ""
 
-if [ "${CHIP}" == "rtl8720cf" ]; then
-    echo "${CHIP} *MUST* be rebooted before we even begin the next scan or you will receive false-positives about the status of the device."
+if [ "${CHIP^^}" == "RTL8720CF" ]; then
+    echo "${CHIP^^} *MUST* be rebooted before we even begin the next scan or you will receive false-positives about the status of the device."
     echo ""
     read -n 1 -s -r -p "Press any key to confirm you have completed power cycling the device and continue."
     echo ""
