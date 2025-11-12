@@ -146,7 +146,7 @@ def walk_app_code():
         return
     
     if b'\x002.3.0\x00' in appcode and b'AmebaZII' in appcode:
-        process_rtl8720cf("RTL8720CF", "SDK 2.3.0", "ssid", 4, "5c223a25647d", 2, 0, "passwd", 2, "65fd286010b3", 1, 0, "26fa3bf08cfaf2", 1, 0)
+        process_rtl8720cf("RTL8720CF", "SDK 2.3.0", "ssid", 4, "2846666ab047", 1, 0, "passwd", 2, "dff83c810646", 1, 0, "044630b10068", 2, 1)
         return
 
     raise RuntimeError('Unknown pattern, please open a new issue and include the bin.')
@@ -232,9 +232,9 @@ def process_rtl8720cf(chipset, sdk_identifier,
         if check_for_patched(patch_pattern):
             return
 
-    find_payload(matcher, int(AddressSize.RTL8720CF), payload1_type, payload1_padding, payload1_string, payload1_count, payload1_index)
-    find_payload(matcher, int(AddressSize.RTL8720CF), payload2_type, payload2_padding, payload2_string, payload2_count, payload2_index)
-    find_payload(matcher, int(AddressSize.RTL8720CF), "finish", 0, finish_string, finish_count, finish_index)
+    find_payload(matcher, AddressSize.RTL8720CF, payload1_type, payload1_padding, payload1_string, payload1_count, payload1_index)
+    find_payload(matcher, AddressSize.RTL8720CF, payload2_type, payload2_padding, payload2_string, payload2_count, payload2_index)
+    find_payload(matcher, AddressSize.RTL8720CF, "finish", 0, finish_string, finish_count, finish_index)
 
 
 def run(decrypted_app_file: str):
