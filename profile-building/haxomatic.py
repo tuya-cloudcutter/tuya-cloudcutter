@@ -41,12 +41,11 @@ PATCHED_PATTERNS = [
 
 
 class CodePatternFinder(object):
-    def __init__(self, code: bytes, platform : PlatformInfo):
-        self.code = code
+    def __init__(self, platform : PlatformInfo):
         self.platform = platform
 
     def bytecode_search(self, bytecode: bytes, stop_at_first: bool = True):
-        offset = self.code.find(bytecode, 0)
+        offset = appcode.find(bytecode, 0)
 
         if offset == -1:
             return []
@@ -55,10 +54,10 @@ class CodePatternFinder(object):
         if stop_at_first:
             return matches
 
-        offset = self.code.find(bytecode, offset+1)
+        offset = appcode.find(bytecode, offset+1)
         while offset != -1:
             matches.append(self.platform.base_address + offset)
-            offset = self.code.find(bytecode, offset+1)
+            offset = appcode.find(bytecode, offset+1)
 
         return matches
 
@@ -286,7 +285,7 @@ def process(platformEnum, sdk_identifier, pattern1 : Pattern, pattern2 : Pattern
     with open(name_output_file('chip.txt'), 'w') as f:
         f.write(f'{platformInfo.platform.value}')
 
-    matcher = CodePatternFinder(appcode, platformInfo)
+    matcher = CodePatternFinder(platformInfo)
     combined_payload_type = f"{pattern1.type}[{pattern1.padding}] + {pattern2.type}[{pattern2.padding}]"
     if pattern3:
         combined_payload_type += f" + {pattern3.type}[{pattern3.padding}]"
