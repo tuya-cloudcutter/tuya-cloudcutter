@@ -49,7 +49,7 @@ def print_and_exit(printText):
     sys.exit(2)
 
 
-def build_params(epoch_time, uuid):
+def build_params_active(epoch_time, uuid):
     params = {
         "a": "tuya.device.active",
         "et": 1,
@@ -61,7 +61,7 @@ def build_params(epoch_time, uuid):
     return params
 
 
-def build_data(epoch_time, reduced_token, firmware_key, product_key, software_version, mcu_software_version, baseline_version='40.00', cad_version='1.0.2', cd_version='1.0.0', protocol_version='2.2', is_fk: bool = True):
+def build_data_active(epoch_time, reduced_token, firmware_key, product_key, software_version, mcu_software_version, baseline_version='40.00', cad_version='1.0.2', cd_version='1.0.0', protocol_version='2.2', is_fk: bool = True):
     data = {
         'token': reduced_token,
         'softVer': software_version,
@@ -76,6 +76,26 @@ def build_data(epoch_time, reduced_token, firmware_key, product_key, software_ve
         'cadVer': cad_version,
         'cdVer': cd_version,
         'options': '{"isFK":' + str(is_fk).lower() + ',"otaChannel":0}',
+        't': epoch_time,
+    }
+
+    return data
+
+
+def build_params_psk(epoch_time, uuid):
+    params = {
+        "a": "tuya.device.uuid.pskkey.get",
+        "et": 1,
+        "t": epoch_time,
+        "uuid": uuid,
+        "v": "1.0",
+    }
+
+    return params
+
+
+def build_data_psk(epoch_time):
+    data = {
         't': epoch_time,
     }
 
@@ -186,9 +206,10 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, firmw
     connection = TuyaAPIConnection(uuid, auth_key)
     url = f"http://a.tuya{region}.com/d.json"
     epoch_time = int(time.time())
-    params = build_params(epoch_time, uuid)
-    response = None
     requestType = "POST"
+    response = None
+        
+    active_params = build_params_active(epoch_time, uuid)
 
     responseCodesToContinueAter = ['FIRMWARE_NOT_MATCH', 'APP_PRODUCT_UNSUPPORT', 'NOT_EXISTS']
 
@@ -196,22 +217,22 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, firmw
         product_key = factory_pin
 
     if product_key is not None:
-        data = build_data(epoch_time, reduced_token, firmware_key, product_key, software_version, mcu_software_version, baseline_version, cad_version, cd_version, protocol_version, False)
-        response = connection.request(url, params, data, requestType)
+        data = build_data_active(epoch_time, reduced_token, firmware_key, product_key, software_version, mcu_software_version, baseline_version, cad_version, cd_version, protocol_version, False)
+        response = connection.request(url, active_params, data, requestType)
 
         if response["success"] == False and response["errorCode"] in responseCodesToContinueAter:
-            data = build_data(epoch_time, reduced_token, firmware_key, product_key, software_version, mcu_software_version, baseline_version, cad_version, cd_version, protocol_version, True)
-            response = connection.request(url, params, data, requestType)
+            data = build_data_active(epoch_time, reduced_token, firmware_key, product_key, software_version, mcu_software_version, baseline_version, cad_version, cd_version, protocol_version, True)
+            response = connection.request(url, active_params, data, requestType)
 
     if response["success"] == False:
         if product_key != firmware_key:
             if (response is None or (response is not None and response["success"] == False and response["errorCode"] != "EXPIRE")) and firmware_key is not None:
-                data = build_data(epoch_time, reduced_token, firmware_key, firmware_key, software_version, mcu_software_version, baseline_version, cad_version, cd_version, protocol_version, True)
-                response = connection.request(url, params, data, requestType)
+                data = build_data_active(epoch_time, reduced_token, firmware_key, firmware_key, software_version, mcu_software_version, baseline_version, cad_version, cd_version, protocol_version, True)
+                response = connection.request(url, active_params, data, requestType)
 
                 if response["success"] == False and response["errorCode"] in responseCodesToContinueAter:
-                    data = build_data(epoch_time, reduced_token, firmware_key, firmware_key, software_version, mcu_software_version, baseline_version, cad_version, cd_version, protocol_version, False)
-                    response = connection.request(url, params, data, requestType)
+                    data = build_data_active(epoch_time, reduced_token, firmware_key, firmware_key, software_version, mcu_software_version, baseline_version, cad_version, cd_version, protocol_version, False)
+                    response = connection.request(url, active_params, data, requestType)
 
     if response["success"] == True:
         print(f"[+] Schema Id: {response['result']['schemaId']}")
@@ -228,6 +249,20 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, firmw
             f.write(response['result']['devId'])
         with open(os.path.join(directory, output_file_prefix + "_sec_key.txt"), 'w') as f:
             f.write(response['result']['secKey'])
+    elif response["success"] == False and response["errorCode"] == 'EXPIRE':
+        print("[!] The token provided has either expired, or you are connected to the wrong region")
+    else:
+        print(response)
+
+    psk_params = build_params_psk(epoch_time, uuid)
+    data = build_data_psk(epoch_time)
+    response = connection.request(url, psk_params, data, requestType)
+
+    if response["success"] == True:
+        #print(response)
+        print("[+] PSK Key: " + response['result']['pskKey'])
+        with open(os.path.join(directory, output_file_prefix + "_psk_key.txt"), 'w') as f:
+            f.write(response['result']['pskKey'])
     elif response["success"] == False and response["errorCode"] == 'EXPIRE':
         print("[!] The token provided has either expired, or you are connected to the wrong region")
     else:
