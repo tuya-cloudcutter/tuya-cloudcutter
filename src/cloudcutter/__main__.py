@@ -452,7 +452,7 @@ def parse_args():
         required=True,
         default="",
         help="authkey assigned to the device (default: Random)",
-        type=__validate_localapicredential_arg(16),
+        #type=__validate_localapicredential_arg(16),
     )
     parser_write_deviceconfig.add_argument(
         "--uuid",
@@ -460,7 +460,7 @@ def parse_args():
         required=True,
         default="",
         help="uuid assigned to the device (default: Random)",
-        type=__validate_localapicredential_arg(12),
+        #type=__validate_localapicredential_arg(12),
     )
     parser_write_deviceconfig.add_argument(
         "--pskkey",
