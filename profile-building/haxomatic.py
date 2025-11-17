@@ -6,21 +6,25 @@ from enum import Enum, IntEnum
 class Platform(Enum):
     BK7231T = "BK7231T"
     BK7231N = "BK7231N"
-    RTL8720CF = "RTL8720CF"
+    RTL8720C = "RTL8720C"
 
 
 class PlatformInfo(object):
-    def __init__(self, platform : Platform):
+    def __init__(self, platform : Platform = None):
         self.platform = platform
         match platform:
             case Platform.BK7231T | Platform.BK7231N:
                 self.address_size = 3
                 self.base_address = 0x0
                 self.start_offset = 0x10000
-            case Platform.RTL8720CF:
+            case Platform.RTL8720C:
                 self.address_size = 4
                 self.base_address = 0x9b000000
                 self.start_offset = 0x0
+            case _:
+                self.address_size = 0
+                self.base_address = 0x0
+                self.start_offset = 0
 
 
 class Pattern(object):
@@ -32,10 +36,17 @@ class Pattern(object):
         self.padding = padding        
 
 
-PATCHED_PATTERNS = [
+PATCHED_PATTERNS_TUYAOS3 = [
+    "547579614f5320563a33", # TuyaOS V:3
+]
+
+PATCHED_PATTERNS_BK7231N = [
     "2d6811226b1dff33181c00210393", # BK7231N short/combined
     "2d6811226b1dff33181c0021039329f0", # BK7231N 2.3.1 Patched
     "2d6811226b1dff33181c002103930bf0", # BK7231N 2.3.3 Patched
+]
+
+PATCHED_PATTERNS_RTL8720C = [
     "d9f80060112206f5827b", # RTL8720CF 2.3.3 Patched BUILD AT:2023_05_16_18_19_54
 ]
 
@@ -76,14 +87,20 @@ def walk_app_code():
     if b'TUYA' not in appcode:
         raise RuntimeError('[!] App binary does not appear to be correctly decrypted, or has no Tuya references.')
 
-    # TuyaOS V3+, patched
     if b'TuyaOS V:3' in appcode:
-        with open(name_output_file('patched.txt'), 'w') as f:
-            f.write('patched')
-        print("==============================================================================================================")
-        print("[!] The binary supplied appears to be patched and no longer vulnerable to the tuya-cloudcutter exploit.")
-        print("==============================================================================================================")
-        return
+        for patch_pattern in PATCHED_PATTERNS_TUYAOS3:
+            if check_for_patched(patch_pattern):
+                return
+
+    if b'AT bk7231n' in appcode or b'AT BK7231NL' in appcode:
+        for patch_pattern in PATCHED_PATTERNS_BK7231N:
+            if check_for_patched(patch_pattern):
+                return
+
+    if b'AT rtl8720cf_ameba' in appcode:
+        for patch_pattern in PATCHED_PATTERNS_RTL8720C:
+            if check_for_patched(patch_pattern):
+                return
 
     # Early BK7231T when it was built with a realtek-like string.
     if b'AT 8710_2M' in appcode:
@@ -197,20 +214,19 @@ def walk_app_code():
             return
 
     # Special case for a RTL8720CF build with no SDK string
-    if b'TUYA IOT SDK' not in appcode and b'AmebaZII' in appcode:
-        # RTL8720CF, 2.3.0 SDK with no SDK string
-        if b'\x002.3.0\x00' in appcode:
-            # 28 46 66 6a b0 47 is the byte pattern for ssid with a padding of 4
-            # 1 match should be found
-            # df f8 3c 81 06 46 is the byte pattern for passwd with a padding of 2
-            # 1 match should be found
-            # 04 46 30 b1 00 68 is the byte pattern for finish
-            # 2 matches should be found, second is correct
-            process(Platform.RTL8720CF, "SDK 2.3.0",
-                    Pattern("ssid", "2846666ab047", 1, 0, 4),
-                    Pattern("passwd", "dff83c810646", 1, 0, 2),
-                    Pattern("finish", "044630b10068", 2, 1))
-            return
+    # RTL8720CF, 2.3.0 SDK with no SDK string
+    if b'TUYA IOT SDK' not in appcode and b'AmebaZII' in appcode and b'\x002.3.0\x00' in appcode:
+        # 28 46 66 6a b0 47 is the byte pattern for ssid with a padding of 4
+        # 1 match should be found
+        # df f8 3c 81 06 46 is the byte pattern for passwd with a padding of 2
+        # 1 match should be found
+        # 04 46 30 b1 00 68 is the byte pattern for finish
+        # 2 matches should be found, second is correct
+        process(Platform.RTL8720C, "SDK 2.3.0",
+                Pattern("ssid", "2846666ab047", 1, 0, 4),
+                Pattern("passwd", "dff83c810646", 1, 0, 2),
+                Pattern("finish", "044630b10068", 2, 1))
+        return
 
     # RTL8720CF
     if b'AT rtl8720cf_ameba' in appcode:
@@ -221,17 +237,33 @@ def walk_app_code():
         # TUYA IOT SDK V:1.0.14 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.2_CD:1.0.0
         
         # RTL8720CF 2.3.0 SDK with SDK string
-        if b'TUYA IOT SDK V:2.3.0 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0' in appcode:
+        if (b'TUYA IOT SDK V:2.3.0 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0' in appcode
+                and (b'BUILD AT:2021_01_06_11_13_21 BY embed FOR ty_iot_sdk_bugfix AT rtl8720cf_ameba' in appcode
+                    or b'BUILD AT:2021_04_29_18_59_39 BY embed FOR ty_iot_sdk_bugfix AT rtl8720cf_ameba' in appcode)):
             # 5b 68 20 46 98 47 is the byte pattern for token
             # 2 matches should be found, second is correct
             # df f8 34 80 06 46 is the byte pattern for passwd with a padding of 4
             # 1 match should be found
             # d8 f8 00 80 b8 f1 is the byte pattern for finish
             # 1 match should be found
-            process(Platform.RTL8720CF, "SDK 2.3.0",
+            process(Platform.RTL8720C, "SDK 2.3.0",
                     Pattern("token", "5b6820469847", 2, 1),
                     Pattern("passwd", "dff834800646", 1, 0, 4),
                     Pattern("finish", "d8f80080b8f1", 1, 0))
+            return
+
+        # Same as 2.3.0 without SDK string above
+        if b'TUYA IOT SDK V:2.3.0 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0' in appcode and b'BUILD AT:2021_06_17_16_35_07 BY embed FOR ty_iot_sdk_bugfix AT rtl8720cf_ameba' in appcode:
+            # 28 46 66 6a b0 47 is the byte pattern for ssid with a padding of 4
+            # 1 match should be found
+            # df f8 3c 81 06 46 is the byte pattern for passwd with a padding of 2
+            # 1 match should be found
+            # 04 46 30 b1 00 68 is the byte pattern for finish
+            # 2 matches should be found, second is correct
+            process(Platform.RTL8720C, "SDK 2.3.0",
+                    Pattern("ssid", "2846666ab047", 1, 0, 4),
+                    Pattern("passwd", "dff83c810646", 1, 0, 2),
+                    Pattern("finish", "044630b10068", 2, 1))
             return
 
         # TUYA IOT SDK V:2.3.2 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.4_CD:1.0.0
@@ -241,7 +273,8 @@ def walk_app_code():
     raise RuntimeError('Unknown pattern, please open a new issue and include the bin.')
 
 
-def check_for_patched(matcher, known_patch_pattern):
+def check_for_patched(known_patch_pattern):
+    matcher = CodePatternFinder(PlatformInfo())
     patched_bytecode = bytes.fromhex(known_patch_pattern)
     patched_matches = matcher.bytecode_search(patched_bytecode, stop_at_first=True)
 
@@ -290,10 +323,6 @@ def process(platformEnum, sdk_identifier, pattern1 : Pattern, pattern2 : Pattern
     if pattern3:
         combined_payload_type += f" + {pattern3.type}[{pattern3.padding}]"
     print(f"[+] Matched pattern for {platformInfo.platform.value} {sdk_identifier}, payload type {combined_payload_type}")
-
-    for patch_pattern in PATCHED_PATTERNS:
-        if check_for_patched(matcher, patch_pattern):
-            return
 
     pattern1_result, pattern1_message = find_payload(matcher, platformInfo.address_size, pattern1)
     pattern2_result, pattern2_message = find_payload(matcher, platformInfo.address_size, pattern2)

@@ -142,7 +142,9 @@ def dump():
         b'bk7231s_',
         b'oem_bk7231n_',
         b'bk7231n_common_',
-        b'_common_ty'
+        b'_common_ty',
+        b'rtl8720cf_',
+        b'rtl8720cm_',
     ]
 
     device_class = ''
@@ -160,6 +162,8 @@ def dump():
         device_class = search_device_class_after_chipid("BK7231NL")
     if device_class == '':
         device_class = search_device_class_after_chipid("bk7231t")
+    if device_class == '':
+        device_class = search_device_class_after_chipid("rtl8720cf_ameba")
 
     if device_class != '':
         print(f"[+] Device class: {device_class}")
