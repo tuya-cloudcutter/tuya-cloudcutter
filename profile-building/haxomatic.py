@@ -1,6 +1,6 @@
 import os.path
 import sys
-from enum import Enum, IntEnum
+from enum import Enum
 
 
 class Platform(Enum):
@@ -10,21 +10,21 @@ class Platform(Enum):
 
 
 class PlatformInfo(object):
-    def __init__(self, platform : Platform = None):
+    def __init__(self, platform : Platform = None, base_address : int = None, start_offset : int = None):
         self.platform = platform
         match platform:
             case Platform.BK7231T | Platform.BK7231N:
                 self.address_size = 3
-                self.base_address = 0x0
-                self.start_offset = 0x10000
+                self.base_address = base_address if base_address else 0x0
+                self.start_offset = start_offset if start_offset else 0x10000
             case Platform.RTL8720C:
                 self.address_size = 4
-                self.base_address = 0x9b000000
-                self.start_offset = 0x0
+                self.base_address = base_address if base_address else 0x9b000000
+                self.start_offset = start_offset if start_offset else 0x0
             case _:
                 self.address_size = 0
-                self.base_address = 0x0
-                self.start_offset = 0
+                self.base_address = base_address if base_address else 0x0
+                self.start_offset = start_offset if start_offset else 0
 
 
 class Pattern(object):
@@ -110,7 +110,7 @@ def walk_app_code():
             # 3 matches, 2nd is correct
             # 2b 68 30 1c 98 47 is the byte pattern for finish
             # 1 match should be found
-            process(Platform.BK7231T, "SDK 2.0.0 8710_2M",
+            process(PlatformInfo(Platform.BK7231T), "SDK 2.0.0 8710_2M",
                     Pattern("datagram", "041e2cd1119b", 1, 0),
                     Pattern("finish", "2b68301c9847", 1, 0))
             return
@@ -121,7 +121,7 @@ def walk_app_code():
             # 3 matches, 2nd is correct
             # 2b 68 30 1c 98 47 is the byte pattern for finish
             # 1 match should be found
-            process(Platform.BK7231T, "SDK 2.0.0 8710_2M",
+            process(PlatformInfo(Platform.BK7231T), "SDK 2.0.0 8710_2M",
                     Pattern("datagram", "041e07d1119b211c00", 3, 1),
                     Pattern("finish", "2b68301c9847", 1, 0))
             return
@@ -134,7 +134,7 @@ def walk_app_code():
             # 1 match should be found
             # 23 68 38 1c 98 47 is the byte pattern for finish
             # 2 matches should be found, 1st is correct
-            process(Platform.BK7231T, "SDK 1.0.# nobt",
+            process(PlatformInfo(Platform.BK7231T), "SDK 1.0.# nobt",
                     Pattern("datagram", "b54f061e07d1", 1, 0),
                     Pattern("finish", "2368381c9847", 2, 0))
             return
@@ -147,7 +147,7 @@ def walk_app_code():
             # 1 match should be found
             # 23 68 38 1c 98 47 is the byte pattern for finish
             # 2 matches should be found, 1st is correct
-            process(Platform.BK7231T, "SDK 1.0.#",
+            process(PlatformInfo(Platform.BK7231T), "SDK 1.0.#",
                     Pattern("datagram", "a14f061e", 1, 0),
                     Pattern("finish", "2368381c9847", 2, 0))
             return
@@ -158,7 +158,7 @@ def walk_app_code():
             # 1 match should be found
             # 7b 69 20 1c 98 47 is the byte pattern for finish
             # 1 match should be found, 1st is correct
-            process(Platform.BK7231T, "SDK 2.3.0",
+            process(PlatformInfo(Platform.BK7231T), "SDK 2.3.0",
                     Pattern("ssid", "041e08d14d4b", 1, 0, 20),
                     Pattern("finish", "7b69201c9847", 1, 0))
             return
@@ -169,7 +169,7 @@ def walk_app_code():
             # 1 match should be found
             # bb 68 20 1c 98 47 is the byte pattern for finish
             # 1 match should be found, 1st is correct
-            process(Platform.BK7231T, "SDK 2.3.2",
+            process(PlatformInfo(Platform.BK7231T), "SDK 2.3.2",
                     Pattern("ssid", "041e00d10ce7", 1, 0, 8),
                     Pattern("finish", "bb68201c9847", 1, 0))
             return
@@ -186,7 +186,7 @@ def walk_app_code():
             # 1 match should be found
             # 43 68 20 1c 98 47 is the byte pattern for finish
             # 1 match should be found
-            process(Platform.BK7231N, "SDK 2.3.1",
+            process(PlatformInfo(Platform.BK7231N), "SDK 2.3.1",
                     Pattern("ssid", "051e00d115e7", 1, 0, 4),
                     Pattern("finish", "4368201c9847", 1, 0))
             return
@@ -197,7 +197,7 @@ def walk_app_code():
             # 1 match should be found
             # 43 68 20 1c 98 47 is the byte pattern for finish
             # 1 match should be found
-            process(Platform.BK7231N, "SDK 2.3.3 LAN 3.3/CAD 1.0.4",
+            process(PlatformInfo(Platform.BK7231N), "SDK 2.3.3 LAN 3.3/CAD 1.0.4",
                     Pattern("ssid", "051e00d113e7", 1, 0, 4),
                     Pattern("finish", "4368201c9847", 1, 0))
             return
@@ -208,7 +208,7 @@ def walk_app_code():
             # 1 match should be found
             # 43 68 20 1c 98 47 is the byte pattern for finish
             # 1 match should be found
-            process(Platform.BK7231N, "SDK 2.3.3 LAN 3.4/CAD 1.0.5",
+            process(PlatformInfo(Platform.BK7231N), "SDK 2.3.3 LAN 3.4/CAD 1.0.5",
                     Pattern("ssid", "051e00d1fce6", 1, 0, 4),
                     Pattern("finish", "4368201c9847", 1, 0))
             return
@@ -222,7 +222,7 @@ def walk_app_code():
         # 1 match should be found
         # 04 46 30 b1 00 68 is the byte pattern for finish
         # 2 matches should be found, second is correct
-        process(Platform.RTL8720C, "SDK 2.3.0",
+        process(PlatformInfo(Platform.RTL8720C), "SDK 2.3.0",
                 Pattern("ssid", "2846666ab047", 1, 0, 4),
                 Pattern("passwd", "dff83c810646", 1, 0, 2),
                 Pattern("finish", "044630b10068", 2, 1))
@@ -235,6 +235,12 @@ def walk_app_code():
         # TUYA IOT SDK V:1.0.12 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.2_CD:1.0.0
         # TUYA IOT SDK V:1.0.13 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.2_CD:1.0.0
         # TUYA IOT SDK V:1.0.14 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.2_CD:1.0.0
+        if b'TUYA IOT SDK V:1.0.' in appcode:
+            # SDK 1.0.x has a special XIP load address and offset
+            process(PlatformInfo(Platform.RTL8720C, 0x9b000000 - 0x8000), "SDK 1.0.x",
+                    Pattern("token", "464f054628b9", 1, 0),
+                    Pattern("finish", "d8f8003011aa", 1, 0))
+            return
         
         # RTL8720CF 2.3.0 SDK with SDK string
         if (b'TUYA IOT SDK V:2.3.0 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0' in appcode
@@ -246,7 +252,7 @@ def walk_app_code():
             # 1 match should be found
             # d8 f8 00 80 b8 f1 is the byte pattern for finish
             # 1 match should be found
-            process(Platform.RTL8720C, "SDK 2.3.0",
+            process(PlatformInfo(Platform.RTL8720C), "SDK 2.3.0",
                     Pattern("token", "5b6820469847", 2, 1),
                     Pattern("passwd", "dff834800646", 1, 0, 4),
                     Pattern("finish", "d8f80080b8f1", 1, 0))
@@ -260,7 +266,7 @@ def walk_app_code():
             # 1 match should be found
             # 04 46 30 b1 00 68 is the byte pattern for finish
             # 2 matches should be found, second is correct
-            process(Platform.RTL8720C, "SDK 2.3.0",
+            process(PlatformInfo(Platform.RTL8720C), "SDK 2.3.0",
                     Pattern("ssid", "2846666ab047", 1, 0, 4),
                     Pattern("passwd", "dff83c810646", 1, 0, 2),
                     Pattern("finish", "044630b10068", 2, 1))
@@ -289,17 +295,19 @@ def check_for_patched(known_patch_pattern):
     return False
 
 
-def find_payload(matcher, addr_size : int, pattern : Pattern):
+def find_payload(platformInfo, pattern : Pattern):
+    matcher = CodePatternFinder(platformInfo)
     print(f"[+] Searching for {pattern.type}[{pattern.padding}] payload address")
     bytecode = bytes.fromhex(pattern.matchString)
     matches = matcher.bytecode_search(bytecode, stop_at_first=False)
     if not matches or len(matches) != pattern.count:
         return -1, f"[!] Failed to find {pattern.type}[{pattern.padding}] payload address (found {len(matches)}, expected {pattern.count})"
     addr = matcher.set_final_thumb_offset(matches[pattern.index])
-    for b in addr.to_bytes(addr_size, byteorder='little'):
+    for b in addr.to_bytes(platformInfo.address_size, byteorder='little'):
         if b == 0:
-            if pattern.type == "finish" and pattern.count > 0:
-                print(f"[!] Preferred {pattern.type} address ({addr:X}) contained a null byte, using available alternative")
+            # TODO: make this a better alternate search if pattern.index is already max
+            if pattern.type == "finish" and pattern.count > 1:
+                print(f"[!] Preferred {pattern.type} address ({addr:X}) contained a null byte, trying available alternative")
                 addr = matcher.set_final_thumb_offset(matches[pattern.index + 1])
             else:
                 return -1, f"[!] {pattern.type} address ({addr:X}) contains a null byte, unable to continue"
@@ -313,24 +321,27 @@ def find_payload(matcher, addr_size : int, pattern : Pattern):
     return 0, ""
 
 
-def process(platformEnum, sdk_identifier, pattern1 : Pattern, pattern2 : Pattern, pattern3 : Pattern = None):
-    platformInfo = PlatformInfo(platformEnum)
+def process(platformInfo, sdk_identifier, pattern1 : Pattern, pattern2 : Pattern, pattern3 : Pattern = None):
     with open(name_output_file('chip.txt'), 'w') as f:
         f.write(f'{platformInfo.platform.value}')
 
-    matcher = CodePatternFinder(platformInfo)
+    
     combined_payload_type = f"{pattern1.type}[{pattern1.padding}] + {pattern2.type}[{pattern2.padding}]"
     if pattern3:
         combined_payload_type += f" + {pattern3.type}[{pattern3.padding}]"
     print(f"[+] Matched pattern for {platformInfo.platform.value} {sdk_identifier}, payload type {combined_payload_type}")
 
-    pattern1_result, pattern1_message = find_payload(matcher, platformInfo.address_size, pattern1)
-    pattern2_result, pattern2_message = find_payload(matcher, platformInfo.address_size, pattern2)
+    pattern1_result, pattern1_message = find_payload(platformInfo, pattern1)
+    pattern2_result, pattern2_message = find_payload(platformInfo, pattern2)
+    pattern3_message = None
     if pattern3:
-        pattern3_result, pattern3_message = find_payload(matcher, platformInfo.address_size, pattern3)
+        pattern3_result, pattern3_message = find_payload(platformInfo, pattern3)
     
     if pattern1_result < 0 or pattern2_result < 0 or (pattern3 and pattern3_result < 0):
         raise RuntimeError("\r\n".join([x for x in [pattern1_message, pattern2_message, pattern3_message] if x]))
+
+    with open(name_output_file('haxomatic_matched.txt'), 'w') as f:
+        f.write('1')
 
 
 def run(decrypted_app_file: str):
@@ -338,15 +349,15 @@ def run(decrypted_app_file: str):
         print('Usage: python haxomatic.py <app code file>')
         sys.exit(1)
 
-    address_finish_file = decrypted_app_file.replace('.bin', '_address_finish.txt')
-    if os.path.exists(address_finish_file):
-        print('[+] Haxomatic has already been run')
-        return
-
     global appcode_path, appcode
     appcode_path = decrypted_app_file.replace(".bin", "")
     if appcode_path.endswith("_app_1.00_decrypted"):
         appcode_path = appcode_path.replace("_app_1.00_decrypted", "")
+
+    if os.path.exists(name_output_file("haxomatic_matched.txt")):
+        print('[+] Haxomatic has already been run')
+        return
+
     with open(decrypted_app_file, 'rb') as fs:
         appcode = fs.read()
         walk_app_code()
