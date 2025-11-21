@@ -112,9 +112,10 @@ if [ "${CHIP^^}" == "RTL8720CF" ]; then
     read -n 1 -s -r -p "Press any key to confirm you have completed power cycling the device and continue."
     echo ""
     echo "Continuing..."
+else
+    sleep 5
 fi
 
-sleep 5
 run_helper_script "pre-wifi-config"
 wifi_connect
 if [ ! $? -eq 0 ]; then

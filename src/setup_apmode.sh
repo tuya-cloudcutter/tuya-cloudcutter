@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
-GATEWAY=10.42.42.1
+GATEWAY=10.204.0.1
+DNS2=10.204.0.2
+DNS3=10.204.0.3
+DHCP_RANGE_START=10.204.0.10
+DHCP_RANGE_END=10.204.0.40
 WLAN=${1:-UNKNOWN}
 VERBOSE_OUTPUT=${2:-"false"}
 
@@ -41,23 +45,14 @@ get_ap_channel() {
 
 echo "Using WLAN adapter: ${WLAN}"
 
+rfkill unblock wifi
+
 ip addr flush dev $WLAN
 ip link set dev $WLAN down
 ip addr add $GATEWAY/24 dev $WLAN
+ip addr add $DNS2 dev $WLAN
+ip addr add $DNS3 dev $WLAN
 ip link set dev $WLAN up
-
-LOG_OPTIONS=""
-if [ "${VERBOSE_OUTPUT}" == "true" ]; then
-        LOG_OPTIONS="--log-dhcp --log-queries --log-facility=/dev/stdout"
-fi
-dnsmasq --no-resolv --interface=$WLAN --bind-interfaces --listen-address=$GATEWAY --except-interface=lo --dhcp-range=10.42.42.10,10.42.42.40,12h --address=/#/${GATEWAY} -x $(pwd)/dnsmasq.pid $LOG_OPTIONS
-
-mkdir /run/mosquitto
-chown mosquitto /run/mosquitto
-echo -e "listener 1883 0.0.0.0\nallow_anonymous true\n" >> /etc/mosquitto/mosquitto.conf
-/usr/sbin/mosquitto -d -c /etc/mosquitto/mosquitto.conf
-
-rfkill unblock wifi
 
 # Set up hostapd with
 # 1. 802.11n in 2.4GHz (hw_mode=g) - some devices scan for it
@@ -84,5 +79,16 @@ wpa_key_mgmt=WPA-PSK
 wpa_passphrase=abcdabcd
 rsn_pairwise=CCMP
 EOF
+
+LOG_OPTIONS=""
+if [ "${VERBOSE_OUTPUT}" == "true" ]; then
+        LOG_OPTIONS="--log-dhcp --log-queries --log-facility=/dev/stdout"
+fi
+dnsmasq --no-resolv --interface=$WLAN --bind-interfaces --listen-address=$GATEWAY --except-interface=lo -K --dhcp-range=$DHCP_RANGE_START,$DHCP_RANGE_END,12h --dhcp-option=option:router,$GATEWAY --dhcp-option=option:dns-server,$GATEWAY,$DNS2,$DNS3 --dhcp-option=option:netmask,255.255.255.0 --address=/#/${GATEWAY} -x $(pwd)/dnsmasq.pid $LOG_OPTIONS
+
+mkdir /run/mosquitto
+chown mosquitto /run/mosquitto
+echo -e "listener 1883 0.0.0.0\nallow_anonymous true\n" >> /etc/mosquitto/mosquitto.conf
+/usr/sbin/mosquitto -d -v -c /etc/mosquitto/mosquitto.conf
 
 echo "If your device gets stuck here with no progress after several (at least two) minutes, see https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/FAQ#my-device-gets-stuck-after-dhcp-what-can-i-do for additional steps"

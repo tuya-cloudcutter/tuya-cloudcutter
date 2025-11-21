@@ -319,9 +319,9 @@ def __configure_wifi(args):
     datagram = build_network_config_packet(payload.encode('ascii'))
     # Send the configuration diagram a few times with minor delay
     # May improve reliability in some setups
-    for _ in range(5):
+    for _ in range(4):
         send_network_config_datagram(datagram)
-        time.sleep(0.300)
+        time.sleep(0.05)
     print(f"Configured device to connect to '{SSID}'")
 
 
@@ -354,8 +354,8 @@ def parse_args():
     parser_configure.add_argument(
         "--ip",
         dest="ip",
-        default="10.42.42.1",
-        help="IP address to listen on and respond to the devices with (default: 10.42.42.1)",
+        default="10.204.0.1",
+        help="IP address to listen on and respond to the devices with (default: 10.204.0.1)",
     )
     parser_configure.add_argument(
         "--ssid",
@@ -381,8 +381,8 @@ def parse_args():
     parser_update_firmware.add_argument(
         "--ip",
         dest="ip",
-        default="10.42.42.1",
-        help="IP address to listen on and respond to the devices with (default: 10.42.42.1)",
+        default="10.204.0.1",
+        help="IP address to listen on and respond to the devices with (default: 10.204.0.1)",
     )
     parser_update_firmware.set_defaults(handler=__update_firmware)
 
