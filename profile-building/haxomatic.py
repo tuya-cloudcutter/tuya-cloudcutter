@@ -41,13 +41,13 @@ PATCHED_PATTERNS_TUYAOS3 = [
 ]
 
 PATCHED_PATTERNS_BK7231N = [
-    "2d6811226b1dff33181c00210393", # BK7231N short/combined
-    "2d6811226b1dff33181c0021039329f0", # BK7231N 2.3.1 Patched
-    "2d6811226b1dff33181c002103930bf0", # BK7231N 2.3.3 Patched
+    "2d6811226b1dff33181c00210393", # Patched BK7231N short/combined
+    "2d6811226b1dff33181c0021039329f0", # Patched BK7231N 2.3.1
+    "2d6811226b1dff33181c002103930bf0", # Patched BK7231N 2.3.3
 ]
 
 PATCHED_PATTERNS_RTL8720C = [
-    "d9f80060112206f5827b", # RTL8720CF 2.3.3 Patched BUILD AT:2023_05_16_18_19_54
+    "d9f80060112206f5827b", # Patched RTL8720CF TUYA IOT SDK V:2.3.3 BS:40.00_PT:2.2_LAN:3.4_CAD:1.0.5_CD:1.0.0
 ]
 
 
@@ -273,8 +273,40 @@ def walk_app_code():
             return
 
         # TUYA IOT SDK V:2.3.2 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.4_CD:1.0.0
+        if b'TUYA IOT SDK V:2.3.2 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.4_CD:1.0.0' in appcode:
+            # 05 46 00 28 3f f4 ba ac is the byte pattern for token
+            # 1 match should be found
+            # 28 46 d8 f8 04 30 is the byte pattern for finish
+            # 1 match should be found
+            process(PlatformInfo(Platform.RTL8720C), "SDK 2.3.2",
+                    Pattern("token", "054600283ff4baac", 1, 0, 4),
+                    Pattern("finish", "2846d8f80430", 1, 0))
+            return
+
         # TUYA IOT SDK V:2.3.3 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.4_CD:1.0.0
-        # TUYA IOT SDK V:2.3.3 BS:40.00_PT:2.2_LAN:3.4_CAD:1.0.5_CD:1.0.0
+        # Early 2.3.3 are the same as 2.3.2
+        if (b'TUYA IOT SDK V:2.3.3 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.4_CD:1.0.0' in appcode 
+            and (b'BUILD AT:2021_09_22_16_52_29 BY embed FOR ty_iot_sdk AT rtl8720cf_ameba' in appcode
+                 or b'BUILD AT:2023_03_02_17_45_15 BY ci_manage FOR ty_iot_sdk AT rtl8720cf_ameba' in appcode)):
+            # 05 46 00 28 3f f4 ba ac is the byte pattern for token
+            # 1 match should be found
+            # 28 46 d8 f8 04 30 is the byte pattern for finish
+            # 1 match should be found
+            process(PlatformInfo(Platform.RTL8720C), "SDK 2.3.3 (older)",
+                    Pattern("token", "054600283ff4baac", 1, 0, 4),
+                    Pattern("finish", "2846d8f80430", 1, 0))
+            return
+
+        # TUYA IOT SDK V:2.3.3 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.4_CD:1.0.0
+        if b'TUYA IOT SDK V:2.3.3 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.4_CD:1.0.0' in appcode:
+            # 28 46 00 f0 2a fd is the byte pattern for token
+            # 1 match should be found
+            # b8 f1 0e 0f 7f d9 is the byte pattern for finish
+            # 1 match should be found
+            process(PlatformInfo(Platform.RTL8720C), "SDK 2.3.3 (newer)",
+                    Pattern("token", "284600f02afd", 1, 0),
+                    Pattern("finish", "b8f10e0f7fd9", 1, 0))
+            return
 
     raise RuntimeError('Unknown pattern, please open a new issue and include the bin.')
 
