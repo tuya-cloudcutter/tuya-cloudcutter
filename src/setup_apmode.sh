@@ -84,7 +84,7 @@ LOG_OPTIONS=""
 if [ "${VERBOSE_OUTPUT}" == "true" ]; then
         LOG_OPTIONS="--log-dhcp --log-queries --log-facility=/dev/stdout"
 fi
-dnsmasq --no-resolv --interface=$WLAN --bind-interfaces --listen-address=$GATEWAY --except-interface=lo -K --dhcp-range=$DHCP_RANGE_START,$DHCP_RANGE_END,12h --dhcp-option=option:router,$GATEWAY --dhcp-option=option:dns-server,$GATEWAY,$DNS2,$DNS3 --dhcp-option=option:netmask,255.255.255.0 --address=/#/${GATEWAY} -x $(pwd)/dnsmasq.pid $LOG_OPTIONS
+dnsmasq --no-resolv --interface=$WLAN --bind-interfaces --listen-address=$GATEWAY --except-interface=lo -K --dhcp-range=$DHCP_RANGE_START,$DHCP_RANGE_END,12h --dhcp-option=option:router,$GATEWAY --dhcp-option=option:dns-server,$GATEWAY,$DNS2,$DNS3 --dhcp-option=option:netmask,255.255.255.0 --dhcp-sequential-ip --address=/#/${GATEWAY} -x $(pwd)/dnsmasq.pid $LOG_OPTIONS
 
 mkdir /run/mosquitto
 chown mosquitto /run/mosquitto

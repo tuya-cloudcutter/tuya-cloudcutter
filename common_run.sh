@@ -132,8 +132,9 @@ if [[ $AP_MATCHED_NAME != A-* ]] && [ -z "${AUTHKEY}" ]; then
     exit 1
 fi
 
-# Add a minor delay to stabilize after connection
-sleep 1
+echo "Device is connecting to 'cloudcutterflash' access point. Passphrase for the AP is 'abcdabcd' (without ')"
+# Add a minor delay to stabilize after connection, to make sure DHCP and such have finished
+sleep 5
 OUTPUT=$(run_in_docker pipenv run python3 -m cloudcutter configure_wifi "cloudcutterflash" "abcdabcd" "${VERBOSE_OUTPUT}")
 RESULT=$?
 echo "${OUTPUT}"
@@ -141,4 +142,3 @@ if [ ! $RESULT -eq 0 ]; then
     echo "Oh no, something went wrong with making the device connect to our hostapd AP! Try again I guess..."
     exit 1
 fi
-echo "Device is connecting to 'cloudcutterflash' access point. Passphrase for the AP is 'abcdabcd' (without ')"
