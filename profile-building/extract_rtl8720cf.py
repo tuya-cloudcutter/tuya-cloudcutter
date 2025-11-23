@@ -1,10 +1,12 @@
+import json
 import os
 import os.path
 import shutil
 import sys
 
-from ltchiptool.commands.flash.split import cli
+from ltchiptool.commands.flash.split import cli as ltchiptool_split_cli
 from ltchiptool import Board
+from ltctplugin.upk2esphome import work as upk2esphome_work
 
 
 def load_file(filename: str):
@@ -19,6 +21,10 @@ def load_file(filename: str):
 
 
 def run(full_filename: str):
+    def SaveStorageData(data):
+        data = json.dumps(data, indent="\t")
+        open(os.path.join(extractfolder, foldername + "_storage.json"), 'wb').write(data.encode('utf-8'))
+    
     if full_filename is None or full_filename == '':
         print('Usage: python extract.py <full 2M bin file>')
         sys.exit(1)
@@ -43,8 +49,11 @@ def run(full_filename: str):
     if not os.path.exists(extractfolder) or not os.path.exists(os.path.join(extractfolder, foldername + "_active_app.bin")):
         try:
             with open(full_filename, "rb") as f:
-                cli.callback(Board("generic-rtl8720cf-2mb-896k"), f, extractfolder, True, True)
+                ltchiptool_split_cli.callback(Board("generic-rtl8720cf-2mb-896k"), f, extractfolder, True, True)
+                on_storage = lambda data: SaveStorageData(data)
+                upk2esphome_work.UpkThread(f, None, on_storage).run_file(full_filename)
         except Exception as ex:
+            print(ex)
             raise ex
 
         dirListing = os.listdir(extractfolder)
