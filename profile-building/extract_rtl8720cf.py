@@ -4,9 +4,9 @@ import os.path
 import shutil
 import sys
 
+from bk7231tools.analysis.kvstorage import KVStorage
 from ltchiptool.commands.flash.split import cli as ltchiptool_split_cli
 from ltchiptool import Board
-from ltctplugin.upk2esphome import work as upk2esphome_work
 
 
 def load_file(filename: str):
@@ -21,10 +21,6 @@ def load_file(filename: str):
 
 
 def run(full_filename: str):
-    def SaveStorageData(data):
-        data = json.dumps(data, indent="\t")
-        open(os.path.join(extractfolder, foldername + "_storage.json"), 'wb').write(data.encode('utf-8'))
-    
     if full_filename is None or full_filename == '':
         print('Usage: python extract.py <full 2M bin file>')
         sys.exit(1)
@@ -46,12 +42,28 @@ def run(full_filename: str):
     extractfolder = os.path.abspath(output_dir)
     foldername = os.path.basename(output_dir)
 
-    if not os.path.exists(extractfolder) or not os.path.exists(os.path.join(extractfolder, foldername + "_active_app.bin")):
+    if not os.path.exists(extractfolder) or not os.path.exists(os.path.join(extractfolder, foldername + "_active_app.bin")) or True:
         try:
             with open(full_filename, "rb") as f:
                 ltchiptool_split_cli.callback(Board("generic-rtl8720cf-2mb-896k"), f, extractfolder, True, True)
-                on_storage = lambda data: SaveStorageData(data)
-                upk2esphome_work.UpkThread(f, None, on_storage).run_file(full_filename)
+                f.seek(0x1D000) # End of OTA2 partition
+                result = KVStorage.find_storage(f.read())
+                if not result:
+                    raise ValueError("File doesn't contain known storage area")
+
+                _, data = result
+                try:
+                    kvs = KVStorage.decrypt_and_unpack(data)
+                except Exception:
+                    raise RuntimeError("Couldn't unpack storage data - see program logs")
+
+                try:
+                    storage = kvs.read_all_values_parsed()
+                except Exception:
+                    raise RuntimeError("Couldn't parse storage data - see program logs")
+
+                storage = json.dumps(storage, indent="\t")
+                open(os.path.join(extractfolder, foldername + "_storage.json"), 'wb').write(storage.encode('utf-8'))
         except Exception as ex:
             print(ex)
             raise ex
