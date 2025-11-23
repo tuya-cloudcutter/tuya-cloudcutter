@@ -42,7 +42,7 @@ def run(full_filename: str):
     extractfolder = os.path.abspath(output_dir)
     foldername = os.path.basename(output_dir)
 
-    if not os.path.exists(extractfolder) or not os.path.exists(os.path.join(extractfolder, foldername + "_active_app.bin")) or True:
+    if not os.path.exists(extractfolder) or not os.path.exists(os.path.join(extractfolder, foldername + "_active_app.bin")):
         try:
             with open(full_filename, "rb") as f:
                 ltchiptool_split_cli.callback(Board("generic-rtl8720cf-2mb-896k"), f, extractfolder, True, True)
