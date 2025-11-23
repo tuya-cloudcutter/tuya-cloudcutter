@@ -155,7 +155,7 @@ def dump():
         with open(name_output_file("sdk"), 'w') as f:
             f.write(sdk_version)
 
-    # If swv doesn't exist from storage
+    # If swv from storage load it, otherwise search for it to use for device class searching.
     if exists(name_output_file("swv")):
         with open(name_output_file("swv"), 'r') as f:
             swv = f.read().strip()        

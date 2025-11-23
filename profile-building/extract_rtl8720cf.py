@@ -46,7 +46,7 @@ def run(full_filename: str):
         try:
             with open(full_filename, "rb") as f:
                 ltchiptool_split_cli.callback(Board("generic-rtl8720cf-2mb-896k"), f, extractfolder, True, True)
-                f.seek(0x1D000) # End of OTA2 partition
+                f.seek(0) # Reset file pointer to beginning after split.
                 result = KVStorage.find_storage(f.read())
                 if not result:
                     raise ValueError("File doesn't contain known storage area")
