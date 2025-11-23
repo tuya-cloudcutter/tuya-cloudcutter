@@ -86,6 +86,20 @@ def search_device_class_after_chipid(chipid: str):
     return ''
 
 
+def search_device_class_after_swv(swv: str):
+    swv_string = b'\0' + bytes(swv, 'utf-8') + b'\0'
+    offset = appcode.find(swv_string, 0)
+    if offset == -1:
+        return ''
+    offset += len(swv_string) + 1
+    for _ in range(3):
+        after = read_between_null_or_newline(offset)
+        offset += len(after) + 1
+        if after.count('_') > 0 and after.count('__') == 0 and after.count(' ') == 0:
+            return after
+    return ''
+
+
 def search_swv_after_compiled_line():
     compiled_at_string = b'**********[%s] [%s] compiled at %s %s**********'
     offset = appcode.find(compiled_at_string, 0)
@@ -140,7 +154,19 @@ def dump():
         print(f"[+] SDK: {sdk_version}")
         with open(name_output_file("sdk"), 'w') as f:
             f.write(sdk_version)
-        
+
+    # If swv doesn't exist from storage
+    if exists(name_output_file("swv")):
+        with open(name_output_file("swv"), 'r') as f:
+            swv = f.read().strip()        
+    else:
+        swv = search_swv_after_compiled_line()
+        if swv == '':
+            swv = search_swv_after_device_class(device_class)
+        if swv != '':
+            print(f"[+] Version: {swv}")
+            with open(name_output_file("swv"), 'w') as f:
+                f.write(swv)
 
     device_class_search_keys = [
         b'oem_bk7231s_',
@@ -149,7 +175,6 @@ def dump():
         b'oem_bk7231n_',
         b'bk7231n_common_',
         b'_common_ty',
-        b'rtl8720cf_',
     ]
 
     device_class = ''
@@ -169,6 +194,8 @@ def dump():
         device_class = search_device_class_after_chipid("bk7231t")
     if device_class == '':
         device_class = search_device_class_after_chipid("rtl8720cf_ameba")
+    if device_class == '':
+        device_class = search_device_class_after_swv(swv)
 
     if device_class != '':
         print(f"[+] Device class: {device_class}")
@@ -191,16 +218,6 @@ def dump():
                 f.write('memory')
     else:
         print("[!] Unable to determine device class, please open an issue and include the bin file.")
-
-    # If swv doesn't exist from storage
-    if exists(name_output_file("swv")) == False:
-        swv = search_swv_after_compiled_line()
-        if swv == '':
-            swv = search_swv_after_device_class(device_class)
-        if swv != '':
-            print(f"[+] Version: {swv}")
-            with open(name_output_file("swv"), 'w') as f:
-                f.write(swv)
 
     # If bv doesn't exist from storage
     if exists(name_output_file("bv")) == False and len(sdk_line.split()) >= 6:
