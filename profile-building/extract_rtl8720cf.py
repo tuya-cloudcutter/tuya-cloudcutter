@@ -20,7 +20,7 @@ def load_file(filename: str):
     return None
 
 
-def run(full_filename: str):
+def run(full_filename: str, process_inactive_app: bool = False):
     if full_filename is None or full_filename == '':
         print('Usage: python extract.py <full 2M bin file>')
         sys.exit(1)
@@ -36,16 +36,18 @@ def run(full_filename: str):
         print('Examples: Tuya-Generic_DS---101-Touch-Switch.bin or Tuya-Generic_A60-E26-RGBCT-Bulb.bin')
         sys.exit(1)
 
-    global current_dir, extractfolder, foldername
+    global current_dir
     current_dir = os.path.dirname(full_filename)
-    output_dir = full_filename.replace('.bin', '')
-    extractfolder = os.path.abspath(output_dir)
-    foldername = os.path.basename(output_dir)
+    base_name = os.path.basename(full_filename.replace('.bin', ''))
+    extract_folder_name = base_name
+    if process_inactive_app:
+        extract_folder_name += '.inactive_app'
+    extract_folder_path = os.path.abspath(extract_folder_name)
 
-    if not os.path.exists(extractfolder) or not os.path.exists(os.path.join(extractfolder, foldername + "_active_app.bin")):
+    if not os.path.exists(extract_folder_name) or not os.path.exists(os.path.join(extract_folder_path, base_name + "_active_app.bin")):
         try:
             with open(full_filename, "rb") as f:
-                ltchiptool_split_cli.callback(Board("generic-rtl8720cf-2mb-896k"), f, extractfolder, True, True)
+                ltchiptool_split_cli.callback(Board("generic-rtl8720cf-2mb-896k"), f, extract_folder_path, True, True)
                 f.seek(0) # Reset file pointer to beginning after split.
                 result = KVStorage.find_storage(f.read())
                 if not result:
@@ -63,12 +65,12 @@ def run(full_filename: str):
                     raise RuntimeError("Couldn't parse storage data - see program logs")
 
                 storage = json.dumps(storage, indent="\t")
-                open(os.path.join(extractfolder, foldername + "_storage.json"), 'wb').write(storage.encode('utf-8'))
+                open(os.path.join(extract_folder_path, base_name + "_storage.json"), 'wb').write(storage.encode('utf-8'))
         except Exception as ex:
             print(ex)
             raise ex
 
-        dirListing = os.listdir(extractfolder)
+        dirListing = os.listdir(extract_folder_path)
 
         active_ota_index = 0
 
@@ -78,50 +80,54 @@ def run(full_filename: str):
             elif file == "001000_system_8959.bin":
                 active_ota_index = 2
 
+        # swap active partitions if processing inactive app
+        if process_inactive_app:
+            active_ota_index = active_ota_index % 2 + 1
+
         for file in dirListing:
             if active_ota_index == 1 and file.startswith("010000_ota1_"):
-                shutil.copyfile(os.path.join(extractfolder, file), os.path.join(extractfolder, foldername + "_active_app.bin"))
+                shutil.copyfile(os.path.join(extract_folder_path, file), os.path.join(extract_folder_path, base_name + "_active_app.bin"))
             elif active_ota_index == 2 and file.startswith("0F0000_ota2_"):
-                shutil.copyfile(os.path.join(extractfolder, file), os.path.join(extractfolder, foldername + "_active_app.bin"))
+                shutil.copyfile(os.path.join(extract_folder_path, file), os.path.join(extract_folder_path, base_name + "_active_app.bin"))
 
         issue = load_file("issue.txt")
         if issue is not None:
-            with open(os.path.join(extractfolder, foldername + "_issue.txt"), 'w') as issueFile:
+            with open(os.path.join(extract_folder_path, base_name + "_issue.txt"), 'w') as issueFile:
                 issueFile.write(issue)
 
         image = load_file("image.jpg")
         if image is not None:
-            with open(os.path.join(extractfolder, foldername + "_image.jpg"), 'wb') as imageFile:
+            with open(os.path.join(extract_folder_path, base_name + "_image.jpg"), 'wb') as imageFile:
                 imageFile.write(image)
 
         schemaId = load_file("schema_id.txt")
         if schemaId is not None:
-            with open(os.path.join(extractfolder, foldername + "_schema_id.txt"), 'w') as schemaIdFile:
+            with open(os.path.join(extract_folder_path, base_name + "_schema_id.txt"), 'w') as schemaIdFile:
                 schemaIdFile.write(schemaId)
 
         schema = load_file("schema.txt")
         if schema is not None:
-            with open(os.path.join(extractfolder, foldername + "_schema.txt"), 'w') as schemaFile:
+            with open(os.path.join(extract_folder_path, base_name + "_schema.txt"), 'w') as schemaFile:
                 schemaFile.write(schema)
 
         storage = load_file("storage.json")
         if storage is not None:
-            with open(os.path.join(extractfolder, foldername + "_storage.json"), 'w') as storageFile:
+            with open(os.path.join(extract_folder_path, base_name + "_storage.json"), 'w') as storageFile:
                 storageFile.write(storage)
 
         user_param_key = load_file("user_param_key.json")
         if user_param_key is not None:
-            with open(os.path.join(extractfolder, foldername + "_user_param_key.json"), 'w') as userParamKeyFile:
+            with open(os.path.join(extract_folder_path, base_name + "_user_param_key.json"), 'w') as userParamKeyFile:
                 userParamKeyFile.write(user_param_key)
         
         decrypted_app_bin = load_file("app.bin")
         if decrypted_app_bin is not None:
-            with open(os.path.join(extractfolder, foldername + "_active_app.bin"), 'wb') as decryptedAppFile:
+            with open(os.path.join(extract_folder_path, base_name + "_active_app.bin"), 'wb') as decryptedAppFile:
                 decryptedAppFile.write(decrypted_app_bin)
 
         ap_ssid = load_file("ap_ssid.txt")
         if ap_ssid is not None:
-            with open(os.path.join(extractfolder, foldername + "_ap_ssid.txt"), 'w') as apSsidFile:
+            with open(os.path.join(extract_folder_path, base_name + "_ap_ssid.txt"), 'w') as apSsidFile:
                 apSsidFile.write(ap_ssid)
     else:
         print('[+] bin has already been extracted')
@@ -129,4 +135,4 @@ def run(full_filename: str):
 
 
 if __name__ == '__main__':
-    run(sys.argv[1])
+    run(sys.argv)

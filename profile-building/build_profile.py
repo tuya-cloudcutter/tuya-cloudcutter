@@ -32,14 +32,21 @@ if __name__ == '__main__':
     if len(sys.argv) > 2 and sys.argv[2] is not None:
         token = sys.argv[2]
 
+    process_inactive_app = False
+    for arg in sys.argv:
+        if arg == '--inactive':
+            process_inactive_app = True
+
     file = sys.argv[1]
-    output_dir = file.replace('.bin', '')
-    base_name = os.path.basename(output_dir)
-    dirname = os.path.dirname(file)
-    storage_file = os.path.join(dirname, base_name, base_name + '_storage.json')
-    app_file = os.path.join(dirname, base_name, base_name + '_active_app.bin')
-    schema_id_file = os.path.join(dirname, base_name, base_name + '_schema_id.txt')
-    extracted_location = os.path.join(dirname, base_name)
+    base_name = os.path.basename(file.replace('.bin', ''))
+    extract_folder_name = base_name
+    if process_inactive_app:
+        extract_folder_name += '.inactive_app'
+    current_dirname = os.path.dirname(file)
+    storage_file = os.path.join(current_dirname, extract_folder_name, base_name + '_storage.json')
+    app_file = os.path.join(current_dirname, extract_folder_name, base_name + '_active_app.bin')
+    schema_id_file = os.path.join(current_dirname, extract_folder_name, base_name + '_schema_id.txt')
+    extracted_location = os.path.join(current_dirname, extract_folder_name)
 
     if base_name.count('_') != 1 or base_name.count(' ') > 0:
         print_filename_instructions()
@@ -58,11 +65,11 @@ if __name__ == '__main__':
     if extract_platform == Platform.BEKEN:
         extract_beken.run(file)
     elif extract_platform == Platform.RTL8720CF:
-        extract_rtl8720cf.run(file)
+        extract_rtl8720cf.run(file, process_inactive_app)
     else:
         raise("no platform?")
     haxomatic.run(app_file)
-    process_storage.run(storage_file)
+    process_storage.run(storage_file, process_inactive_app)
     process_app.run(app_file)
 
     if not os.path.exists(schema_id_file):

@@ -37,14 +37,11 @@ def assemble():
     chip = load_file("chip.txt")
     sdk = load_file("sdk.txt")
     bv = load_file("bv.txt")
-    # uuid = load_file("uuid.txt")
-
     ap_ssid = load_file("ap_ssid.txt")
-    # auth_key = load_file("auth_key.txt")
-    address_finish = load_file("address_finish.txt")
+    haxomatic_matched = load_file("haxomatic_matched.txt") is not None
     icon = load_file("icon.txt")
 
-    if address_finish is None:
+    if haxomatic_matched is None:
         print("[!] Directory has not been fully processed, unable to generate classic profile")
         return
 
@@ -54,10 +51,14 @@ def assemble():
         swv = "0.0.0"
     product_key = load_file("product_key.txt")
     firmware_key = load_file("firmware_key.txt")
+    address_finish = load_file("address_finish.txt")
     address_datagram = load_file("address_datagram.txt")
     address_ssid = load_file("address_ssid.txt")
     address_ssid_padding = load_file("address_ssid_padding.txt")
     address_passwd = load_file("address_passwd.txt")
+    address_passwd_padding = load_file("address_passwd_padding.txt")
+    address_token = load_file("address_token.txt")
+    address_token_padding = load_file("address_token_padding.txt")
     schema_id = load_file("schema_id.txt")
     schema = load_file("schema.txt")
     if schema is not None and schema != '':
@@ -94,6 +95,12 @@ def assemble():
             data["address_ssid_padding"] = int(address_ssid_padding)
     if address_passwd is not None:
         data["address_passwd"] = address_passwd
+        if address_passwd_padding is not None:
+            data["address_passwd_padding"] = int(address_passwd_padding)
+    if address_token is not None:
+        data["address_token"] = address_token
+        if address_token_padding is not None:
+            data["address_token_padding"] = int(address_token_padding)
 
     profile["data"] = data
 
@@ -150,6 +157,17 @@ def assemble():
     if tuyamcu_baud is not None:
         device["tuyamcu_baud"] = tuyamcu_baud
 
+    # version cleanup
+    name_end = device["name"].split()[-1]
+    # version is present, but doesn't match what is being processed, correct it
+    if name_end.startswith("v") and name_end != f"v{swv}":
+        device["name"] = device["name"].replace(name_end, f"v{swv}")
+        device_filename = device_filename.replace(name_end, f"v{swv}")
+    # no version present, add it
+    if not name_end.startswith("v"):
+        device["name"] = f"{device['name']} v{swv}"
+        device_filename = f"{device_filename}-v{swv}"
+
     print(f"[+] Creating device profile {device_filename}")
     with open(os.path.join(full_path, "profile-classic", "devices", f"{device_filename}.json"), 'w') as f:
         f.write(json.dumps(device, indent='\t'))
@@ -163,7 +181,7 @@ def assemble():
 def run(processed_directory: str):
     global full_path, base_name
     full_path = processed_directory
-    base_name = os.path.basename(os.path.normpath(full_path))
+    base_name = os.path.basename(os.path.normpath(full_path)).replace('.inactive_app', '')
 
     assemble()
     return
