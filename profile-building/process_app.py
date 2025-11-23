@@ -134,6 +134,13 @@ def dump():
         print(f"[+] SDK: {sdk_version}")
         with open(name_output_file("sdk"), 'w') as f:
             f.write(sdk_version)
+    elif b'\x002.3.0\x00' in appcode and b'\x002.5.2\x00' in appcode:
+        # Fix for a single case where there is no sdk line, but we know the version
+        sdk_version = '2.3.0'
+        print(f"[+] SDK: {sdk_version}")
+        with open(name_output_file("sdk"), 'w') as f:
+            f.write(sdk_version)
+        
 
     device_class_search_keys = [
         b'oem_bk7231s_',
