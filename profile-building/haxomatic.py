@@ -6,7 +6,7 @@ from enum import Enum
 class Platform(Enum):
     BK7231T = "BK7231T"
     BK7231N = "BK7231N"
-    RTL8720C = "RTL8720C"
+    RTL8720CF = "RTL8720CF"
 
 
 class PlatformInfo(object):
@@ -17,7 +17,7 @@ class PlatformInfo(object):
                 self.address_size = 3
                 self.base_address = base_address if base_address else 0x0
                 self.start_offset = start_offset if start_offset else 0x10000
-            case Platform.RTL8720C:
+            case Platform.RTL8720CF:
                 self.address_size = 4
                 self.base_address = base_address if base_address else 0x9b000000
                 self.start_offset = start_offset if start_offset else 0x0
@@ -46,7 +46,7 @@ PATCHED_PATTERNS_BK7231N = [
     "2d6811226b1dff33181c002103930bf0", # Patched BK7231N 2.3.3
 ]
 
-PATCHED_PATTERNS_RTL8720C = [
+PATCHED_PATTERNS_RTL8720CF = [
     "d9f80060112206f5827b", # Patched RTL8720CF TUYA IOT SDK V:2.3.3 BS:40.00_PT:2.2_LAN:3.4_CAD:1.0.5_CD:1.0.0
 ]
 
@@ -98,7 +98,7 @@ def walk_app_code():
                 return
 
     if b'AT rtl8720cf_ameba' in appcode:
-        for patch_pattern in PATCHED_PATTERNS_RTL8720C:
+        for patch_pattern in PATCHED_PATTERNS_RTL8720CF:
             if check_for_patched(patch_pattern):
                 return
 
@@ -222,7 +222,7 @@ def walk_app_code():
         # 1 match should be found
         # 04 46 30 b1 00 68 is the byte pattern for finish
         # 2 matches should be found, second is correct
-        process(PlatformInfo(Platform.RTL8720C), "SDK 2.3.0",
+        process(PlatformInfo(Platform.RTL8720CF), "SDK 2.3.0",
                 Pattern("ssid", "2846666ab047", 1, 0, 4),
                 Pattern("passwd", "dff83c810646", 1, 0, 2),
                 Pattern("finish", "044630b10068", 2, 1))
@@ -237,7 +237,7 @@ def walk_app_code():
         # TUYA IOT SDK V:1.0.14 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.2_CD:1.0.0
         if b'TUYA IOT SDK V:1.0.' in appcode:
             # SDK 1.0.x has a special XIP load address and offset
-            process(PlatformInfo(Platform.RTL8720C, 0x9b000000 - 0x8000), "SDK 1.0.x",
+            process(PlatformInfo(Platform.RTL8720CF, 0x9b000000 - 0x8000), "SDK 1.0.x",
                     Pattern("token", "464f054628b9", 1, 0),
                     Pattern("finish", "d8f8003011aa", 1, 0))
             return
@@ -252,7 +252,7 @@ def walk_app_code():
             # 1 match should be found
             # d8 f8 00 80 b8 f1 is the byte pattern for finish
             # 1 match should be found
-            process(PlatformInfo(Platform.RTL8720C), "SDK 2.3.0",
+            process(PlatformInfo(Platform.RTL8720CF), "SDK 2.3.0",
                     Pattern("token", "5b6820469847", 2, 1),
                     Pattern("passwd", "dff834800646", 1, 0, 4),
                     Pattern("finish", "d8f80080b8f1", 1, 0))
@@ -266,7 +266,7 @@ def walk_app_code():
             # 1 match should be found
             # 04 46 30 b1 00 68 is the byte pattern for finish
             # 2 matches should be found, second is correct
-            process(PlatformInfo(Platform.RTL8720C), "SDK 2.3.0",
+            process(PlatformInfo(Platform.RTL8720CF), "SDK 2.3.0",
                     Pattern("ssid", "2846666ab047", 1, 0, 4),
                     Pattern("passwd", "dff83c810646", 1, 0, 2),
                     Pattern("finish", "044630b10068", 2, 1))
@@ -278,7 +278,7 @@ def walk_app_code():
             # 1 match should be found
             # 28 46 d8 f8 04 30 is the byte pattern for finish
             # 1 match should be found
-            process(PlatformInfo(Platform.RTL8720C), "SDK 2.3.2",
+            process(PlatformInfo(Platform.RTL8720CF), "SDK 2.3.2",
                     Pattern("token", "054600283ff4baac", 1, 0, 4),
                     Pattern("finish", "2846d8f80430", 1, 0))
             return
@@ -292,7 +292,7 @@ def walk_app_code():
             # 1 match should be found
             # 28 46 d8 f8 04 30 is the byte pattern for finish
             # 1 match should be found
-            process(PlatformInfo(Platform.RTL8720C), "SDK 2.3.3 (older)",
+            process(PlatformInfo(Platform.RTL8720CF), "SDK 2.3.3 (older)",
                     Pattern("token", "054600283ff4baac", 1, 0, 4),
                     Pattern("finish", "2846d8f80430", 1, 0))
             return
@@ -303,7 +303,7 @@ def walk_app_code():
             # 1 match should be found
             # b8 f1 0e 0f 7f d9 is the byte pattern for finish
             # 1 match should be found
-            process(PlatformInfo(Platform.RTL8720C), "SDK 2.3.3 (newer)",
+            process(PlatformInfo(Platform.RTL8720CF), "SDK 2.3.3 (newer)",
                     Pattern("token", "284600f02afd", 1, 0),
                     Pattern("finish", "b8f10e0f7fd9", 1, 0))
             return
@@ -383,8 +383,8 @@ def run(decrypted_app_file: str):
 
     global appcode_path, appcode
     appcode_path = decrypted_app_file.replace(".bin", "")
-    if appcode_path.endswith("_app_1.00_decrypted"):
-        appcode_path = appcode_path.replace("_app_1.00_decrypted", "")
+    if appcode_path.endswith("_active_app"):
+        appcode_path = appcode_path.replace("_active_app", "")
 
     if os.path.exists(name_output_file("haxomatic_matched.txt")):
         print('[+] Haxomatic has already been run')

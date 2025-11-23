@@ -46,7 +46,7 @@ def run(full_encrypted_file: str):
     input.extract = True
     input.storage = False
 
-    if not os.path.exists(extractfolder) or not os.path.exists(os.path.join(extractfolder, foldername + "_app_1.00_decrypted.bin")):
+    if not os.path.exists(extractfolder) or not os.path.exists(os.path.join(extractfolder, foldername + "_active_app.bin")):
         try:
             bk7231tools.__main__.dissect_dump_file(input)
         except Exception as ex:
@@ -58,7 +58,9 @@ def run(full_encrypted_file: str):
             if file.endswith('app_pattern_scan.bin'):
                 os.rename(os.path.join(extractfolder, file), os.path.join(extractfolder, file.replace('app_pattern_scan.bin', 'app_1.00.bin')))
             elif file.endswith('app_pattern_scan_decrypted.bin'):
-                os.rename(os.path.join(extractfolder, file), os.path.join(extractfolder, file.replace('app_pattern_scan_decrypted.bin', 'app_1.00_decrypted.bin')))
+                os.rename(os.path.join(extractfolder, file), os.path.join(extractfolder, file.replace('app_pattern_scan_decrypted.bin', 'active_app.bin')))
+            elif file.endswith('app_1.00_decrypted.bin'):
+                os.rename(os.path.join(extractfolder, file), os.path.join(extractfolder, file.replace('app_1.00_decrypted.bin', '_active_app.bin')))
 
         issue = load_file("issue.txt")
         if issue is not None:
@@ -92,7 +94,7 @@ def run(full_encrypted_file: str):
         
         decrypted_app_bin = load_file("app.bin")
         if decrypted_app_bin is not None:
-            with open(os.path.join(extractfolder, foldername + "_app_1.00_decrypted.bin"), 'wb') as decryptedAppFile:
+            with open(os.path.join(extractfolder, foldername + "_active_app"), 'wb') as decryptedAppFile:
                 decryptedAppFile.write(decrypted_app_bin)
 
         ap_ssid = load_file("ap_ssid.txt")
