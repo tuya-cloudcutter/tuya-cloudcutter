@@ -99,4 +99,4 @@ A big thank you to all who have provided meaningful contributions to the success
 - [divadiow](https://github.com/divadiow) - Firmware dump collection and device support organization
 - [Jeremy Salwen](https://github.com/jeremysalwen/) - Exploit expansion to the RTL8720CF platform.
 
-and many other [contributers](https://github.com/tuya-cloudcutter/tuya-cloudcutter/graphs/contributors) (and [here](https://github.com/tuya-cloudcutter/tuya-cloudcutter.github.io/graphs/contributors)) over the years!
+and many other [contributors](https://github.com/tuya-cloudcutter/tuya-cloudcutter/graphs/contributors) (and [here](https://github.com/tuya-cloudcutter/tuya-cloudcutter.github.io/graphs/contributors)) over the years!
