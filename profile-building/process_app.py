@@ -183,6 +183,7 @@ def dump():
         b'_common_ty',
         b'rtl8720cf_common_',
         b'_common_lock_ty',
+        b'_common_user_config_ty',
     ]
 
     device_class = ''
