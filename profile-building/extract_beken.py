@@ -94,7 +94,7 @@ def run(full_encrypted_file: str):
         
         decrypted_app_bin = load_file("app.bin")
         if decrypted_app_bin is not None:
-            with open(os.path.join(extract_folder_path, base_name + "_active_app"), 'wb') as decryptedAppFile:
+            with open(os.path.join(extract_folder_path, base_name + "_active_app.bin"), 'wb') as decryptedAppFile:
                 decryptedAppFile.write(decrypted_app_bin)
 
         ap_ssid = load_file("ap_ssid.txt")
