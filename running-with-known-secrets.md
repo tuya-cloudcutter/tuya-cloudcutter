@@ -15,7 +15,7 @@ You can only use this method if you know
 ## How can I find the secrets necessary?
 
 - UUID - This can be found one of two ways:
-  - Via iot tuya account, similar to finding the locak/secret keys via the instructions from [Tiny Tuya](https://github.com/jasonacox/tinytuya#setup-wizard---getting-local-keys) method 3 - Tuya Account
+  - Via iot tuya account, similar to finding the local/secret keys via the instructions from [Tiny Tuya](https://github.com/jasonacox/tinytuya#setup-wizard---getting-local-keys) method 3 - Tuya Account
   - Via uart logging (not all devices)
 - AuthKey
   - Via uart logging (not all devices)
