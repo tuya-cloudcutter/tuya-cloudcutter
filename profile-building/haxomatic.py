@@ -290,7 +290,7 @@ def walk_app_code():
             # 1 match should be found
             # 28 46 d8 f8 04 30 is the byte pattern for finish
             # 1 match should be found
-            process(PlatformInfo(Platform.RTL8720CF), "SDK 2.3.2",
+            process(PlatformInfo(Platform.RTL8720CF), "SDK 2.3.1",
                     Pattern("token", "054600283ff4a6ac", 1, 0, 4),
                     Pattern("finish", "2846d8f80430", 1, 0))
             return
