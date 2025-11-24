@@ -1,6 +1,6 @@
 # Tuya Cloudcutter
 
-This repository contains the toolchain to exploit a wireless vulnerability that can jailbreak some of the latest smart devices built with the Beken BK7231 (BK7231T,BK7231N) or Realtek RTL8720CF chipsets under various brand names by Tuya. The vulnerability as well as the exploitation tooling were identified and created by [Khaled Nassar](https://twitter.com/kmhnassar) and [Tom Clement](https://twitter.com/Tom_Clement) with support from [Jilles Groenendijk](https://twitter.com/jilles_com).
+This repository contains the toolchain to exploit a wireless vulnerability that can jailbreak some of the latest smart devices built with the Beken BK7231 (BK7231T,BK7231N) or Realtek RTL8720CF chipsets under various brand names by Tuya. The vulnerability as well as the exploitation tooling were identified and created by [Khaled Nassar](https://rb9.nl/) and [Tom Clement](https://github.com/tjclement) with support from [Jilles Groenendijk](https://jilles.com/).
 
 Our tool disconnects Tuya devices from the cloud, allowing them to run completely locally. Additionally, it can be used to flash custom firmware to devices over-the-air.
 
@@ -61,7 +61,6 @@ You can also contribute device dumps by [making an issue](https://github.com/tuy
 - If you don't want your SSID and/or SSID password to be out there, then it's best to dump a device that was onboarded on a dummy AP that you don't mind leaking the parameters for. Otherwise, you may also configure it on a dummy access point a few times before dumping it. This will greatly lower the chances of accidental leakage to anyone working on the building a profile from your device flash dump, **but it is never zero in this case**. As a rule of thumb, it's better to dump a fresh device which has been configured with a dummy AP, but if you still want to dump one that's in use on your home AP then know that you always run the risk of leaking your SSID and password.
 - Another option, when having a device paired to SmartLife/TuyaSmart, is to open the app, click the pencil icon in the top-right corner, choose `Remove Device` and click `Disconnect and wipe data`.
 
-~~Note that a dump made on a device which has been already activated on Tuya's app using any working SSID and password would simplify profile building a lot for contributors, so if possible please try to do so.~~
 Flash dumps of devices that have never been joined to Smart Life (or disconnected with a data wipe) are now generally acceptable. In order to not potentially leak personal information, that may be the preferred way.
 
 Tools to dump flash from devices:
@@ -88,3 +87,16 @@ If you'd like to check if a device is exploitable, one way to lower the chance o
 - [Smart Home - Smart Hack (35c3 talk)](https://media.ccc.de/v/35c3-9723-smart_home_-_smart_hack) by Michael Steigerwald from [VRUST](https://www.vtrust.de/).
 - [tuya-convert](https://github.com/ct-Open-Source/tuya-convert) - MQTT code for triggering firmware updates inspired by their work.
 - [tinytuya](https://github.com/jasonacox/tinytuya) - modified version of the library is used to communicate with devices after exploitation.
+
+## Special Thanks
+
+A big thank you to all who have provided meaningful contributions to the success of the Tuya CloudCutter project.  Those include, but are not limited to
+
+- [Khaled Nassar](https://rb9.nl/) - Founder, exploit researcher, original script
+- [Tom Clement](https://github.com/tjclement) - Founder, exploit researcher, original script
+- [Jilles Groenendijk](https://jilles.com/) - Support for original tooling for dumping firmware
+- [Kuba Szczodrzyński](https://github.com/kuba2k2/) - Lightleak, script improvements, additional tooling, LibreTiny/ESPHome implementation, and more.
+- [divadiow](https://github.com/divadiow) - Firmware dump collection and device support organization
+- [Jeremy Salwen](https://github.com/jeremysalwen/) - Exploit expansion to the RTL8720CF platform.
+
+and many other [contributers](https://github.com/tuya-cloudcutter/tuya-cloudcutter/graphs/contributors) (and [here](https://github.com/tuya-cloudcutter/tuya-cloudcutter.github.io/graphs/contributors)) over the years!
