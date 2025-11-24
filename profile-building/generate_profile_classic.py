@@ -35,7 +35,7 @@ def assemble():
     name = base_name.split('_')[1].replace('-', ' ').replace("   ", "-")
     device_class = load_file("device_class.txt")
     chip = load_file("chip.txt")
-    sdk = load_file("sdk.txt")
+    sdk = load_file("sdk_version.txt")
     bv = load_file("bv.txt")
     ap_ssid = load_file("ap_ssid.txt")
     haxomatic_matched = load_file("haxomatic_matched.txt") is not None

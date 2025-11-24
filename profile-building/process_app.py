@@ -154,18 +154,25 @@ def dump():
     global base_name, base_folder
     base_name = basename(appcode_path)[:-23]
     base_folder = dirname(appcode_path)
-    sdk_line = ''
+    sdk_string = ''
     if b'< TUYA IOT SDK' in appcode:
-        sdk_line = read_until_null_or_newline(appcode.index(b'< TUYA IOT SDK'))
-        sdk_version = sdk_line.split()[4].split(':')[1]
-        print(f"[+] SDK: {sdk_version}")
-        with open(name_output_file("sdk"), 'w') as f:
+        sdk_string = read_until_null_or_newline(appcode.index(b'< TUYA IOT SDK'))
+        sdk_version = sdk_string.split()[4].split(':')[1]
+        with open(name_output_file("sdk_version"), 'w') as f:
             f.write(sdk_version)
+        with open(name_output_file("sdk_string"), 'w') as f:
+            f.write(sdk_string)
+        sdk_build_at = read_until_null_or_newline(appcode.index(b'< BUILD AT:'))
+        with open(name_output_file("sdk_build_at"), 'w') as f:
+            f.write(sdk_build_at)
+        print(f"[+] SDK Version: {sdk_version}")
+        print(f"[+] SDK String: {sdk_string}")
+        print(f"[+] SDK Build At: {sdk_build_at}")
     elif b'\x002.3.0\x00' in appcode and b'\x002.5.2\x00' in appcode:
         # Fix for a single case where there is no sdk line, but we know the version
         sdk_version = '2.3.0'
         print(f"[+] SDK: {sdk_version}")
-        with open(name_output_file("sdk"), 'w') as f:
+        with open(name_output_file("sdk_version"), 'w') as f:
             f.write(sdk_version)
 
     swv = None
@@ -241,8 +248,8 @@ def dump():
                 f.write(swv)
 
     # If bv doesn't exist from storage
-    if exists(name_output_file("bv")) == False and sdk_line != '':
-        for sdk_part in re.split(r'[ _\s]+', sdk_line):
+    if exists(name_output_file("bv")) == False and sdk_string != '':
+        for sdk_part in re.split(r'[ _\s]+', sdk_string):
             if sdk_part.startswith('BS:'):
                 bv = sdk_part.split(':')[1]
                 print(f"[+] bv: {bv}")
