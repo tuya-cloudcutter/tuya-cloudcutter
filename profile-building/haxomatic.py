@@ -176,6 +176,18 @@ def walk_app_code():
 
     # BK7231N and BK7231NL
     if b'AT bk7231n' in appcode or b'AT BK7231NL' in appcode:
+        # This one build is slightly different than the rest of the following 2.3.1 builds
+        if (b'TUYA IOT SDK V:2.3.1 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0' in appcode
+                and b'BUILD AT:2021_02_26_12_42_29 BY embed FOR ty_iot_sdk AT bk7231n' in appcode):
+            # 05 1e 00 d1 c9 e6 is the byte pattern for ssid payload with a padding of 4
+            # 1 match should be found
+            # 43 68 20 1c 98 47 is the byte pattern for finish
+            # 1 match should be found
+            process(PlatformInfo(Platform.BK7231N), "SDK 2.3.1",
+                    Pattern("ssid", "051e00d1c9e6", 1, 0, 4),
+                    Pattern("finish", "4368201c9847", 1, 0))
+            return
+        
         # BK7231N, BS 40.00, SDK 2.3.1, CAD 1.0.3
         # 0.0.2 is also a variant of 2.3.1
         if (b'TUYA IOT SDK V:2.3.1 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0' in appcode
