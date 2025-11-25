@@ -53,8 +53,8 @@ if ! [ -z "${FIRMWARE}" ]; then
     echo "Selected Firmware: ${FIRMWARE}"
 fi
 
-if ! [ -z "${AUTHKEY}" ] && ! [ -z "${UUID}" ] && ! [ -z "${PSKKEY}" ]; then
-    echo "Using AuthKey ${AUTHKEY} , UUID ${UUID} , and PSKKey ${PSKKEY}"
+if ! [ -z "${AUTHKEY}" ] && ! [ -z "${UUID}" ]; then
+    echo "Using AuthKey ${AUTHKEY} , UUID ${UUID}"
     if ! [ -z "${DEVICEID}" ] && ! [ -z "${LOCALKEY}" ]; then
         echo "Using DeviceId ${DEVICEID} and LocalKey ${LOCALKEY}"
     fi
@@ -105,7 +105,17 @@ echo "Long press the power/reset button on the device until it starts fast-blink
 echo "See https://support.tuya.com/en/help/_detail/K9hut3w10nby8 for more information."
 echo "================================================================================"
 echo ""
-sleep 5
+
+if [ "${CHIP^^}" == "RTL8720CF" ]; then
+    echo "${CHIP^^} *MUST* be rebooted before we even begin the next scan or you will receive false-positives about the status of the device."
+    echo ""
+    read -n 1 -s -r -p "Press any key to confirm you have completed power cycling the device and continue."
+    echo ""
+    echo "Continuing..."
+else
+    sleep 5
+fi
+
 run_helper_script "pre-wifi-config"
 wifi_connect
 if [ ! $? -eq 0 ]; then
@@ -122,8 +132,9 @@ if [[ $AP_MATCHED_NAME != A-* ]] && [ -z "${AUTHKEY}" ]; then
     exit 1
 fi
 
-# Add a minor delay to stabilize after connection
-sleep 1
+echo "Device is connecting to 'cloudcutterflash' access point. Passphrase for the AP is 'abcdabcd' (without ')"
+# Add a minor delay to stabilize after connection, to make sure DHCP and such have finished
+sleep 5
 OUTPUT=$(run_in_docker pipenv run python3 -m cloudcutter configure_wifi "cloudcutterflash" "abcdabcd" "${VERBOSE_OUTPUT}")
 RESULT=$?
 echo "${OUTPUT}"
@@ -131,4 +142,3 @@ if [ ! $RESULT -eq 0 ]; then
     echo "Oh no, something went wrong with making the device connect to our hostapd AP! Try again I guess..."
     exit 1
 fi
-echo "Device is connecting to 'cloudcutterflash' access point. Passphrase for the AP is 'abcdabcd' (without ')"

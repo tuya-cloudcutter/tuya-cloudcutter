@@ -101,7 +101,6 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
     flash_timeout = 15
     if args.flash_timeout is not None:
         flash_timeout = args.flash_timeout
-    mqtt.mqtt_connect(device_id, local_key, tornado.ioloop.IOLoop.current(), graceful_exit_timeout=flash_timeout, verbose_output=args.verbose_output)
 
     with open(args.profile, "r") as f:
         combined = json.load(f)
@@ -109,6 +108,7 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
 
     def trigger_payload_endpoint_hook(handler, *_):
         if update_firmware:
+            mqtt.mqtt_connect(device_id, local_key, tornado.ioloop.IOLoop.current(), graceful_exit_timeout=flash_timeout, verbose_output=args.verbose_output)
             task_function = __trigger_firmware_update
             task_args = (config, args)
         else:
@@ -214,21 +214,32 @@ def __update_firmware(args):
         print(f"Firmware {args.firmware} does not exist or not a file.", file=sys.stderr)
         sys.exit(50)
 
-    UG_FILE_MAGIC = b"\x55\xAA\x55\xAA"
     FILE_MAGIC_DICT = {
         b"RBL\x00": "RBL",
         b"\x43\x09\xb5\x96": "QIO",
-        b"\x2f\x07\xb5\x94": "UA"
+        b"\x2f\x07\xb5\x94": "UA",
+        b"\x55\xAA\x55\xAA": "UG",
+        b"\x99\x99\x96\x96": "RTL8720CF_UART",
+        b"\x68\x51\x3e\xf8\x3e\x39\x6b\x12\xba\x05\x9a\x90\x0f\x36\xb6\xd3": "RTL8720CF_OTA",
     }
 
     with open(args.firmware, "rb") as fs:
-        magic = fs.read(4)
+        magic4 = fs.read(4)
+        fs.seek(32, 0)
+        magic16 = fs.read(16)
         error_code = 0
-        if magic in FILE_MAGIC_DICT:
+        if magic4 not in FILE_MAGIC_DICT and magic16 not in FILE_MAGIC_DICT:
             print(f"Firmware {args.firmware} is an {FILE_MAGIC_DICT[magic]} file! Please provide a UG file.", file=sys.stderr)
             error_code = 51
-        elif magic != UG_FILE_MAGIC:
-            print(f"Firmware {args.firmware} is not a UG file.", file=sys.stderr)
+
+        file_type = ""
+        if magic4 in FILE_MAGIC_DICT:
+            file_type = FILE_MAGIC_DICT[magic4]
+        elif magic16 in FILE_MAGIC_DICT:
+            file_type = FILE_MAGIC_DICT[magic16]
+
+        if file_type not in ["UG", "UF2", "RTL8720CF_OTA"]:
+            print(f"Firmware {args.firmware} is not a UG or RTL8720CF OTA file.", file=sys.stderr)
             error_code = 52
         else:
             # File is a UG file
@@ -308,9 +319,9 @@ def __configure_wifi(args):
     datagram = build_network_config_packet(payload.encode('ascii'))
     # Send the configuration diagram a few times with minor delay
     # May improve reliability in some setups
-    for _ in range(5):
+    for _ in range(4):
         send_network_config_datagram(datagram)
-        time.sleep(0.300)
+        time.sleep(0.05)
     print(f"Configured device to connect to '{SSID}'")
 
 
@@ -343,8 +354,8 @@ def parse_args():
     parser_configure.add_argument(
         "--ip",
         dest="ip",
-        default="10.42.42.1",
-        help="IP address to listen on and respond to the devices with (default: 10.42.42.1)",
+        default="10.204.0.1",
+        help="IP address to listen on and respond to the devices with (default: 10.204.0.1)",
     )
     parser_configure.add_argument(
         "--ssid",
@@ -370,8 +381,8 @@ def parse_args():
     parser_update_firmware.add_argument(
         "--ip",
         dest="ip",
-        default="10.42.42.1",
-        help="IP address to listen on and respond to the devices with (default: 10.42.42.1)",
+        default="10.204.0.1",
+        help="IP address to listen on and respond to the devices with (default: 10.204.0.1)",
     )
     parser_update_firmware.set_defaults(handler=__update_firmware)
 
@@ -441,7 +452,7 @@ def parse_args():
         required=True,
         default="",
         help="authkey assigned to the device (default: Random)",
-        type=__validate_localapicredential_arg(32),
+        #type=__validate_localapicredential_arg(16),
     )
     parser_write_deviceconfig.add_argument(
         "--uuid",
@@ -449,7 +460,7 @@ def parse_args():
         required=True,
         default="",
         help="uuid assigned to the device (default: Random)",
-        type=__validate_localapicredential_arg(16),
+        #type=__validate_localapicredential_arg(12),
     )
     parser_write_deviceconfig.add_argument(
         "--pskkey",
@@ -457,7 +468,7 @@ def parse_args():
         required=True,
         default="",
         help="pskkey assigned to the device (default: Random)",
-        type=__validate_localapicredential_arg(37),
+        #type=__validate_localapicredential_arg(37),
     )
     parser_write_deviceconfig.set_defaults(handler=__write_deviceconfig)
 

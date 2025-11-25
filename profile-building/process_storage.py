@@ -10,7 +10,7 @@ def write_file(key, value: str):
     except:
         return
 
-def dump(file):
+def dump(file, process_inactive_app: bool = False):
     with open(file, "r") as storage_file:
         storage = json.load(storage_file)
         global base_name, base_folder
@@ -32,24 +32,15 @@ def dump(file):
                 write_file("factory_pin", factory_pin)
         # Not all firmwares have version information in storage
         if 'gw_di' in storage:
-            if 'swv' in storage['gw_di']:
+            if 'swv' in storage['gw_di'] and not process_inactive_app:
                 print(f"[+] storage swv: {storage['gw_di']['swv']}")
                 write_file("swv", storage['gw_di']['swv'])
-            else:
-                print(f"[+] storage swv: 0.0.0")
-                write_file("swv", "0.0.0")
-            if 'dev_swv' in storage['gw_di']:
+            if 'dev_swv' in storage['gw_di'] and not process_inactive_app:
                 print(f"[+] storage dev_swv: {storage['gw_di']['dev_swv']}")
                 write_file("mcuswv", storage['gw_di']['dev_swv'])
-            else:
-                print(f"[+] storage dev_swv: 0.0.0")
-                write_file("mcuswv", "0.0.0")
-            if 'bv' in storage['gw_di']:
+            if 'bv' in storage['gw_di'] and not process_inactive_app:
                 print(f"[+] storage bv: {storage['gw_di']['bv']}")
                 write_file("bv", storage['gw_di']['bv'])
-            else:
-                print(f"[+] storage bv: 0.0.0")
-                write_file("bv", "0.0.0")
             if 'firmk' in storage['gw_di'] and storage['gw_di']['firmk'] is not None:
                 firmware_key = storage['gw_di']['firmk']
                 print(f"[+] firmware key: {firmware_key}")
@@ -76,17 +67,17 @@ def dump(file):
             write_file("manually_process", "No version or key stored, manual lookup required")
 
 
-def run(storage_file: str):
+def run(storage_file: str, process_inactive_app: bool = False):
     if not storage_file:
         print('Usage: python parse_storage.py <storage.json file>')
         sys.exit(1)
 
     if os.path.exists(storage_file):
-        dump(storage_file)
+        dump(storage_file, process_inactive_app)
     else:
         print('[!] Storage file not found')
         return
 
 
 if __name__ == '__main__':
-    run(sys.argv[1])
+    run(sys.argv[1], sys.argv[2])
