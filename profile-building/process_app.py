@@ -72,6 +72,20 @@ def search_device_class_after_compiled_line():
     return ''
 
 
+def search_device_class_before_compiled_line():
+    compiled_at_string = b'Base firmware: %s:%s compiled at Date:%s Time:%s'
+    offset = appcode.find(compiled_at_string, 0)
+    if offset == -1:
+        return ''
+    offset -= 2
+    for _ in range(4):
+        after = read_between_null_or_newline(offset)
+        offset += len(after) + 1
+        if after.count('_') > 0 and after.count(' ') == 0:
+            return after
+    return ''
+
+
 def search_device_class_after_chipid(chipid: str):
     chipid_string = b'\0' + bytes(chipid, 'utf-8') + b'\0'
     offset = appcode.find(chipid_string, 0)
@@ -202,6 +216,8 @@ def dump():
 
     if device_class == '':
         device_class = search_device_class_after_compiled_line()
+    if device_class == '':
+        device_class = search_device_class_before_compiled_line()
     if device_class == '':
         device_class = search_device_class_after_chipid("bk7231n")
     if device_class == '':
