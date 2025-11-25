@@ -8,9 +8,9 @@ Our tool disconnects Tuya devices from the cloud, allowing them to run completel
 
 ## ⚠️ WARNING⚠️
 
-**Using cloudcutter means that you will NO LONGER be able to use Tuya's apps and servers. Be absolutely sure that you are never going to use them again!**
+**Using Tuya CloudCutter means that you will NO LONGER be able to use Tuya's apps and servers. Be absolutely sure that you are never going to use them again!**
 
-Additionally, please be aware that this software is experimental and provided without any guarantees from the authors strictly for peronal and educational use. If you will still use it, then you agree that:
+Additionally, please be aware that this software is experimental and provided without any guarantees from the authors strictly for personal and educational use. If you will still use it, then you agree that:
 
 1. You understand what the software is doing
 2. You choose to use it at your own risk
@@ -23,7 +23,7 @@ If you're curious about the vulnerability and how the exploit chain works, here'
 ## Requirements
 
 - A device with a stand-alone wifi adapter (but not be your primary source of networking, ethernet is preferred for that)
-- An account with sudo / elevated privlidges - An account capable of making network setting changes.
+- An account with sudo / elevated privileges - An account capable of making network setting changes.
 - NetworkManager / nmcli - This is used to scan for Tuya APs, connect to them, and host a CloudCutter AP to run the exploit.  If you run into issues, make sure your NetworkManager service is started.  You may need to use the `-r` parameter if you continue to have issues.
 - Docker / Docker CLI package - This is used to create a controlled python environment to handle and run the exploit
 - An active internet connection (Somewhat optional) - This is used to download the packages to build the docker container and to download new device profiles.
