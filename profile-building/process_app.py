@@ -123,7 +123,7 @@ def search_swv_after_compiled_line():
     for _ in range(4):
         after = read_between_null_or_newline(offset)
         offset += len(after) + 1
-        if after.count('.') > 1:
+        if after.count('.') > 1 and re.match("^([\d]+\.)?(\d+\.)?(\*|\d+)$", after):
             return after
     return ''
 
@@ -136,7 +136,7 @@ def search_swv_after_device_class(device_class):
     for _ in range(4):
         after = read_between_null_or_newline(offset)
         offset += len(after) + 1
-        if after.count('.') > 1:
+        if after.count('.') > 1 and re.match("^(\d+\.)?(\d+\.)?(\*|\d+)$", after):
             return after
     return ''
 
@@ -149,7 +149,20 @@ def search_swv_before_device_class(device_class):
     for _ in range(4):
         after = read_between_null_or_newline(offset)
         offset += len(after) + 1
-        if after.count('.') > 1:
+        if after.count('.') > 1 and re.match("^(\d+\.)?(\d+\.)?(\*|\d+)$", after):
+            return after
+    return ''
+
+
+def search_swv_after_firmware_key(firmware_key):
+    offset = appcode.find(bytes(firmware_key, 'utf-8'), 0)
+    if offset == -1:
+        return ''
+    offset += len(firmware_key) + 1
+    for _ in range(4):
+        after = read_between_null_or_newline(offset)
+        offset += len(after) + 1
+        if after.count('.') > 1 and re.match("^(\d+\.)?(\d+\.)?(\*|\d+)$", after):
             return after
     return ''
 
@@ -188,6 +201,18 @@ def dump():
         print(f"[+] SDK: {sdk_version}")
         with open(name_output_file("sdk_version"), 'w') as f:
             f.write(sdk_version)
+
+    # If firmware_key doesn't exist from storage
+    firmware_key = ''
+    if exists(name_output_file("firmware_key")) == False:
+        firmware_key = search_key()
+        if firmware_key is not None and firmware_key != '':
+            print(f"[+] firmware_key: {firmware_key}")
+            with open(name_output_file("firmware_key"), 'w') as f:
+                f.write(firmware_key)
+    else:
+        with open(name_output_file("firmware_key"), 'r') as f:
+            firmware_key = f.read().strip()
 
     swv = None
     # If swv from storage load it, otherwise search for it to use for device class searching.
@@ -258,6 +283,8 @@ def dump():
             swv = search_swv_after_device_class(device_class)
         if swv == '':
             swv = search_swv_before_device_class(device_class)
+        if swv == '' and firmware_key != '':
+            swv = search_swv_after_firmware_key(firmware_key)
         if swv != '':
             print(f"[+] Version: {swv}")
             with open(name_output_file("swv"), 'w') as f:
@@ -271,14 +298,6 @@ def dump():
                 print(f"[+] bv: {bv}")
                 with open(name_output_file("bv"), 'w') as f:
                     f.write(bv)
-
-    # If key doesn't exist from storage
-    if exists(name_output_file("firmware_key")) == False:
-        key = search_key()
-        if key is not None and key != '':
-            print(f"[+] firmware_key: {key}")
-            with open(name_output_file("firmware_key"), 'w') as f:
-                f.write(key)
 
 
 def run(device_folder: str):

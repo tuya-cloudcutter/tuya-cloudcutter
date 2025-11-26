@@ -65,7 +65,12 @@ def run(full_filename: str, process_inactive_app: bool = False):
                     raise RuntimeError("Couldn't parse storage data - see program logs")
 
                 storage = json.dumps(storage, indent="\t")
-                open(os.path.join(extract_folder_path, base_name + "_storage.json"), 'wb').write(storage.encode('utf-8'))
+                with open(os.path.join(extract_folder_path, base_name + "_storage.json"), 'wb') as storageFile:
+                    storageFile.write(storage.encode('utf-8'))
+                json_data = json.loads(storage)
+                if "user_param_key" in json_data:
+                    with open(os.path.join(extract_folder_path, base_name + "_user_param_key.json"), 'wb') as upkFile:
+                        upkFile.write(json.dumps(json_data["user_param_key"], indent="\t").encode('utf-8'))
         except Exception as ex:
             print(ex)
             raise ex
