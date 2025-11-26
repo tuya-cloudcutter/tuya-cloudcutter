@@ -330,6 +330,18 @@ def walk_app_code():
                     Pattern("token", "284600f02afd", 1, 0),
                     Pattern("finish", "b8f10e0f7fd9", 1, 0))
             return
+        
+        # TUYA IOT SDK V:2.3.4 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.4_CD:1.0.0
+        # Same as 2.3.2 and earlier 2.3.3
+        if b'TUYA IOT SDK V:2.3.4 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.4_CD:1.0.0' in appcode:
+            # 05 46 00 28 3f f4 ba ac is the byte pattern for token
+            # 1 match should be found
+            # 28 46 d8 f8 04 30 is the byte pattern for finish
+            # 1 match should be found
+            process(PlatformInfo(Platform.RTL8720CF), "SDK 2.3.4",
+                    Pattern("token", "054600283ff4baac", 1, 0, 4),
+                    Pattern("finish", "2846d8f80430", 1, 0))
+            return
 
     raise RuntimeError('Unknown pattern, please open a new issue and include the bin.')
 
