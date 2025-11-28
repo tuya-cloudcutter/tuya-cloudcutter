@@ -189,7 +189,7 @@ def dump():
             f.write(sdk_version)
         with open(name_output_file("sdk_string"), 'w') as f:
             f.write(sdk_string)
-        sdk_build_at = read_until_null_or_newline(appcode.index(b'< BUILD AT:'))
+        sdk_build_at = read_until_null_or_newline(appcode.index(b' BUILD AT:'))
         with open(name_output_file("sdk_build_at"), 'w') as f:
             f.write(sdk_build_at)
         print(f"[+] SDK Version: {sdk_version}")
