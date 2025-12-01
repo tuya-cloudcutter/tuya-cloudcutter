@@ -320,7 +320,7 @@ def __configure_wifi(args):
     # Send the configuration diagram a few times with minor delay
     # May improve reliability in some setups
     for _ in range(4):
-        send_network_config_datagram(datagram)
+        send_network_config_datagram(datagram, args.victim_ip)
         time.sleep(0.05)
     print(f"Configured device to connect to '{SSID}'")
 
@@ -415,6 +415,13 @@ def parse_args():
         help="localkey assigned to the device (default: Random)",
         type=__validate_localapicredential_arg(16),
     )
+    parser_exploit_device.add_argument(
+        "--victim-ip",
+        dest="victim_ip",
+        required=True,
+        default="192.168.175.1",
+        help="victim device IP address (default: 192.168.175.1)",
+    )
     parser_exploit_device.set_defaults(handler=__exploit_device)
 
     parser_write_deviceconfig = subparsers.add_parser(
@@ -479,6 +486,13 @@ def parse_args():
     parser_configure_wifi.add_argument("SSID", help="WiFi access point name to make the device join")
     parser_configure_wifi.add_argument("password", help="WiFi access point password")
     parser_configure_wifi.add_argument("verbose_output", help="Flag for more verbose output, 'true' for verbose output", type=bool)
+    parser_configure_wifi.add_argument(
+        "--victim-ip",
+        dest="victim_ip",
+        required=True,
+        default="192.168.175.1",
+        help="Victim device IP address (default: 192.168.175.1)"
+    )
     parser_configure_wifi.set_defaults(handler=__configure_wifi)
 
     return parser.parse_args()

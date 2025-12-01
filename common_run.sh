@@ -84,7 +84,7 @@ else
     if ! [ -z "${DEVICEID}" ] && ! [ -z "${LOCALKEY}" ]; then
         echo "Using DeviceId ${DEVICEID} and LocalKey ${LOCALKEY}"
     fi
-    OUTPUT=$(run_in_docker pipenv run python3 -m cloudcutter exploit_device "${PROFILE}" "${VERBOSE_OUTPUT}" --deviceid "${DEVICEID}" --localkey "${LOCALKEY}")
+    OUTPUT=$(run_in_docker pipenv run python3 -m cloudcutter exploit_device "${PROFILE}" "${VERBOSE_OUTPUT}" --deviceid "${DEVICEID}" --localkey "${LOCALKEY}" --victim-ip "${AP_GATEWAY}")
 fi
 
 RESULT=$?
@@ -106,7 +106,7 @@ echo "See https://support.tuya.com/en/help/_detail/K9hut3w10nby8 for more inform
 echo "================================================================================"
 echo ""
 
-if [ "${CHIP^^}" == "RTL8720CF" ]; then
+if [ "${CHIP^^}" == "RTL8720CF" ] || [ "${CHIP^^}" == "RLT8710BN" ]; then
     echo "${CHIP^^} *MUST* be rebooted before we even begin the next scan or you will receive false-positives about the status of the device."
     echo ""
     read -n 1 -s -r -p "Press any key to confirm you have completed power cycling the device and continue."
@@ -135,7 +135,7 @@ fi
 echo "Device is connecting to 'cloudcutterflash' access point. Passphrase for the AP is 'abcdabcd' (without ')"
 # Add a minor delay to stabilize after connection, to make sure DHCP and such have finished
 sleep 5
-OUTPUT=$(run_in_docker pipenv run python3 -m cloudcutter configure_wifi "cloudcutterflash" "abcdabcd" "${VERBOSE_OUTPUT}")
+OUTPUT=$(run_in_docker pipenv run python3 -m cloudcutter configure_wifi "cloudcutterflash" "abcdabcd" "${VERBOSE_OUTPUT}" --victim-ip "${AP_GATEWAY}")
 RESULT=$?
 echo "${OUTPUT}"
 if [ ! $RESULT -eq 0 ]; then
