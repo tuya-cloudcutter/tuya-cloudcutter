@@ -122,7 +122,7 @@ def assemble():
     classic_profile_name = f"{device_class.replace('_', '-')}-{swv}-sdk-{sdk}-{bv}".lower()
     
     if can_be_either_slot:
-        classic_profile_name = classic_profile_name.replace(f"{swv}-", f"{swv}-ota1-")
+        classic_profile_name = classic_profile_name.replace(f"-{swv}", f"-ota1-{swv}")
         profile["name"] = f"{swv} - OTA1 - {chip}"
         profile["firmware"]["ota"] = "OTA1"
 
