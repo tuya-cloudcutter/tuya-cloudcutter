@@ -358,8 +358,7 @@ def walk_app_code():
         # 1 match should be found
         # 20 46 33 68 98 47 is the byte pattern for finish
         # 2 matches should be found, use first (or any)
-        # TODO: fix offset by OTA slot
-        process(PlatformInfo(Platform.RTL8710BN, 0x0800B000), "SDK 1.0.x",
+        process(PlatformInfo(Platform.RTL8710BN), "SDK 1.0.x",
                 Pattern("token", "dff82c810546", 1, 0),
                 Pattern("finish", "204633689847", 2, 0))
         return

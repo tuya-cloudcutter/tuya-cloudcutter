@@ -45,6 +45,12 @@ def assemble():
         print("[!] Directory has not been fully processed, unable to generate classic profile")
         return
 
+    can_be_either_slot = False
+    second_slot_additional_offset = 0x0
+    if chip == "RTL8710BN":
+        can_be_either_slot = True
+        second_slot_additional_offset = 0xC5000
+
     # Optional items
     swv = load_file("swv.txt")
     if swv is None:
@@ -114,11 +120,32 @@ def assemble():
         os.makedirs(os.path.join(full_path, "profile-classic", "profiles"))
 
     classic_profile_name = f"{device_class.replace('_', '-')}-{swv}-sdk-{sdk}-{bv}".lower()
+    
+    if can_be_either_slot:
+        classic_profile_name = classic_profile_name.replace(f"{swv}-", f"{swv}-ota1-")
+        profile["name"] = f"{swv} - OTA1 - {chip}"
+        profile["firmware"]["ota"] = "OTA1"
 
     print(f"[+] Creating classic profile {classic_profile_name}")
     with open(os.path.join(full_path, "profile-classic", "profiles", f"{classic_profile_name}.json"), 'w') as f:
         f.write(json.dumps(profile, indent='\t'))
         f.write('\n')
+
+    if can_be_either_slot:
+        print(f"[+] Creating classic profile {classic_profile_name.replace('ota1', 'ota2')}")
+        with open(os.path.join(full_path, "profile-classic", "profiles", f"{classic_profile_name.replace('ota1', 'ota2')}.json"), 'w') as f:
+            profileOTA2 = profile.copy()
+            profileOTA2["data"]["address_finish"] = f"0x{(int(address_finish, 16) + second_slot_additional_offset):X}"
+            profileOTA2["name"] = profileOTA2["name"].replace("OTA1", "OTA2")
+            profileOTA2["firmware"]["ota"] = "OTA2"
+            if "address_datagram" in profileOTA2["data"]:
+                profileOTA2["data"]["address_datagram"] = f"0x{(int(address_datagram, 16) + second_slot_additional_offset):X}"
+            if "address_passwd" in profileOTA2["data"]:
+                profileOTA2["data"]["address_passwd"] = f"0x{(int(address_passwd, 16) + second_slot_additional_offset):X}"
+            if "address_token" in profileOTA2["data"]:
+                profileOTA2["data"]["address_token"] = f"0x{(int(address_token, 16) + second_slot_additional_offset):X}"
+            f.write(json.dumps(profileOTA2, indent='\t'))
+            f.write('\n')
 
     device = {}
     device["manufacturer"] = manufacturer
@@ -168,10 +195,22 @@ def assemble():
         device["name"] = f"{device['name']} v{swv}"
         device_filename = f"{device_filename}-v{swv}"
 
+    if can_be_either_slot:
+        device["name"] = device["name"].replace(f" v{swv}", f" ota1 v{swv}")
+        device_filename = device_filename.replace(f"-v{swv}", f"-ota1-v{swv}")
+
     print(f"[+] Creating device profile {device_filename}")
     with open(os.path.join(full_path, "profile-classic", "devices", f"{device_filename}.json"), 'w') as f:
         f.write(json.dumps(device, indent='\t'))
         f.write('\n')
+
+    if can_be_either_slot:
+        print(f"[+] Creating device profile {device_filename.replace('ota1', 'ota2')}")
+        deviceOTA2 = device.copy()
+        deviceOTA2["profiles"][0] = deviceOTA2["profiles"][0].replace("ota1", "ota2")
+        with open(os.path.join(full_path, "profile-classic", "devices", f"{device_filename.replace('ota1', 'ota2')}.json"), 'w') as f:
+            f.write(json.dumps(deviceOTA2, indent='\t'))
+            f.write('\n')
 
     if image is not None:
         with open(os.path.join(full_path, "profile-classic", "images", f"{device_filename}.jpg"), 'wb') as f:
