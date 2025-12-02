@@ -4,6 +4,8 @@ import sys
 
 import extract_beken
 import extract_rtl8720cf
+import extract_rtl8710bn
+import copy_files
 import generate_profile_classic
 import haxomatic
 import process_app
@@ -13,7 +15,9 @@ import pull_schema
 
 class Platform(Enum):
     BEKEN = "BEKEN",
-    RTL8720CF = "RTL8720CF"
+    RTL8720CF = "RTL8720CF",
+    RTL8710BN = "RTL8710BN",
+
 
 def print_filename_instructions():
     print('Encrypted bin name must be in the pattern of Manufacturer-Name_Model-and-device-description')
@@ -57,17 +61,39 @@ if __name__ == '__main__':
     extract_platform = None
     with open(file, 'rb') as fs:
         appcode = fs.read()
-        if appcode.find(b'Ameba', 0) > -1:
+        if appcode.find(b'AmebaZII', 0) > -1:
             extract_platform = Platform.RTL8720CF
+        elif appcode.find(b'81958711', 0) > -1:
+            extract_platform = Platform.RTL8710BN
         else:
             extract_platform = Platform.BEKEN
+
+    if file is None or file == '':
+        print('Usage: python extract.py <full 2M encrypted bin file>')
+        sys.exit(1)
+
+    if not file.__contains__('_') or file.__contains__(' ') or not file.endswith('.bin'):
+        print('Filename must match specific rules in order to properly generate a useful profile.')
+        print('The general format is Manufacturer-Name_Model-Number.bin')
+        print('manufacturer name followed by underscore (_) followed by model are required, and the extension should be .bin')
+        print('Dashes (-) should be used instead of spaces, and if there is a dash (-) in any part of the manufacturer or model, it must be replaced with 3 dashes (---) to be maintained.')
+        print('There should only be one underscore (_) present, separating manufacturer name and model')
+        print('Example: a Tuya Generic DS-101 would become Tuya-Generic_DS---101.bin')
+        print('Adding the general device type to the end of the model is recommended.')
+        print('Examples: Tuya-Generic_DS---101-Touch-Switch.bin or Tuya-Generic_A60-E26-RGBCT-Bulb.bin')
+        sys.exit(1)
 
     if extract_platform == Platform.BEKEN:
         extract_beken.run(file)
     elif extract_platform == Platform.RTL8720CF:
         extract_rtl8720cf.run(file, process_inactive_app)
+    elif extract_platform == Platform.RTL8710BN:
+        extract_rtl8710bn.run(file, process_inactive_app)
     else:
         raise("no platform?")
+    
+    copy_files.run(file)
+    
     haxomatic.run(app_file)
     process_storage.run(storage_file, process_inactive_app)
     process_app.run(app_file)

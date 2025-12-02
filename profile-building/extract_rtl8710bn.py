@@ -21,7 +21,7 @@ def run(full_filename: str, process_inactive_app: bool = False):
     if not os.path.exists(extract_folder_name) or not os.path.exists(os.path.join(extract_folder_path, base_name + "_active_app.bin")):
         try:
             with open(full_filename, "rb") as f:
-                ltchiptool_split_cli.callback(Board("generic-rtl8720cf-2mb-896k"), f, extract_folder_path, True, True)
+                ltchiptool_split_cli.callback(Board("generic-rtl8710bn-2mb-788k"), f, extract_folder_path, True, True)
                 f.seek(0) # Reset file pointer to beginning after split.
                 result = KVStorage.find_storage(f.read())
                 if not result:
@@ -54,19 +54,23 @@ def run(full_filename: str, process_inactive_app: bool = False):
         active_ota_index = 0
 
         for file in dirListing:
-            if file == "001000_system_E782.bin":
-                active_ota_index = 1
-            elif file == "001000_system_8959.bin":
-                active_ota_index = 2
+            if file.startswith("009000_system_"):
+                with open(os.path.join(extract_folder_path, file), 'rb') as systemFile:
+                    systemFile.seek(4)
+                    active_partition_int = int.from_bytes(systemFile.read(4), 'little')
+                    active_ota_index = bin(active_partition_int).count('1') % 2 + 1
+
+        if active_ota_index == 0:
+            raise RuntimeError("Couldn't determine active OTA partition")
 
         # swap active partitions if processing inactive app
         if process_inactive_app:
             active_ota_index = active_ota_index % 2 + 1
 
         for file in dirListing:
-            if active_ota_index == 1 and file.startswith("010000_ota1_"):
+            if active_ota_index == 1 and file.startswith("00B000_ota1_"):
                 shutil.copyfile(os.path.join(extract_folder_path, file), os.path.join(extract_folder_path, base_name + "_active_app.bin"))
-            elif active_ota_index == 2 and file.startswith("0F0000_ota2_"):
+            elif active_ota_index == 2 and file.startswith("0D0000_ota2_"):
                 shutil.copyfile(os.path.join(extract_folder_path, file), os.path.join(extract_folder_path, base_name + "_active_app.bin"))
     else:
         print('[+] bin has already been extracted')
