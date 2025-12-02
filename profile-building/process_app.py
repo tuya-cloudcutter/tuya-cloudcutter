@@ -245,6 +245,7 @@ def dump():
         b'_common_lock_ty',
         b'_common_user_config_ty',
         b'_common_9600',
+        b'_common_115200',
     ]
 
     device_class = ''
