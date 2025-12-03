@@ -221,24 +221,29 @@ def __update_firmware(args):
         b"\x55\xAA\x55\xAA": "UG",
         b"\x99\x99\x96\x96": "RTL8720CF_UART",
         b"\x68\x51\x3e\xf8\x3e\x39\x6b\x12\xba\x05\x9a\x90\x0f\x36\xb6\xd3": "RTL8720CF_OTA",
+        b"\x4f\x54\x41\x31\x18\x00\x00\x00": "RTL8710BN_OTA",
     }
 
     with open(args.firmware, "rb") as fs:
         magic4 = fs.read(4)
+        fs.seek(8, 0)
+        magic8 = fs.read(8)
         fs.seek(32, 0)
         magic16 = fs.read(16)
         error_code = 0
-        if magic4 not in FILE_MAGIC_DICT and magic16 not in FILE_MAGIC_DICT:
-            print(f"Firmware {args.firmware} is an {FILE_MAGIC_DICT[magic]} file! Please provide a UG file.", file=sys.stderr)
+        if magic4 not in FILE_MAGIC_DICT and magic16 not in FILE_MAGIC_DICT and magic8 not in FILE_MAGIC_DICT:
+            print(f"Firmware {args.firmware} is an unknown file! Please provide a UG file.", file=sys.stderr)
             error_code = 51
 
         file_type = ""
         if magic4 in FILE_MAGIC_DICT:
             file_type = FILE_MAGIC_DICT[magic4]
+        elif magic8 in FILE_MAGIC_DICT:
+            file_type = FILE_MAGIC_DICT[magic8]
         elif magic16 in FILE_MAGIC_DICT:
             file_type = FILE_MAGIC_DICT[magic16]
 
-        if file_type not in ["UG", "UF2", "RTL8720CF_OTA"]:
+        if file_type not in ["UG", "UF2", "RTL8720CF_OTA", "RTL8710BN_OTA"]:
             print(f"Firmware {args.firmware} is not a UG or RTL8720CF OTA file.", file=sys.stderr)
             error_code = 52
         else:
