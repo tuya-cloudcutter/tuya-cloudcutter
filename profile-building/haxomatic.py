@@ -362,7 +362,15 @@ def walk_app_code():
                 Pattern("token", "dff82c810546", 1, 0),
                 Pattern("finish", "204633689847", 2, 0))
         return
-    
+
+    # TUYA IOT SDK V:2.3.0 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0
+    if b'AT rtl8710bn' in appcode and b'TUYA IOT SDK V:2.3.0' in appcode:
+        # 40 b9 56 4b 01 93 is the byte pattern for finish
+        # 3 matches should be found, use first
+        process(PlatformInfo(Platform.RTL8710BN), "SDK 2.3.0",
+                Pattern("finish", "40b9564b0193", 3, 0))
+        return
+
     raise RuntimeError('Unknown pattern, please open a new issue and include the bin.')
 
 
@@ -408,23 +416,27 @@ def find_payload(platformInfo, pattern : Pattern):
     return 0, ""
 
 
-def process(platformInfo, sdk_identifier, pattern1 : Pattern, pattern2 : Pattern, pattern3 : Pattern = None):
+def process(platformInfo, sdk_identifier, pattern1 : Pattern, pattern2 : Pattern = None, pattern3 : Pattern = None):
     with open(name_output_file('chip.txt'), 'w') as f:
         f.write(f'{platformInfo.platform.value}')
 
     
-    combined_payload_type = f"{pattern1.type}[{pattern1.padding}] + {pattern2.type}[{pattern2.padding}]"
+    combined_payload_type = f"{pattern1.type}[{pattern1.padding}]"
+    if pattern2:
+        combined_payload_type += f" + {pattern2.type}[{pattern2.padding}]"
     if pattern3:
         combined_payload_type += f" + {pattern3.type}[{pattern3.padding}]"
     print(f"[+] Matched pattern for {platformInfo.platform.value} {sdk_identifier}, payload type {combined_payload_type}")
 
     pattern1_result, pattern1_message = find_payload(platformInfo, pattern1)
-    pattern2_result, pattern2_message = find_payload(platformInfo, pattern2)
+    pattern2_message = None
+    if pattern2:
+        pattern2_result, pattern2_message = find_payload(platformInfo, pattern2)
     pattern3_message = None
     if pattern3:
         pattern3_result, pattern3_message = find_payload(platformInfo, pattern3)
     
-    if pattern1_result < 0 or pattern2_result < 0 or (pattern3 and pattern3_result < 0):
+    if pattern1_result < 0 or (pattern2 and pattern2_result < 0) or (pattern3 and pattern3_result < 0):
         raise RuntimeError("\r\n".join([x for x in [pattern1_message, pattern2_message, pattern3_message] if x]))
 
     with open(name_output_file('haxomatic_matched.txt'), 'w') as f:
