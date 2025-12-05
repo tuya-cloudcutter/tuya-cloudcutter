@@ -54,10 +54,11 @@ def run(full_filename: str, process_inactive_app: bool = False):
         active_ota_index = 0
 
         for file in dirListing:
-            if file == "001000_system_E782.bin":
-                active_ota_index = 1
-            elif file == "001000_system_8959.bin":
-                active_ota_index = 2
+            if file.startswith("001000_system_"):
+                with open(os.path.join(extract_folder_path, file), 'rb') as systemFile:
+                    systemFile.seek(4)
+                    active_partition_int = int.from_bytes(systemFile.read(4), 'little')
+                    active_ota_index = bin(active_partition_int).count('1') % 2 + 1
 
         # swap active partitions if processing inactive app
         if process_inactive_app:
