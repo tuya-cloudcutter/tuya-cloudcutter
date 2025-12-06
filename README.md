@@ -40,6 +40,13 @@ Check out [usage instructions](./INSTRUCTIONS.md) for info about **flashing cust
   - Note: This platform is newer, and we may not be able to generate profiles for all devices until more samples have been collected.  Please feel free to submit full dumps to [issues](https://github.com/tuya-cloudcutter/tuya-cloudcutter/issues).  Additionally, even if vulnerable, some devices may not be able to be exploited if required addresses within the exploit chain contain a null byte.
 - Devices with [known secret values](running-with-known-secrets.md)
 
+## Unsupported devices
+
+- [Patched Beken BK7231T devices](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/Known-Patched-Firmware#bk7231t)
+- [Patched Beken BK7231N devices](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/Known-Patched-Firmware#bk7231n)
+- [Non-Vulnerable (SDK 2.0.0) or Patched Realtek RTL8710BN devices](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/Known-Patched-Firmware#rtl8710bn)
+- [Patched Realtek RTL8720CF devices](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/Known-Patched-Firmware#rtl8720cf)
+
 ## FAQ
 
 Please see the [FAQ](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/FAQ) section of the wiki for the most up-to-date questions and answers.  This will cover many things like how to get your device into pairing mode, how to find more information about your device like the current firmware installed, and is expanding as new questions are asked/answered.  Additionally, you may want to consider searching [issues](https://github.com/tuya-cloudcutter/tuya-cloudcutter/issues?q=is%3Aissue).

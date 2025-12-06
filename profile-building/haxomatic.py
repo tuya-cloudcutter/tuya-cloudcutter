@@ -45,6 +45,10 @@ PATCHED_PATTERNS_TUYAOS3 = [
     "547579614f5320563a33", # TuyaOS V:3
 ]
 
+PATCHED_PATTERNS_BK7231T = [
+    "68301ff051f901981ef0a8ff2b1c", # Patched BK7231T
+]
+
 PATCHED_PATTERNS_BK7231N = [
     "2d6811226b1dff33181c00210393", # Patched BK7231N short/combined
     "2d6811226b1dff33181c0021039329f0", # Patched BK7231N 2.3.1
@@ -94,6 +98,11 @@ def walk_app_code():
 
     if b'TuyaOS V:3' in appcode:
         for patch_pattern in PATCHED_PATTERNS_TUYAOS3:
+            if check_for_patched(patch_pattern):
+                return
+
+    if b'AT bk7231t' in appcode:
+        for patch_pattern in PATCHED_PATTERNS_BK7231T:
             if check_for_patched(patch_pattern):
                 return
 
