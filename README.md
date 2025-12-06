@@ -36,6 +36,9 @@ Check out [usage instructions](./INSTRUCTIONS.md) for info about **flashing cust
 
 - Unpatched Beken BK7231T (WB3S, WB3L, WB2S, etc)
 - Unpatched Beken BK7231N (CB3S, CB3L, CB2S, CBU, etc)
+- Unpatched Realtek RTL8710BN (WR1, WR2, WR3, WR3E, etc)
+  - Note: SDK 2.0.0 (oldest RTL8710BN devices) does not appear to be vulnerable, see the [Unsupported devices](#unsupported-devices) list below.
+  - This platform is also newer, and may require full firmware dumps to support more devices.
 - Unpatched Realtek RTL8720CF (WBR1, WBR2, WBR3, WBRU, etc)
   - Note: This platform is newer, and we may not be able to generate profiles for all devices until more samples have been collected.  Please feel free to submit full dumps to [issues](https://github.com/tuya-cloudcutter/tuya-cloudcutter/issues).  Additionally, even if vulnerable, some devices may not be able to be exploited if required addresses within the exploit chain contain a null byte.
 - Devices with [known secret values](running-with-known-secrets.md)
