@@ -213,7 +213,7 @@ class DetachHandler(TuyaServerHandler):
             body = self.get_argument('data')
             body = bytes.fromhex(body)
             decrypted = self.cipher.decrypt(body, key_choice).decode('utf-8')
-        except:
-            print(f"[!] Unable to decrypt device reponse.  PSKKEY/AUTHKEY do not match device.")
+        except Exception as e:
+            print(f"[!] Unable to decrypt device reponse.  PSKKEY/AUTHKEY do not match device - {e}")
             exit(90)
         return decrypted
