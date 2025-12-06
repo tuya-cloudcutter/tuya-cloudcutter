@@ -107,6 +107,6 @@ A big thank you to all who have provided meaningful contributions to the success
 - [Jilles Groenendijk](https://jilles.com/) - Support for original tooling for dumping firmware
 - [Kuba Szczodrzyński](https://github.com/kuba2k2/) - Lightleak, script improvements, additional tooling, LibreTiny/ESPHome implementation, and more.
 - [divadiow](https://github.com/divadiow) - Firmware dump collection and device support organization
-- [Jeremy Salwen](https://github.com/jeremysalwen/) - Exploit expansion to the RTL8720CF platform.
+- [Jeremy Salwen](https://github.com/jeremysalwen/) - Exploit expansion to the RTL8710BN and RTL8720CF platforms.
 
 and many other [contributors](https://github.com/tuya-cloudcutter/tuya-cloudcutter/graphs/contributors) (and [here](https://github.com/tuya-cloudcutter/tuya-cloudcutter.github.io/graphs/contributors)) over the years!
