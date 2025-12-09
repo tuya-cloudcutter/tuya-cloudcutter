@@ -39,6 +39,7 @@ Check out [usage instructions](./INSTRUCTIONS.md) for info about **flashing cust
 - Unpatched Realtek RTL8710BN (WR1, WR2, WR3, WR3E, etc)
   - Note: SDK 2.0.0 (oldest RTL8710BN devices) does not appear to be vulnerable, see the [Unsupported devices](#unsupported-devices) list below.
   - This platform is also newer, and may require full firmware dumps to support more devices.
+  - Devices have 2 profile for every version, but only one will work for each device.  See [the FAQ entry](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/FAQ#why-do-rtl8710bn-devices-have-two-profiles-for-every-version) for more information.
 - Unpatched Realtek RTL8720CF (WBR1, WBR2, WBR3, WBRU, etc)
   - Note: This platform is newer, and we may not be able to generate profiles for all devices until more samples have been collected.  Please feel free to submit full dumps to [issues](https://github.com/tuya-cloudcutter/tuya-cloudcutter/issues).  Additionally, even if vulnerable, some devices may not be able to be exploited if required addresses within the exploit chain contain a null byte.
 - Devices with [known secret values](running-with-known-secrets.md)
