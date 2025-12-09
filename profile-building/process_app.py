@@ -114,6 +114,20 @@ def search_device_class_after_swv(swv: str):
     return ''
 
 
+def search_device_class_before_swv(swv: str):
+    swv_string = b'\0' + bytes(swv, 'utf-8') + b'\0'
+    offset = appcode.find(swv_string, 0)
+    if offset == -1:
+        return ''
+    offset -= 2
+    for _ in range(3):
+        after = read_between_null_or_newline(offset)
+        offset += len(after) + 1
+        if after.count('_') > 0 and after.count('__') == 0 and after.count(' ') == 0:
+            return after
+    return ''
+
+
 def search_swv_after_compiled_line():
     compiled_at_string = b'**********[%s] [%s] compiled at %s %s**********'
     offset = appcode.find(compiled_at_string, 0)
@@ -230,6 +244,8 @@ def dump():
         b'rtl8720cf_common_',
         b'_common_lock_ty',
         b'_common_user_config_ty',
+        b'_common_9600',
+        b'_common_115200',
     ]
 
     device_class = ''
@@ -253,6 +269,8 @@ def dump():
         device_class = search_device_class_after_chipid("rtl8720cf_ameba")
     if device_class == '' and swv is not None:
         device_class = search_device_class_after_swv(swv)
+    if device_class == '' and swv is not None:
+        device_class = search_device_class_before_swv(swv)
 
     if device_class != '':
         print(f"[+] Device class: {device_class}")

@@ -221,24 +221,29 @@ def __update_firmware(args):
         b"\x55\xAA\x55\xAA": "UG",
         b"\x99\x99\x96\x96": "RTL8720CF_UART",
         b"\x68\x51\x3e\xf8\x3e\x39\x6b\x12\xba\x05\x9a\x90\x0f\x36\xb6\xd3": "RTL8720CF_OTA",
+        b"\x4f\x54\x41\x31\x18\x00\x00\x00": "RTL8710BN_OTA",
     }
 
     with open(args.firmware, "rb") as fs:
         magic4 = fs.read(4)
+        fs.seek(8, 0)
+        magic8 = fs.read(8)
         fs.seek(32, 0)
         magic16 = fs.read(16)
         error_code = 0
-        if magic4 not in FILE_MAGIC_DICT and magic16 not in FILE_MAGIC_DICT:
-            print(f"Firmware {args.firmware} is an {FILE_MAGIC_DICT[magic]} file! Please provide a UG file.", file=sys.stderr)
+        if magic4 not in FILE_MAGIC_DICT and magic16 not in FILE_MAGIC_DICT and magic8 not in FILE_MAGIC_DICT:
+            print(f"Firmware {args.firmware} is an unknown file! Please provide a UG file.", file=sys.stderr)
             error_code = 51
 
         file_type = ""
         if magic4 in FILE_MAGIC_DICT:
             file_type = FILE_MAGIC_DICT[magic4]
+        elif magic8 in FILE_MAGIC_DICT:
+            file_type = FILE_MAGIC_DICT[magic8]
         elif magic16 in FILE_MAGIC_DICT:
             file_type = FILE_MAGIC_DICT[magic16]
 
-        if file_type not in ["UG", "UF2", "RTL8720CF_OTA"]:
+        if file_type not in ["UG", "UF2", "RTL8720CF_OTA", "RTL8710BN_OTA"]:
             print(f"Firmware {args.firmware} is not a UG or RTL8720CF OTA file.", file=sys.stderr)
             error_code = 52
         else:
@@ -320,7 +325,7 @@ def __configure_wifi(args):
     # Send the configuration diagram a few times with minor delay
     # May improve reliability in some setups
     for _ in range(4):
-        send_network_config_datagram(datagram)
+        send_network_config_datagram(datagram, args.victim_ip)
         time.sleep(0.05)
     print(f"Configured device to connect to '{SSID}'")
 
@@ -415,6 +420,13 @@ def parse_args():
         help="localkey assigned to the device (default: Random)",
         type=__validate_localapicredential_arg(16),
     )
+    parser_exploit_device.add_argument(
+        "--victim-ip",
+        dest="victim_ip",
+        required=True,
+        default="192.168.175.1",
+        help="victim device IP address (default: 192.168.175.1)",
+    )
     parser_exploit_device.set_defaults(handler=__exploit_device)
 
     parser_write_deviceconfig = subparsers.add_parser(
@@ -479,6 +491,13 @@ def parse_args():
     parser_configure_wifi.add_argument("SSID", help="WiFi access point name to make the device join")
     parser_configure_wifi.add_argument("password", help="WiFi access point password")
     parser_configure_wifi.add_argument("verbose_output", help="Flag for more verbose output, 'true' for verbose output", type=bool)
+    parser_configure_wifi.add_argument(
+        "--victim-ip",
+        dest="victim_ip",
+        required=True,
+        default="192.168.175.1",
+        help="Victim device IP address (default: 192.168.175.1)"
+    )
     parser_configure_wifi.set_defaults(handler=__configure_wifi)
 
     return parser.parse_args()

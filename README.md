@@ -36,9 +36,20 @@ Check out [usage instructions](./INSTRUCTIONS.md) for info about **flashing cust
 
 - Unpatched Beken BK7231T (WB3S, WB3L, WB2S, etc)
 - Unpatched Beken BK7231N (CB3S, CB3L, CB2S, CBU, etc)
+- Unpatched Realtek RTL8710BN (WR1, WR2, WR3, WR3E, etc)
+  - Note: SDK 2.0.0 (oldest RTL8710BN devices) does not appear to be vulnerable, see the [Unsupported devices](#unsupported-devices) list below.
+  - This platform is also newer, and may require full firmware dumps to support more devices.
+  - Devices have 2 profile for every version, but only one will work for each device.  See [the FAQ entry](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/FAQ#why-do-rtl8710bn-devices-have-two-profiles-for-every-version) for more information.
 - Unpatched Realtek RTL8720CF (WBR1, WBR2, WBR3, WBRU, etc)
   - Note: This platform is newer, and we may not be able to generate profiles for all devices until more samples have been collected.  Please feel free to submit full dumps to [issues](https://github.com/tuya-cloudcutter/tuya-cloudcutter/issues).  Additionally, even if vulnerable, some devices may not be able to be exploited if required addresses within the exploit chain contain a null byte.
 - Devices with [known secret values](running-with-known-secrets.md)
+
+## Unsupported devices
+
+- [Patched Beken BK7231T devices](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/Known-Patched-Firmware#bk7231t)
+- [Patched Beken BK7231N devices](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/Known-Patched-Firmware#bk7231n)
+- [Non-Vulnerable (SDK 2.0.0) or Patched Realtek RTL8710BN devices](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/Known-Patched-Firmware#rtl8710bn)
+- [Patched Realtek RTL8720CF devices](https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/Known-Patched-Firmware#rtl8720cf)
 
 ## FAQ
 
@@ -97,6 +108,6 @@ A big thank you to all who have provided meaningful contributions to the success
 - [Jilles Groenendijk](https://jilles.com/) - Support for original tooling for dumping firmware
 - [Kuba Szczodrzyński](https://github.com/kuba2k2/) - Lightleak, script improvements, additional tooling, LibreTiny/ESPHome implementation, and more.
 - [divadiow](https://github.com/divadiow) - Firmware dump collection and device support organization
-- [Jeremy Salwen](https://github.com/jeremysalwen/) - Exploit expansion to the RTL8720CF platform.
+- [Jeremy Salwen](https://github.com/jeremysalwen/) - Exploit expansion to the RTL8710BN and RTL8720CF platforms.
 
 and many other [contributors](https://github.com/tuya-cloudcutter/tuya-cloudcutter/graphs/contributors) (and [here](https://github.com/tuya-cloudcutter/tuya-cloudcutter.github.io/graphs/contributors)) over the years!

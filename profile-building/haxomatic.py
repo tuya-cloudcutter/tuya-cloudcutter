@@ -7,6 +7,7 @@ class Platform(Enum):
     BK7231T = "BK7231T"
     BK7231N = "BK7231N"
     RTL8720CF = "RTL8720CF"
+    RTL8710BN = "RTL8710BN"
 
 
 class PlatformInfo(object):
@@ -20,6 +21,10 @@ class PlatformInfo(object):
             case Platform.RTL8720CF:
                 self.address_size = 4
                 self.base_address = base_address if base_address else 0x9b000000
+                self.start_offset = start_offset if start_offset else 0x0
+            case Platform.RTL8710BN:
+                self.address_size = 4
+                self.base_address = base_address if base_address else 0x0800B000
                 self.start_offset = start_offset if start_offset else 0x0
             case _:
                 self.address_size = 0
@@ -38,6 +43,10 @@ class Pattern(object):
 
 PATCHED_PATTERNS_TUYAOS3 = [
     "547579614f5320563a33", # TuyaOS V:3
+]
+
+PATCHED_PATTERNS_BK7231T = [
+    "68301ff051f901981ef0a8ff2b1c", # Patched BK7231T
 ]
 
 PATCHED_PATTERNS_BK7231N = [
@@ -92,6 +101,11 @@ def walk_app_code():
             if check_for_patched(patch_pattern):
                 return
 
+    if b'AT bk7231t' in appcode:
+        for patch_pattern in PATCHED_PATTERNS_BK7231T:
+            if check_for_patched(patch_pattern):
+                return
+
     if b'AT bk7231n' in appcode or b'AT BK7231NL' in appcode:
         for patch_pattern in PATCHED_PATTERNS_BK7231N:
             if check_for_patched(patch_pattern):
@@ -103,14 +117,14 @@ def walk_app_code():
                 return
 
     # Early BK7231T when it was built with a realtek-like string.
-    if b'AT 8710_2M' in appcode:
+    if b'BK7231S_2M' in appcode and b'AT 8710_2M' in appcode:
         # Older versions of BK7231T, BS version 30.04, SDK 2.0.0
         if b'TUYA IOT SDK V:2.0.0 BS:30.04' in appcode:
             # 04 1e 2c d1 11 9b is the byte pattern for datagram payload
             # 3 matches, 2nd is correct
             # 2b 68 30 1c 98 47 is the byte pattern for finish
             # 1 match should be found
-            process(PlatformInfo(Platform.BK7231T), "SDK 2.0.0 8710_2M",
+            process(PlatformInfo(Platform.BK7231T), "BK7231T SDK 2.0.0 8710_2M",
                     Pattern("datagram", "041e2cd1119b", 1, 0),
                     Pattern("finish", "2b68301c9847", 1, 0))
             return
@@ -121,7 +135,7 @@ def walk_app_code():
             # 3 matches, 2nd is correct
             # 2b 68 30 1c 98 47 is the byte pattern for finish
             # 1 match should be found
-            process(PlatformInfo(Platform.BK7231T), "SDK 2.0.0 8710_2M",
+            process(PlatformInfo(Platform.BK7231T), "BK7231T SDK 2.0.0 8710_2M",
                     Pattern("datagram", "041e07d1119b211c00", 3, 1),
                     Pattern("finish", "2b68301c9847", 1, 0))
             return
@@ -343,6 +357,29 @@ def walk_app_code():
                     Pattern("finish", "2846d8f80430", 1, 0))
             return
 
+    # TUYA IOT SDK V:2.0.0 BS:30.04_PT:2.2_LAN:3.3_CAD:1.0.2_CD:1.0.0
+    if b'AT 8710_2M' in appcode and b'rtl8710b' in appcode:
+        raise RuntimeError('RTL8710BN SDK 2.0.0 not yet supported.')
+
+    # TUYA IOT SDK V:1.0.7 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.2_CD:1.0.0
+    if b'AT rtl8710bn' in appcode and b'TUYA IOT SDK V:1.0.' in appcode:
+        # df f8 2c 81 05 46 is the byte pattern for token
+        # 1 match should be found
+        # 20 46 33 68 98 47 is the byte pattern for finish
+        # 2 matches should be found, use first (or any)
+        process(PlatformInfo(Platform.RTL8710BN), "SDK 1.0.x",
+                Pattern("token", "dff82c810546", 1, 0),
+                Pattern("finish", "204633689847", 2, 0))
+        return
+
+    # TUYA IOT SDK V:2.3.0 BS:40.00_PT:2.2_LAN:3.3_CAD:1.0.3_CD:1.0.0
+    if b'AT rtl8710bn' in appcode and b'TUYA IOT SDK V:2.3.0' in appcode:
+        # 40 b9 56 4b 01 93 is the byte pattern for finish
+        # 3 matches should be found, use first
+        process(PlatformInfo(Platform.RTL8710BN), "SDK 2.3.0",
+                Pattern("finish", "40b9564b0193", 3, 0))
+        return
+
     raise RuntimeError('Unknown pattern, please open a new issue and include the bin.')
 
 
@@ -388,23 +425,27 @@ def find_payload(platformInfo, pattern : Pattern):
     return 0, ""
 
 
-def process(platformInfo, sdk_identifier, pattern1 : Pattern, pattern2 : Pattern, pattern3 : Pattern = None):
+def process(platformInfo, sdk_identifier, pattern1 : Pattern, pattern2 : Pattern = None, pattern3 : Pattern = None):
     with open(name_output_file('chip.txt'), 'w') as f:
         f.write(f'{platformInfo.platform.value}')
 
     
-    combined_payload_type = f"{pattern1.type}[{pattern1.padding}] + {pattern2.type}[{pattern2.padding}]"
+    combined_payload_type = f"{pattern1.type}[{pattern1.padding}]"
+    if pattern2:
+        combined_payload_type += f" + {pattern2.type}[{pattern2.padding}]"
     if pattern3:
         combined_payload_type += f" + {pattern3.type}[{pattern3.padding}]"
     print(f"[+] Matched pattern for {platformInfo.platform.value} {sdk_identifier}, payload type {combined_payload_type}")
 
     pattern1_result, pattern1_message = find_payload(platformInfo, pattern1)
-    pattern2_result, pattern2_message = find_payload(platformInfo, pattern2)
+    pattern2_message = None
+    if pattern2:
+        pattern2_result, pattern2_message = find_payload(platformInfo, pattern2)
     pattern3_message = None
     if pattern3:
         pattern3_result, pattern3_message = find_payload(platformInfo, pattern3)
     
-    if pattern1_result < 0 or pattern2_result < 0 or (pattern3 and pattern3_result < 0):
+    if pattern1_result < 0 or (pattern2 and pattern2_result < 0) or (pattern3 and pattern3_result < 0):
         raise RuntimeError("\r\n".join([x for x in [pattern1_message, pattern2_message, pattern3_message] if x]))
 
     with open(name_output_file('haxomatic_matched.txt'), 'w') as f:
