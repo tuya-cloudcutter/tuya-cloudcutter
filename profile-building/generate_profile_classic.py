@@ -196,7 +196,7 @@ def assemble():
         device_filename = f"{device_filename}-v{swv}"
 
     if can_be_either_slot:
-        device["name"] = device["name"].replace(f" v{swv}", f" ota1 v{swv}")
+        device["name"] = device["name"].replace(f" v{swv}", f" OTA1 v{swv}")
         device_filename = device_filename.replace(f"-v{swv}", f"-ota1-v{swv}")
 
     print(f"[+] Creating device profile {device_filename}")
@@ -207,6 +207,7 @@ def assemble():
     if can_be_either_slot:
         print(f"[+] Creating device profile {device_filename.replace('ota1', 'ota2')}")
         deviceOTA2 = device.copy()
+        deviceOTA2["name"] = deviceOTA2["name"].replace("OTA1", "OTA2")
         deviceOTA2["profiles"][0] = deviceOTA2["profiles"][0].replace("ota1", "ota2")
         with open(os.path.join(full_path, "profile-classic", "devices", f"{device_filename.replace('ota1', 'ota2')}.json"), 'w') as f:
             f.write(json.dumps(deviceOTA2, indent='\t'))
