@@ -25,18 +25,18 @@ def run(full_filename: str, process_inactive_app: bool = False):
                 f.seek(0) # Reset file pointer to beginning after split.
                 result = KVStorage.find_storage(f.read())
                 if not result:
-                    raise ValueError("File doesn't contain known storage area")
+                    raise ValueError("[!] File doesn't contain known storage area")
 
                 _, data = result
                 try:
                     kvs = KVStorage.decrypt_and_unpack(data)
                 except Exception:
-                    raise RuntimeError("Couldn't unpack storage data - see program logs")
+                    raise RuntimeError("[!] Couldn't unpack storage data - see program logs")
 
                 try:
                     storage = kvs.read_all_values_parsed()
                 except Exception:
-                    raise RuntimeError("Couldn't parse storage data - see program logs")
+                    raise RuntimeError("[!] Couldn't parse storage data - see program logs")
 
                 storage = json.dumps(storage, indent="\t")
                 with open(os.path.join(extract_folder_path, base_name + "_storage.json"), 'wb') as storageFile:
@@ -47,7 +47,6 @@ def run(full_filename: str, process_inactive_app: bool = False):
                         upkFile.write(json.dumps(json_data["user_param_key"], indent="\t").encode('utf-8'))
         except Exception as ex:
             print(ex)
-            raise ex
 
         dirListing = os.listdir(extract_folder_path)
 
