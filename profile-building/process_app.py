@@ -250,29 +250,35 @@ def dump():
 
     device_class = ''
 
+    invalid_device_classes = [
+        '',
+        'tuya_mdev_test1',
+        'tuya_mdev_test2',
+    ]
+
     for searchKey in device_class_search_keys:
         device_class = find_device_class(searchKey)
         if device_class != '':
             break
 
-    if device_class == '':
+    if device_class in invalid_device_classes:
         device_class = search_device_class_after_compiled_line()
-    if device_class == '':
+    if device_class in invalid_device_classes:
         device_class = search_device_class_before_compiled_line()
-    if device_class == '':
+    if device_class in invalid_device_classes:
         device_class = search_device_class_after_chipid("bk7231n")
-    if device_class == '':
+    if device_class in invalid_device_classes:
         device_class = search_device_class_after_chipid("BK7231NL")
-    if device_class == '':
+    if device_class in invalid_device_classes:
         device_class = search_device_class_after_chipid("bk7231t")
-    if device_class == '':
+    if device_class in invalid_device_classes:
         device_class = search_device_class_after_chipid("rtl8720cf_ameba")
-    if device_class == '' and swv is not None:
+    if device_class in invalid_device_classes and swv is not None:
         device_class = search_device_class_after_swv(swv)
-    if device_class == '' and swv is not None:
+    if device_class in invalid_device_classes and swv is not None:
         device_class = search_device_class_before_swv(swv)
 
-    if device_class != '':
+    if device_class not in invalid_device_classes:
         print(f"[+] Device class: {device_class}")
         with open(name_output_file("device_class"), 'w') as f:
             f.write(device_class)

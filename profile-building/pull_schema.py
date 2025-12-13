@@ -216,6 +216,9 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, firmw
     if factory_pin is not None and len(factory_pin) > 0:
         product_key = factory_pin
 
+    if firmware_key is None and product_key is not None:
+        firmware_key = product_key
+
     if product_key is not None:
         data = build_data_active(epoch_time, reduced_token, firmware_key, product_key, software_version, mcu_software_version, baseline_version, cad_version, cd_version, protocol_version, False)
         response = connection.request(url, active_params, data, requestType)
@@ -225,7 +228,7 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, firmw
             response = connection.request(url, active_params, data, requestType)
 
     if response["success"] == False:
-        if product_key != firmware_key:
+        if firmware_key != product_key:
             if (response is None or (response is not None and response["success"] == False and response["errorCode"] != "EXPIRE")) and firmware_key is not None:
                 data = build_data_active(epoch_time, reduced_token, firmware_key, firmware_key, software_version, mcu_software_version, baseline_version, cad_version, cd_version, protocol_version, True)
                 response = connection.request(url, active_params, data, requestType)
