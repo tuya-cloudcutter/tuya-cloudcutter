@@ -28,8 +28,8 @@ UF2_FAMILY_MAP = {
 
 
 def api_get(short_path):
+    full_path = f"https://tuya-cloudcutter.github.io/api/{short_path}"
     try:
-        full_path = f"https://tuya-cloudcutter.github.io/api/{short_path}"
         with requests.get(full_path, timeout=(10, 60)) as r:
             if r.status_code == 404:
                 print("The specified device does not exist in the API.")
