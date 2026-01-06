@@ -27,15 +27,20 @@ UF2_FAMILY_MAP = {
 }
 
 
-def api_get(path):
-    with requests.get(f"https://tuya-cloudcutter.github.io/api/{path}") as r:
-        if r.status_code == 404:
-            print("The specified device does not exist in the API.")
-            exit(1)
-        if r.status_code != 200:
-            print("API request failed. Make sure you have an Internet connection.")
-            exit(1)
-        return r.json()
+def api_get(short_path):
+    try:
+        full_path = f"https://tuya-cloudcutter.github.io/api/{short_path}"
+        with requests.get(full_path, timeout=(10, 60)) as r:
+            if r.status_code == 404:
+                print("The specified device does not exist in the API.")
+                exit(1)
+            if r.status_code != 200:
+                print(f"API request to {full_path} failed. Make sure you have an Internet connection.")
+                exit(1)
+            return r.json()
+    except:
+        print(f"API request to {full_path} timed out. Make sure you have an Internet connection and the path is not blocked by a firewall.")
+        exit(1)
 
 
 def ask_options(text, options):
