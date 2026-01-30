@@ -88,7 +88,8 @@ dnsmasq --no-resolv --interface=$WLAN --bind-interfaces --listen-address=$GATEWA
 
 mkdir /run/mosquitto
 chown mosquitto /run/mosquitto
-echo -e "listener 1883 0.0.0.0\nallow_anonymous true\n" >> /etc/mosquitto/mosquitto.conf
+#echo -e "listener 1883 0.0.0.0\nallow_anonymous true\nlistener 8886 0.0.0.0\nallow_anonymous true\n" >> /etc/mosquitto/mosquitto.conf
+echo -e "listener 1883 0.0.0.0\nallow_anonymous true\nlistener 8886 0.0.0.0\nallow_anonymous true\npsk_hint HICLOUDCUTTERWASHEREFREEINGYOURDEVICE\n" >> /etc/mosquitto/mosquitto.conf
 /usr/sbin/mosquitto -d -v -c /etc/mosquitto/mosquitto.conf
 
 echo "If your device gets stuck here with no progress after several (at least two) minutes, see https://github.com/tuya-cloudcutter/tuya-cloudcutter/wiki/FAQ#my-device-gets-stuck-after-dhcp-what-can-i-do for additional steps"

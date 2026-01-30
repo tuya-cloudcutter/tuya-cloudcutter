@@ -11,13 +11,14 @@ import requests
 
 
 class FirmwareType(Enum):
-    INVALID = 0
-    IGNORED_HEADER = 1
-    IGNORED_FILENAME = 2
-    VALID_UG = 3
-    VALID_UF2 = 4
+    INVALID = 0,
+    IGNORED_HEADER = 1,
+    IGNORED_FILENAME = 2,
+    VALID_UG_BK7231 = 3,
+    VALID_UF2 = 4,
     VALID_RTL8720CF_OTA = 5,
     VALID_RTL8710BN_OTA = 6,
+    VALID_UG_ESP8266 = 7,
 
 
 UF2_UG_SUFFIX = "-extracted.ug.bin"
@@ -27,20 +28,15 @@ UF2_FAMILY_MAP = {
 }
 
 
-def api_get(short_path):
-    full_path = f"https://tuya-cloudcutter.github.io/api/{short_path}"
-    try:
-        with requests.get(full_path, timeout=(10, 60)) as r:
-            if r.status_code == 404:
-                print("The specified device does not exist in the API.")
-                exit(1)
-            if r.status_code != 200:
-                print(f"API request to {full_path} failed. Make sure you have an Internet connection.")
-                exit(1)
-            return r.json()
-    except:
-        print(f"API request to {full_path} timed out. Make sure you have an Internet connection and the path is not blocked by a firewall.")
-        exit(1)
+def api_get(path):
+    with requests.get(f"https://tuya-cloudcutter.github.io/api/{path}") as r:
+        if r.status_code == 404:
+            print("The specified device does not exist in the API.")
+            exit(1)
+        if r.status_code != 200:
+            print("API request failed. Make sure you have an Internet connection.")
+            exit(1)
+        return r.json()
 
 
 def ask_options(text, options):
@@ -183,7 +179,7 @@ def validate_firmware_file_internal(firmware: str, chip: str = None) -> Firmware
 
     if (magic4 not in FILE_MAGIC_DICT and magic16 not in FILE_MAGIC_DICT and magic8 not in FILE_MAGIC_DICT) or len(header) < 512:
         print(
-            f"!!! Unrecognized file type - '{base}' is not a UG, UF2, or RTL8720CF OTA file.",
+            f"!!! Unrecognized file type - '{base}' is not a UG, UF2, or Realtek OTA file.",
             file=sys.stderr,
         )
         return FirmwareType.INVALID
@@ -196,7 +192,7 @@ def validate_firmware_file_internal(firmware: str, chip: str = None) -> Firmware
     elif magic16 in FILE_MAGIC_DICT:
         file_type = FILE_MAGIC_DICT[magic16]
 
-    if file_type not in ["UG", "UF2", "RTL8720CF_OTA", "RTL8710BN_OTA"]:
+    if file_type not in ["UG", "UF2", "RTL8720CF_OTA", "RTL8710BN_OTA", "ESP8266_OTA"]:
         print(
             f"!!! File {base} is a '{file_type}' file! Please provide an UG file.",
             file=sys.stderr,
@@ -211,17 +207,22 @@ def validate_firmware_file_internal(firmware: str, chip: str = None) -> Firmware
                 # wrong chip type
                 return FirmwareType.IGNORED_HEADER
             # correct chip type
-            return FirmwareType.VALID_UG
+            return FirmwareType.VALID_UG_BK7231
         # check chip by filename
         if "bk7231" in base.lower():
             if chip and chip not in base.lower():
                 # wrong chip type
                 return FirmwareType.IGNORED_FILENAME
             # correct chip type
-            return FirmwareType.VALID_UG
+            return FirmwareType.VALID_UG_BK7231
+        if "esp8266" in base.lower():
+            if chip and chip not in base.lower():
+                return FirmwareType.IGNORED_FILENAME
+            # correct chip type
+            return FirmwareType.VALID_UG_ESP8266
         print(
             f"!!! Can't verify chip type of UG file '{base}' - "
-            "make sure that BK7231T or BK7231N is present in the filename!",
+            "make sure that BK7231T, BK7231N, or ESP8266 is present in the filename!",
             file=sys.stderr,
         )
         return FirmwareType.INVALID
@@ -251,7 +252,7 @@ def validate_firmware_file_internal(firmware: str, chip: str = None) -> Firmware
     
     if file_type == "RTL8710BN_OTA" and chip.upper() in file_type:
         return FirmwareType.VALID_RTL8710BN_OTA
-    
+
 def extract_uf2(file_with_path: str, firmware_dir: str, chip: str) -> str:
     target = file_with_path + "-" + chip.lower() + UF2_UG_SUFFIX
     print(f"Extracting UF2 package as '{basename(target)}'")
@@ -382,7 +383,7 @@ def choose_profile(ctx, flashing: bool = False):
 @click.option(
     "-c",
     "--chip",
-    type=click.Choice(["bk7231t", "bk7231n", "rtl8720cf", "rtl8710bn"], case_sensitive=False),
+    type=click.Choice(["bk7231t", "bk7231n", "rtl8720cf", "rtl8710bn", "esp8266"], case_sensitive=False),
     default=None,
 )
 @click.pass_context
@@ -399,7 +400,7 @@ def choose_firmware(ctx, chip: str = None):
             continue
         path = join(firmware_dir, file)
         fw_type = validate_firmware_file_internal(path, chip and chip.lower())
-        if fw_type in [FirmwareType.VALID_UG, FirmwareType.VALID_UF2, FirmwareType.VALID_RTL8720CF_OTA, FirmwareType.VALID_RTL8710BN_OTA]:
+        if fw_type in [FirmwareType.VALID_UG_BK7231, FirmwareType.VALID_UF2, FirmwareType.VALID_RTL8720CF_OTA, FirmwareType.VALID_RTL8710BN_OTA, FirmwareType.VALID_UG_ESP8266]:
             options[file] = fw_type
         elif fw_type in [FirmwareType.INVALID]:
             invalid_filenames[file] = file
@@ -436,7 +437,7 @@ def choose_firmware(ctx, chip: str = None):
 @click.option(
     "-c",
     "--chip",
-    type=click.Choice(["bk7231t", "bk7231n", "rtl8720cf", "rtl8710bn"], case_sensitive=False),
+    type=click.Choice(["bk7231t", "bk7231n", "rtl8720cf", "rtl8710bn", "esp8266"], case_sensitive=False),
     default=None,
 )
 @click.pass_context
@@ -444,7 +445,7 @@ def validate_firmware_file(ctx, filename: str, chip: str = None):
     chip = chip and chip.upper()
     firmware_dir = ctx.obj["firmware_dir"]
     fw_type = validate_firmware_file_internal(join(firmware_dir, filename), chip and chip.lower())
-    if fw_type not in [FirmwareType.VALID_UG, FirmwareType.VALID_UF2, FirmwareType.VALID_RTL8720CF_OTA, FirmwareType.VALID_RTL8710BN_OTA]:
+    if fw_type not in [FirmwareType.VALID_UG_BK7231, FirmwareType.VALID_UF2, FirmwareType.VALID_RTL8720CF_OTA, FirmwareType.VALID_RTL8710BN_OTA, FirmwareType.VALID_UG_ESP8266]:
         print(
             f"The firmware file supplied ({filename}) is not valid for the chosen profile type of {chip}",
             file=sys.stderr,

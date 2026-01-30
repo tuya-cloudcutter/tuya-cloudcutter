@@ -1,0 +1,1 @@
+{"t":1000000000,"e":false,"success":true,"result":{"gwApiUrl":"http://10.204.0.1/gw.json","stdTimeZone":"-05:00","mqttRanges":"","timeZone":"-05:00","httpsPSKUrl":"https://10.204.0.1/gw.json","mediaMqttUrl":"10.204.0.1","gwMqttUrl":"10.204.0.1","dstIntervals":[],"mqttsUrl":"","mqttsPSKUrl":"","mediaMqttsUrl":"","aispeech":"10.204.0.1"}}

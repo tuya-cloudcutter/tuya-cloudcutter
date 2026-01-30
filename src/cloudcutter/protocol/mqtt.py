@@ -120,7 +120,7 @@ def on_message(client, userdata, message):
 
 def trigger_firmware_update(device_id, local_key, protocol="2.2", broker="127.0.0.1", verbose_output: bool = False):
     if protocol == "2.1":
-        message = '{"data":{"gwId":"%s"},"protocol":15,"s":%d,"t":%d}' % device_id, 1523715, time.time()
+        message = '{"data":{"gwId":"%s"},"protocol":15,"s":%d,"t":%d}' % (device_id, 1523715, time.time())
     else:
         message = '{"data":{"firmwareType":0},"protocol":15,"t":%d}' % time.time()
     if verbose_output:

@@ -80,6 +80,7 @@ def __trigger_firmware_update(config: DeviceConfig, args):
     device_id = config.get(DeviceConfig.DEVICE_ID)
     local_key = config.get(DeviceConfig.LOCAL_KEY)
 
+    mqtt.trigger_firmware_update(device_id=device_id, local_key=local_key, protocol="2.1", broker="127.0.0.1", verbose_output=args.verbose_output)
     mqtt.trigger_firmware_update(device_id=device_id, local_key=local_key, protocol="2.2", broker="127.0.0.1", verbose_output=args.verbose_output)
 
 
@@ -94,9 +95,12 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
 
     config = DeviceConfig.read(args.config)
     authkey, uuid, pskkey = config.get_bytes(DeviceConfig.AUTH_KEY, default=DEFAULT_AUTH_KEY), config.get_bytes(DeviceConfig.UUID), config.get_bytes(DeviceConfig.PSK, default="")
+    if config.get(DeviceConfig.CHIP_FAMILY) == "ESP8266":
+        authkey = b'CCTR' + authkey
     if len(pskkey) == 0:
         pskkey = None
     context = PSKContext(authkey=authkey, uuid=uuid, psk=pskkey)
+    print("Using PSK Key:", pskkey, "AuthKey:", authkey, "uuid:", uuid)
     device_id, local_key = config.get(DeviceConfig.DEVICE_ID), config.get(DeviceConfig.LOCAL_KEY)
     flash_timeout = 15
     if args.flash_timeout is not None:
@@ -137,6 +141,7 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
         return {
             "result": {
                 "url": f"http://{args.ip}:80/files/{firmware_filename}",
+                "pskUrl": f"http://{args.ip}:80/files/{firmware_filename}",
                 "hmac": file_hmac,
                 "version": "9.0.0",
                 "size": str(len(upgrade_data)),
@@ -175,12 +180,17 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
     response_transformers = __configure_local_device_response_transformers(config)
     endpoint_hooks = {
         "tuya.device.active": active_endpoint_hook,
+        #"s.gw.dev.fk.active": active_endpoint_hook,
+        #"s.gw.dev.pk.active": active_endpoint_hook,
+        "tuya.device.dynamic.config.ack": active_endpoint_hook,
     }
 
     if update_firmware:
         endpoint_hooks.update({
             "tuya.device.upgrade.get": upgrade_endpoint_hook,
             "tuya.device.upgrade.silent.get": upgrade_endpoint_hook,
+            "s.gw.upgrade.get": upgrade_endpoint_hook,
+            "s.gw.upgrade": upgrade_endpoint_hook,
         })
 
     application = tornado.web.Application([
@@ -188,7 +198,9 @@ def __configure_local_device_or_update_firmware(args, update_firmware: bool = Fa
         (r'/v2/url_config', handlers.GetURLHandlerV2, dict(ipaddr=args.ip, verbose_output=args.verbose_output)),
         # 2018 SDK specific endpoint
         (r'/device/url_config', handlers.OldSDKGetURLHandler, dict(ipaddr=args.ip, verbose_output=args.verbose_output)),
-        (r'/d.json', handlers.DetachHandler, dict(schema_directory=args.schema, response_transformers=response_transformers, config=config, endpoint_hooks=endpoint_hooks, verbose_output=args.verbose_output)),
+        (r'/d.json', handlers.DetachHandler, dict(schema_directory=args.schema, response_transformers=response_transformers, config=config, endpoint_hooks=endpoint_hooks, verbose_output=args.verbose_output, ipaddr=args.ip)),
+        # ESP8266
+        (r'/gw.json', handlers.DetachHandler, dict(schema_directory=args.schema, response_transformers=response_transformers, config=config, endpoint_hooks=endpoint_hooks, verbose_output=args.verbose_output, ipaddr=args.ip)),
         (f'/files/(.*)', handlers.OTAFilesHandler, dict(path="/work/custom-firmware/", graceful_exit_timeout=args.flash_timeout, verbose_output=args.verbose_output)),
     ])
 
@@ -244,7 +256,7 @@ def __update_firmware(args):
             file_type = FILE_MAGIC_DICT[magic16]
 
         if file_type not in ["UG", "UF2", "RTL8720CF_OTA", "RTL8710BN_OTA"]:
-            print(f"Firmware {args.firmware} is not a UG or RTL8720CF OTA file.", file=sys.stderr)
+            print(f"Firmware {args.firmware} is not a UG or Realtek OTA file.", file=sys.stderr)
             error_code = 52
         else:
             # File is a UG file
@@ -312,7 +324,7 @@ def __configure_wifi(args):
     # Pass the payload through the json module specifically
     # to avoid issues with special chars (e.g. ") in either
     # SSIDs or passwords.
-    payload = {"ssid": SSID, "token": "AAAAAAAA"}
+    payload = {"ssid": SSID, "token": "AZ87654321CCTR"}
 
     # Configure the password ONLY if it's present
     # Some devices may parse incorrectly otherwise
@@ -448,7 +460,7 @@ def parse_args():
         required=False,
         default="",
         help="deviceid assigned to the device (default: Random)",
-        type=__validate_localapicredential_arg(20),
+        #type=__validate_localapicredential_arg(20),
     )
     parser_write_deviceconfig.add_argument(
         "--localkey",
@@ -456,7 +468,7 @@ def parse_args():
         required=False,
         default="",
         help="localkey assigned to the device (default: Random)",
-        type=__validate_localapicredential_arg(16),
+        #type=__validate_localapicredential_arg(16),
     )
     parser_write_deviceconfig.add_argument(
         "--authkey",

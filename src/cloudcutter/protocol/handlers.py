@@ -44,16 +44,20 @@ def log_request(endpoint, request, decrypted_request_body, verbose_output: bool 
         print(f'[{datetime.datetime.now().time()} Log (Client)] Request: {request}')
 
         if len(clean_request_body) > 0:
-            print(f'[{datetime.datetime.now().time()} LOG (Client)] ==== Request body ===')
+            print(f'[{datetime.datetime.now().time()} LOG (Client)] ==================== Request body ====================')
             print(clean_request_body)
-            print(f'[{datetime.datetime.now().time()} LOG (Client)] ==== End request body ===')
+            print(f'[{datetime.datetime.now().time()} LOG (Client)] ==================== End request body ====================')
     else:
         print(f"Processing endpoint {endpoint}")
 
 
-def log_response(response, verbose_output: bool = False):
+def log_response(response, encrypted : bool = False, verbose_output: bool = False):
     if verbose_output:
-        print(f'[{datetime.datetime.now().time()} LOG (Server)] Response: ', response)
+        # print a blank line for easier reading
+        print("")
+        print(f'[{datetime.datetime.now().time()} LOG (Server)] ==================== Response ({"encrypted" if encrypted else "unencrypted"}) ====================')
+        print(response)
+        print(f'[{datetime.datetime.now().time()} LOG (Server)] ==================== End Response ({"encrypted" if encrypted else "unencrypted"}) ====================')
 
 
 class TuyaHeadersHandler(tornado.web.RequestHandler):
@@ -64,19 +68,28 @@ class TuyaHeadersHandler(tornado.web.RequestHandler):
 
 
 class TuyaServerHandler(TuyaHeadersHandler):
-    def initialize(self, config: DeviceConfig):
-        self.cipher = TuyaCipher(config.get_bytes(DeviceConfig.AUTH_KEY))
+    def initialize(self, config: DeviceConfig, verbose_output: bool):
+        authkey = config.get_bytes(DeviceConfig.AUTH_KEY)
+        if config.get(DeviceConfig.CHIP_FAMILY) == "ESP8266":
+            authkey = b'CCTR' + authkey
+        self.cipher = TuyaCipher(authkey)
         self.cipher.set_seckey(config.get_bytes(DeviceConfig.SEC_KEY))
         self.config = config
+        self.verbose_output = verbose_output
 
-    def reply(self, key_choice, response: dict):
+    def reply(self, key_choice, response: dict, skip_encryption: bool = False):
+        if self.verbose_output:
+            log_response(response, False, self.verbose_output)
         encrypted = self.cipher.encrypt(response, key_choice)
         encrypted = base64.b64encode(encrypted).decode("utf-8")
         timestamp = int(time.time())
         response = {"result": encrypted, "t": timestamp}
         signature = self.cipher.sign_server(response, key_choice)
         response["sign"] = signature
-        response = object_to_json(response) + "\n"
+        response = object_to_json(response)
+        if self.verbose_output:
+            log_response(response, True, self.verbose_output)
+        response = response + "\n"
         self.finish(response)
 
 
@@ -156,26 +169,33 @@ class OTAFilesHandler(tornado.web.StaticFileHandler):
 
 
 class DetachHandler(TuyaServerHandler):
-    AUTHKEY_ENDPOINTS = ["tuya.device.active", "tuya.device.uuid.pskkey.get"]
+    AUTHKEY_ENDPOINTS = ["tuya.device.active", "tuya.device.uuid.pskkey.get", "s.gw.token.get", "s.gw.dev.pk.active", "s.gw.dev.fk.active"]
 
-    def initialize(self, schema_directory: os.PathLike, config: DeviceConfig, response_transformers: List[ResponseTransformer], endpoint_hooks, verbose_output: bool):
-        super().initialize(config=config)
+    def initialize(self, schema_directory: os.PathLike, config: DeviceConfig, response_transformers: List[ResponseTransformer], endpoint_hooks, verbose_output: bool, ipaddr: str):
+        super().initialize(config=config, verbose_output=verbose_output)
         self.schema_directory = schema_directory
         self.endpoint_hooks = endpoint_hooks
         self.response_transformers = response_transformers
         self.verbose_output = verbose_output
+        self.ipaddr = ipaddr
+        self.isGet = False
+
+    def get(self):
+        self.isGet = True
+        self.post()
 
     def post(self):
         endpoint = self.get_query_argument("a")
         key_choice = TuyaCipherKeyChoice.AUTHKEY if endpoint in self.AUTHKEY_ENDPOINTS else TuyaCipherKeyChoice.SECKEY
-        request_body = self.__decrypt_request_body(key_choice)
+        request_body = ""
+        if not self.isGet:
+            request_body = self.__decrypt_request_body(key_choice)
+            request_body = json.dumps(request_body)
         log_request(endpoint, self.request, request_body, self.verbose_output)
-        request_body = json.dumps(request_body)
         response = self.__rework_endpoint_response(endpoint, request_body)
         default_response = {"success": True, "t": int(time.time())}
         if not response:
             response = default_response
-        log_response(response, self.verbose_output)
         self.reply(key_choice, response)
 
     def __rework_endpoint_response(self, endpoint, request_body):
@@ -209,6 +229,8 @@ class DetachHandler(TuyaServerHandler):
         return response
 
     def __decrypt_request_body(self, key_choice: TuyaCipherKeyChoice):
+        if len(self.request.body) == 0 and self.get_argument('data', None) is None:
+            return ""
         try:
             body = self.get_argument('data')
             body = bytes.fromhex(body)
