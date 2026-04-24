@@ -156,6 +156,16 @@ def walk_app_code():
     # Typical newer BK7231T
     if b'AT bk7231t' in appcode:
         # Newer versions of BK7231T, BS 40.00, SDK 1.0.x
+        if b'TUYA IOT SDK V:1.0.0' in appcode:
+            # 99 4e 04 1e 07 d1 is the byte pattern for datagram payload
+            # 1 match should be found
+            # 23 68 38 1c 98 47 is the byte pattern for finish
+            # 1 match should be found
+            process(PlatformInfo(Platform.BK7231T), "SDK 1.0.0",
+                    Pattern("datagram", "994e041e07d1", 1, 0),
+                    Pattern("finish", "2368381c9847", 2, 0))
+            return
+
         if b'TUYA IOT SDK V:1.0.' in appcode:
             # a1 4f 06 1e is the byte pattern for datagram payload
             # 1 match should be found
