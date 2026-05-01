@@ -112,8 +112,6 @@ if [ "${CHIP^^}" == "RTL8720CF" ] || [ "${CHIP^^}" == "RTL8710BN" ]; then
     read -n 1 -s -r -p "Press any key to confirm you have completed power cycling the device and continue."
     echo ""
     echo "Continuing..."
-else
-    sleep 5
 fi
 
 run_helper_script "pre-wifi-config"
@@ -133,8 +131,6 @@ if [[ $AP_MATCHED_NAME != A-* ]] && [ -z "${AUTHKEY}" ]; then
 fi
 
 echo "Device is connecting to 'cloudcutterflash' access point. Passphrase for the AP is 'abcdabcd' (without ')"
-# Add a minor delay to stabilize after connection, to make sure DHCP and such have finished
-sleep 5
 OUTPUT=$(run_in_docker pipenv run python3 -m cloudcutter configure_wifi "cloudcutterflash" "abcdabcd" "${VERBOSE_OUTPUT}" --victim-ip "${AP_GATEWAY}")
 RESULT=$?
 echo "${OUTPUT}"
