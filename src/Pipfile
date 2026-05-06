@@ -16,6 +16,7 @@ pycryptodome = "==3.19.0"
 paho-mqtt = "==1.6.1"
 click = "==8.1.7"
 ltchiptool = ">=4.9.2"
+pyfzf = "==0.3.1"
 
 [requires]
 python_version = "3"
