@@ -12,7 +12,7 @@ function getopts-extra () {
     done
 }
 
-while getopts "hrntvw:p:f:d:l:s::a:k:u:o:" flag; do
+while getopts "hrnt:vw:p:f:d:l:s::a:k:u:o:" flag; do
     case "$flag" in
         r)	RESETNM="true";;
         n)  DISABLE_RESCAN="true";;
