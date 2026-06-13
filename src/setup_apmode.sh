@@ -66,6 +66,12 @@ else
         AP_CHANNEL="6"
         echo "Unable to get channel from wlan info. Using $AP_CHANNEL as fallback."
 fi
+echo "Waiting 5 seconds before starting access point on ${WLAN}"
+for i in {1..5}; do
+  sleep 1
+  echo -n "."
+done
+echo
 hostapd /dev/stdin -P $(pwd)/hostapd.pid -B <<- EOF
 ssid=cloudcutterflash
 channel=$AP_CHANNEL
