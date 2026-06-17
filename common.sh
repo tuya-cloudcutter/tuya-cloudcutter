@@ -128,7 +128,7 @@ build_docker() {
 
 run_in_docker() {
     docker rm cloudcutter >/dev/null 2>&1
-    docker run --rm --name cloudcutter --network=host -ti --privileged -v "$(pwd):/work" cloudcutter "${@}"
+    docker run --rm --name cloudcutter --network=host -ti --cap-add=NET_ADMIN --cap-add=SYS_ADMIN --device=/dev/rfkill:/dev/rfkill -v "$(pwd):/work" cloudcutter "${@}"
 }
 
 # Docker prep
