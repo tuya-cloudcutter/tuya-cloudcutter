@@ -276,7 +276,7 @@ def __exploit_device(args):
     output_path = os.path.join(output_dir, f"{device_uuid}.deviceconfig")
     device_config.write(output_path)
 
-    print("Exploit run, saved device config too!")
+    print("Exploit run, saved device config too!  Note: this is only the attempt of the exploit, and may not have succeeded.  Please check the following log to determine if the exploit was successful.  If the exploit was not successful, the device config saved was never applied to your device.")
 
     # To communicate with external scripts
     print(f"output={output_path}")

@@ -13,30 +13,14 @@ Steps:
    - A 4GB SD card is required to have enough space for the OS and building the Docker image.
    - If using SSH, enable it (using the installer or making an empty file `ssh` on the boot partition)
 2. Access the pi (SSH or keyboard + monitor)
-3. Install Network Manager (only reboot once all files are in place)
-   - `sudo apt update && sudo apt install network-manager`
-   - `sudo nano /etc/dhcpcd.conf` then add line `denyinterfaces wlan0`
-   - `sudo nano /etc/NetworkManager/NetworkManager.conf` and make it look exactly like
-
-    ```text
-    [main]
-    plugins=ifupdown,keyfile
-    dhcp=internal
-
-    [ifupdown]
-    managed=true
-    ```
-
-4. Reboot the pi `sudo reboot` then reaccess.
-5. Make sure network manager is enabled and running:
-   - `sudo systemctl enable NetworkManager.service`
-   - `sudo systemctl start NetworkManager.service`
-6. Install Docker with `curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh`
-7. Install git `sudo apt install git`
-8. Clone tuya-cloudcutter repo `git clone https://github.com/tuya-cloudcutter/tuya-cloudcutter`
-9. Go to cloned tuya-cloudcutter repo `cd tuya-cloudcutter`
-10. (Optional as independent step) In the cloudcutter directory, build the docker image `sudo docker build --network=host -t cloudcutter .`
-11. Run CloudCutter with `sudo ./tuya-cloudcutter.sh -r ...` (refer to [usage instructions](./INSTRUCTIONS.md))
+3. Install git `sudo apt update && sudo apt install git`
+4. Clone tuya-cloudcutter repo `git clone https://github.com/tuya-cloudcutter/tuya-cloudcutter`
+5. Go to cloned tuya-cloudcutter repo `cd tuya-cloudcutter`
+6. Install the host requirements (Docker and iw) `sudo ./install-requirements.sh`
+   - If Docker was just installed, log out and back in (or reboot) so your user picks up the `docker` group.
+7. (Optional as independent step) In the cloudcutter directory, build the docker image `sudo docker build --network=host -t cloudcutter .`
+8. Run CloudCutter with `sudo ./tuya-cloudcutter.sh ...` (refer to [usage instructions](./INSTRUCTIONS.md))
+   - The WiFi adapter defaults to `wlan0`; pass `-w <adapter>` to use a different one. It is moved fully into the container for the duration of the run, so no NetworkManager configuration is required.
 
 ## Pi Zero 2W with SSH over USB
 
@@ -59,27 +43,11 @@ Steps:
    - May need to get the right drivers: https://raspberrypi.stackexchange.com/questions/89400/cannot-ssh-raspberry-pi-zero-w-on-windows-via-usb
 4. Connect using ssh to `piusb.local` (or whatever hostname you chose)
 5. Share your computers network with the Pi
-6. Install Network Manager (only reboot once all files are in place)
-   - `sudo apt update && sudo apt install network-manager`
-   - `sudo nano /etc/dhcpcd.conf` then add line `denyinterfaces wlan0`
-   - `sudo nano /etc/NetworkManager/NetworkManager.conf` and make it look exactly like
-
-    ```text
-    [main]
-    plugins=ifupdown,keyfile
-    dhcp=internal
-
-    [ifupdown]
-    managed=true
-
-    [keyfile]
-    unmanaged-devices=interface-name:usb*
-    ```
-
-7. Reboot the Pi `sudo reboot` then reconnect over ssh
-8. Install Docker with `curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh`
-9. Install git `sudo apt install git`
-10. Clone tuya-cloudcutter repo `git clone https://github.com/tuya-cloudcutter/tuya-cloudcutter`
-11. Go to cloned tuya-cloudcutter repo `cd tuya-cloudcutter`
-12. (Optional as independent step) In the cloudcutter directory, build the docker image `sudo docker build --network=host -t cloudcutter .`
-13. Run CloudCutter with `sudo ./tuya-cloudcutter.sh -r ...` (refer to [usage instructions](./INSTRUCTIONS.md))
+6. Install git `sudo apt update && sudo apt install git`
+7. Clone tuya-cloudcutter repo `git clone https://github.com/tuya-cloudcutter/tuya-cloudcutter`
+8. Go to cloned tuya-cloudcutter repo `cd tuya-cloudcutter`
+9. Install the host requirements (Docker and iw) `sudo ./install-requirements.sh`
+   - If Docker was just installed, log out and back in (or reboot) so your user picks up the `docker` group.
+10. (Optional as independent step) In the cloudcutter directory, build the docker image `sudo docker build --network=host -t cloudcutter .`
+11. Run CloudCutter with `sudo ./tuya-cloudcutter.sh ...` (refer to [usage instructions](./INSTRUCTIONS.md))
+    - The WiFi adapter defaults to `wlan0`; pass `-w <adapter>` to use a different one. It is moved fully into the container for the duration of the run, so no NetworkManager configuration is required.

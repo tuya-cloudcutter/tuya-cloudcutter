@@ -1,0 +1,4 @@
+# Shell scripts always run inside Linux / the Docker container, so they must keep
+# LF line endings regardless of the host's core.autocrlf setting. CRLF in a shebang
+# line breaks execution inside the container.
+*.sh text eol=lf

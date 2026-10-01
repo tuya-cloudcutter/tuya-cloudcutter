@@ -10,9 +10,10 @@ Here we describe how to use Tuya CloudCutter to jailbreak Tuya IoT devices by re
 
 ### Prerequisites
 
-- A laptop or computer with a WiFi adapter
-- Running (non-virtualized) Ubuntu (other distributions with NetworkManager might also work, untested. VMs might work if you passthrough WiFi adapter.)
+- A laptop or computer with a stand-alone WiFi adapter that supports AP mode
+- Running (non-virtualized) Linux with `iw` installed. The adapter is moved into the container's own network namespace, so NetworkManager is no longer required. (VMs might work if you passthrough the WiFi adapter.)
 - Docker should be installed, and your user should be part of the "docker" group (reboot if you've just installed Docker, to reload the user groups.)
+- The WiFi adapter can be specified with `-w <adapter>` (e.g. `-w wlan1`); it defaults to `wlan0` if omitted. The adapter must exist (it is verified before the run starts) because it is handed entirely to the container, and it will disappear from the host until the run finishes.
 
 **Note**: the script mentioned below can also be run in interactive mode, i.e. without any parameters, in which the user will be asked to choose one of available options.
 
@@ -28,17 +29,19 @@ If you don't know the exact device model, or your device does not have any avail
 4. choose "Device Update"
 5. note the "Main Module" version number
 
-Knowing this, you can run `sudo ./tuya-cloudcutter.sh` without any parameters. Then, use the `By firmware version and name` option and choose the version you found.
+Knowing this, you can run `sudo ./tuya-cloudcutter.sh` (optionally pass `-w <adapter>`; defaults to wlan0). Then, use the `By firmware version and name` option and choose the version you found.
 
 ### Running the toolchain
 
 1. Download or git clone this repository
 2. Open a terminal and `cd` into the repository to make it your working directory
-3. Run `sudo ./tuya-cloudcutter.sh -s <SSID> <SSID password>`, where SSID/password is the name of the access point you want the Tuya device to join.
+3. Install the host requirements (docker and iw) by running `sudo ./install-requirements.sh`. This checks for each and installs anything missing via your system package manager. (If docker was just installed, log out and back in so your user picks up the `docker` group.)
+4. Run `sudo ./tuya-cloudcutter.sh -w <adapter> -s <SSID> <SSID password>`, where `<adapter>` is your stand-alone wifi adapter (e.g. `wlan1`) and SSID/password is the name of the access point you want the Tuya device to join.
 
+   - The `-w <adapter>` argument is optional and defaults to `wlan0`; the adapter is passed fully into the container and is verified to exist first.
    - You can specify the device profile name using `-p my-device-name`; otherwise an interactive menu will be shown.
-   - **If your SSID and/or password have special characters like $ ! or @, make sure to pass them with ' characters, e.g. 'P@$$W0rD!'. If it has the ' character then also make sure to escape that, with bash that'd be `'P@$$W0rD!'"'"' 1234'` to use the password `P@$$W0rD!' 1234`** **Optionally run with parameter -r to reset NetworkManager connections, which may help with some wifi adaptors ( sudo ./tuya-cloudcutter.sh -r -s <SSID> <SSID password> )**
-   - If you wish to set a custom deviceid or localkey, prepend these parameters like so: `sudo ./tuya-cloudcutter.sh -d 20characterdeviceid -l 16characterlocalkey -s <SSID> <SSID password>`, Note, localtuya in homeassistant currently requires unique deviceid to work.
+   - **If your SSID and/or password have special characters like $ ! or @, make sure to pass them with ' characters, e.g. 'P@$$W0rD!'. If it has the ' character then also make sure to escape that, with bash that'd be `'P@$$W0rD!'"'"' 1234'` to use the password `P@$$W0rD!' 1234`** **Optionally run with parameter -r to reset any saved wifi state inside the container before running, which may help with some wifi adaptors ( sudo ./tuya-cloudcutter.sh -w <adapter> -r -s <SSID> <SSID password> )**
+   - If you wish to set a custom deviceid or localkey, prepend these parameters like so: `sudo ./tuya-cloudcutter.sh -w <adapter> -d 20characterdeviceid -l 16characterlocalkey -s <SSID> <SSID password>`, Note, localtuya in homeassistant currently requires unique deviceid to work.
 
 4. When instructed, put your Tuya device in _AP Mode_.  This can usually be accomplished by either:
 
@@ -62,7 +65,7 @@ Knowing this, you can run `sudo ./tuya-cloudcutter.sh` without any parameters. T
 
 1. Copy your new firmware .bin file (UG or UF2 files only!) to ./custom-firmware
 2. Find your device name, as instructed in the steps above.
-3. Run `sudo ./tuya-cloudcutter.sh`. You can specify device profile name and firmware file using `-p` and `-f`, respectively (this is optional). Example: `sudo ./tuya-cloudcutter.sh -p avatar-asl04-tv-backlight -f custom_firmware_file.bin`
+3. Run `sudo ./tuya-cloudcutter.sh` (optionally pass `-w <adapter>`; defaults to wlan0). You can specify device profile name and firmware file using `-p` and `-f`, respectively (this is optional). Example: `sudo ./tuya-cloudcutter.sh -w wlan1 -p avatar-asl04-tv-backlight -f custom_firmware_file.bin`
 4. Follow the instructions from the script to turn off/on your device 6 times during 2 steps (similar to the steps above)
 5. If all goes well, your device is now running your custom firmware, enjoy!
 

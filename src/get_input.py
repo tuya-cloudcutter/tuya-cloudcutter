@@ -43,6 +43,21 @@ def api_get(short_path):
         exit(1)
 
 
+def _build_theme():
+    # Build the theme as an object and set the cursor as a literal string.
+    # Passing it through load_theme_from_dict makes inquirer resolve every value
+    # as a blessed terminal capability, so a glyph like "►" triggers a
+    # "unknown terminal capability: '►'" warning (and silently fails to render).
+    theme = inquirer.themes.Default()
+    try:
+        theme.List.selection_cursor = "►"
+        theme.List.selection_color = inquirer.themes.term.underline
+    except Exception:
+        # Fall back to the stock theme if the attribute layout ever changes.
+        return inquirer.themes.Default()
+    return theme
+
+
 def ask_options(text, options):
     res = inquirer.prompt(
         [
@@ -52,7 +67,7 @@ def ask_options(text, options):
                 message=text,
                 choices=options,
             )
-        ], theme=inquirer.themes.load_theme_from_dict({ "List": { "selection_color": "underline", "selection_cursor": "►" } })
+        ], theme=_build_theme()
     )
     if res is None:
         # Ctrl+C

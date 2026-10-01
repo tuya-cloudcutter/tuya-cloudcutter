@@ -22,11 +22,13 @@ If you're curious about the vulnerability and how the exploit chain works, here'
 
 ## Requirements
 
-- A device with a stand-alone wifi adapter (but not be your primary source of networking, ethernet is preferred for that)
-- An account with sudo / elevated privileges - An account capable of making network setting changes.
-- NetworkManager / nmcli - This is used to scan for Tuya APs, connect to them, and host a CloudCutter AP to run the exploit.  If you run into issues, make sure your NetworkManager service is started.  You may need to use the `-r` parameter if you continue to have issues.
-- Docker / Docker CLI package - This is used to create a controlled python environment to handle and run the exploit
+- A stand-alone wifi adapter that supports AP mode (and is not your primary source of networking - ethernet is preferred for that). This adapter is moved *fully into the container* for the duration of the run. Select it with `-w` (defaults to `wlan0`); it is verified to exist before the run begins.
+- An account with sudo / elevated privileges - moving the wifi adapter into the container's network namespace requires elevated privileges.
+- `iw` on the host - used to move the physical wifi device into the container. All other wireless work (scanning, joining the Tuya AP, DHCP, DNS, MQTT, and hosting the CloudCutter AP) now happens **inside the container**; the host no longer uses NetworkManager for any of it.
+- Docker / Docker CLI package - This is used to create a controlled environment that performs all of the work, including the wireless operations.
 - An active internet connection (Somewhat optional) - This is used to download the packages to build the docker container and to download new device profiles.
+
+You can install the host requirements (docker and iw) automatically by running `sudo ./install-requirements.sh`, which installs whatever is missing via your system package manager.
 
 ## Usage
 
