@@ -201,7 +201,6 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, firmw
     reduced_token = token[2:]
     reduced_token = reduced_token[:8]
     assert len(reduced_token) == 8
-    print(f'Using token: {token} product_key: {product_key} firmware_key: {firmware_key}')
     # tuya.device.active encrypts with auth_key
     connection = TuyaAPIConnection(uuid, auth_key)
     url = f"http://a.tuya{region}.com/d.json"
@@ -218,6 +217,8 @@ def run(directory: str, output_file_prefix: str, uuid: str, auth_key: str, firmw
 
     if firmware_key is None and product_key is not None:
         firmware_key = product_key
+
+    print(f'Using token: {token} product_key: {product_key} firmware_key: {firmware_key}')
 
     if product_key is not None:
         data = build_data_active(epoch_time, reduced_token, firmware_key, product_key, software_version, mcu_software_version, baseline_version, cad_version, cd_version, protocol_version, False)
