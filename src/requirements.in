@@ -1,0 +1,37 @@
+# Direct (top-level) Python dependencies - the source of truth.
+#
+# This file lists ONLY the packages the code imports directly. The fully-pinned
+# requirements.txt (including all transitive dependencies) is generated from this
+# file with pip-compile (pip-tools), so transitive pins never drift or go stale and
+# unused packages cannot accumulate.
+#
+# To regenerate requirements.txt after changing this file, run from this directory:
+#     pip install pip-tools
+#     pip-compile --no-emit-index-url --strip-extras requirements.in
+# With the existing requirements.txt present, pip-compile keeps the current pins and
+# only applies your changes here; add --upgrade to intentionally bump transitive deps.
+#
+# No local setup? Do it in a throwaway container from the repo's src/ directory:
+#     docker run --rm -v "$PWD:/src" -w /src python:3.14-slim sh -c \
+#       'pip install -q pip-tools && pip-compile --no-emit-index-url --strip-extras requirements.in'
+
+# Crypto: Cryptodome namespace (cloudcutter) and Crypto namespace (tinytuya).
+pycryptodomex==3.19.0
+pycryptodome==3.19.0
+
+# Exploit server / networking.
+tornado==6.4
+# sslpsk3 MUST stay on 1.x. The device uses a BINARY psk identity; sslpsk3 1.1.1 passes
+# it to our callback as raw bytes (via ssl.wrap_socket). sslpsk3 2.x decodes the identity
+# as UTF-8, which rejects Tuya's binary identity (PSK_IDENTITY_NOT_FOUND). 1.x requires
+# ssl.wrap_socket, which exists only on Python <=3.11 - hence the pinned base image.
+sslpsk3==1.1.1
+paho-mqtt==1.6.1
+requests==2.31.0
+
+# CLI / interactive prompts (get_input.py).
+click==8.1.7
+inquirer==3.4.1
+
+# Firmware handling (UF2 extraction / validation).
+ltchiptool>=4.9.2

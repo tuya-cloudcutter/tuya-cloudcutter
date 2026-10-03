@@ -1,12 +1,34 @@
 import secrets
 import ssl
+import warnings
+
 import sslpsk3 as sslpsk
 
 from Cryptodome.Cipher import AES
 from hashlib import md5, sha256
 
+# Silence two expected, by-design deprecation warnings (both present since Python 3.10):
+#   - ssl.PROTOCOL_TLSv1_2: the device speaks PSK over TLS 1.2 (cipher
+#     PSK-AES128-CBC-SHA256), so wrap_socket() must pin TLS 1.2 via this constant.
+#   - ssl.wrap_socket(): sslpsk3 1.x (required for binary PSK identities on Python <=3.11)
+#     uses the deprecated module-level ssl.wrap_socket() internally.
+# Both are required for the exploit to work, so suppress the noise rather than change the
+# handshake behaviour.
+warnings.filterwarnings(
+    'ignore',
+    message=r'ssl\.(PROTOCOL_TLSv1_2|wrap_socket\(\)) is deprecated',
+    category=DeprecationWarning,
+)
+
 class PSKContext(ssl.SSLContext):
     DEFAULT_HINT = b'1dHRsc2NjbHltbGx3eWh50000000000000000'
+
+    def __new__(cls, authkey: bytes = None, uuid: bytes = None, psk: bytes = None):
+        # Construct the base ssl.SSLContext with an explicit, non-deprecated protocol.
+        # Without one, ssl.SSLContext() defaults to the deprecated ssl.PROTOCOL_TLS and
+        # emits DeprecationWarnings. The protocol here is only a placeholder - the real
+        # TLS parameters are applied per-socket in wrap_socket() via sslpsk3.
+        return super().__new__(cls, ssl.PROTOCOL_TLS_SERVER)
 
     def __init__(self, authkey: bytes = None, uuid: bytes = None, psk: bytes = None):
         self.psk = b'' if psk is None else psk

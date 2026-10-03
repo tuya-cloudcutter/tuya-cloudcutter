@@ -47,6 +47,16 @@ echo "Using WLAN adapter: ${WLAN}"
 
 rfkill unblock wifi
 
+# Switch the adapter out of client mode before starting hostapd. The exploit phase
+# associated with the device's AP via wpa_supplicant; if that station association and
+# its keys are still present, hostapd fails to initialise AP mode with
+# "nl80211: kernel reports: key not allowed" / "Could not connect to kernel driver".
+# Explicitly stop any supplicant, drop the association, and set the interface to AP type.
+pkill -f "wpa_supplicant.*${WLAN}" 2>/dev/null
+iw dev "$WLAN" disconnect 2>/dev/null
+ip link set dev "$WLAN" down
+iw dev "$WLAN" set type __ap 2>/dev/null || true
+
 ip addr flush dev $WLAN
 ip link set dev $WLAN down
 ip addr add $GATEWAY/24 dev $WLAN

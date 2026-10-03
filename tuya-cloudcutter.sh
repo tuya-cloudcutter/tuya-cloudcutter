@@ -1,6 +1,24 @@
 #!/usr/bin/env bash
-TIMESTAMP=`date +%s`
-LOGFILE="logs/log-${TIMESTAMP}.log"
+#
+# Thin launcher for tuya-cloudcutter.
+#
+# This script no longer performs any of the actual work (scanning, connecting,
+# safety checks, hosting the AP, or running the exploit).  Its only jobs are:
+#   1. Parse the command line options.
+#   2. Build the Docker image.
+#   3. Move the requested WiFi adapter *fully* into the container's own network
+#      namespace, so that everything wireless-related runs inside the container.
+#   4. Hand control to the in-container workflow (src/container/run.sh).
+#
+# Because the adapter is moved into the container's namespace, a WiFi adapter
+# MUST be supplied with -w.  It should be a stand-alone adapter that is not your
+# primary source of networking (use ethernet for that), because it will disappear
+# from the host for the duration of the run.
+
+set -o pipefail
+
+IMAGE_NAME="cloudcutter"      # docker image tag (build / run)
+CONTAINER_NAME="cloudcutter"  # running container name (run --name / exec / inspect / rm)
 FLASH_TIMEOUT=15
 
 function getopts-extra () {
@@ -14,22 +32,22 @@ function getopts-extra () {
 
 while getopts "hrnt:vw:p:f:d:l:s::a:k:u:o:" flag; do
     case "$flag" in
-        r)	RESETNM="true";;
+        r)  RESETNM="true";;
         n)  DISABLE_RESCAN="true";;
         v)  VERBOSE_OUTPUT="true";;
-        w)	WIFI_ADAPTER=${OPTARG};;
-        p)	PROFILE=${OPTARG};;
-        f)	FIRMWARE=${OPTARG}
+        w)  WIFI_ADAPTER=${OPTARG};;
+        p)  PROFILE=${OPTARG};;
+        f)  FIRMWARE=${OPTARG}
             METHOD_FLASH="true"
         ;;
         t)  FLASH_TIMEOUT=${OPTARG};;
-        d)	DEVICEID=${OPTARG};;
-        l)	LOCALKEY=${OPTARG};;
+        d)  DEVICEID=${OPTARG};;
+        l)  LOCALKEY=${OPTARG};;
         a)  AUTHKEY=${OPTARG};;
         k)  PSKKEY=${OPTARG};;
         u)  UUID=${OPTARG};;
         o)  OVERRIDE_AP_SSID=${OPTARG};;
-        s)	getopts-extra "$@"
+        s)  getopts-extra "$@"
             METHOD_DETACH="true"
             HAVE_SSID="true"
             SSID_ARGS=( "${OPTARG[@]}" )
@@ -39,11 +57,11 @@ while getopts "hrnt:vw:p:f:d:l:s::a:k:u:o:" flag; do
         h)
             echo "usage: $0 [OPTION]..."
             echo "  -h                Show this message"
-            echo "  -r                Reset NetworkManager"
-            echo "  -n				  No Rescan (for older versions of nmcli that don't support it)"
+            echo "  -w TEXT           WiFi adapter name (default: wlan0 - it is passed fully into the container, and must exist)"
+            echo "  -r                Reset saved WiFi state inside the container before running"
+            echo "  -n                No Rescan (accepted for backwards compatibility)"
             echo "  -o TEXT           Override specific device AP name to connect to"
-            echo "  -v				  Verbose log output"
-            echo "  -w TEXT           WiFi adapter name (optional, auto-selected if not supplied)"
+            echo "  -v                Verbose log output"
             echo "  -p TEXT           Device profile name, AKA Device Slug (optional)"
             echo "  -a TEXT           AuthKey of the device (optional, requires UUID and PSKKey accompanied with it)"
             echo "  -k TEXT           PSKKey of the device (optinal, requires AuthKey and UUID accompanied with it)"
@@ -62,93 +80,150 @@ while getopts "hrnt:vw:p:f:d:l:s::a:k:u:o:" flag; do
     esac
 done
 
-if [ $METHOD_DETACH ] && [ $METHOD_FLASH ]; then
+if [ "${METHOD_DETACH}" ] && [ "${METHOD_FLASH}" ]; then
     echo "You have supplied arguments for both detaching and flashing.  Please only include the arguments for your desired action."
     echo "Please see '${0} -h' for more information."
     exit 1
 fi
 
-source common.sh
+# ---------------------------------------------------------------------------
+# Basic host requirements
+# ---------------------------------------------------------------------------
+for cmd in docker iw; do
+    if ! command -v "${cmd}" >/dev/null 2>&1; then
+        echo "[!] Required host command '${cmd}' was not found."
+        if [ "${cmd}" == "iw" ]; then
+            echo "    Install it (e.g. 'sudo apt install iw') - it is used to move the WiFi adapter into the container."
+        fi
+        exit 1
+    fi
+done
+
+if [ "${WIFI_ADAPTER}" == "" ]; then
+    WIFI_ADAPTER="wlan0"
+    echo "No WiFi adapter supplied with -w; defaulting to '${WIFI_ADAPTER}'."
+fi
+
+if ! iw dev "${WIFI_ADAPTER}" info >/dev/null 2>&1; then
+    echo "[!] '${WIFI_ADAPTER}' does not exist or is not a WiFi (nl80211) interface on this host."
+    echo "    Pass a valid adapter with -w. Available WiFi interfaces:"
+    iw dev | awk '/Interface/ {print "      " $2}'
+    exit 1
+fi
+
+# Resolve the physical device (wiphy) that backs the interface.  We move the whole
+# phy - not just the netdev - so the container has complete control of the radio.
+PHY_INDEX=$(iw dev "${WIFI_ADAPTER}" info | awk '/wiphy/ {print $2; exit}')
+if [ -z "${PHY_INDEX}" ]; then
+    echo "[!] Could not determine the wiphy for '${WIFI_ADAPTER}'."
+    exit 1
+fi
+PHY="phy${PHY_INDEX}"
+
+# ---------------------------------------------------------------------------
+# Helper scripts that bookend the run happen on the host, where normal LAN
+# connectivity is still available (the adapter has not been handed off yet).
+# ---------------------------------------------------------------------------
+run_helper_script() {
+    if [ -f "scripts/${1}.sh" ]; then
+        echo "Running helper script '${1}'"
+        source "scripts/${1}.sh"
+    fi
+}
 
 run_helper_script "pre-setup"
 
-if [ ! $METHOD_DETACH ] && [ ! $METHOD_FLASH ]; then
-    PS3="[?] Select your desired operation [1/2]: "
-    select method in "Detach from the cloud and run Tuya firmware locally" "Flash 3rd Party Firmware"; do
-        case $REPLY in
-            1)		METHOD_DETACH="true"
-                break
-            ;;
-            2)		METHOD_FLASH="true"
-                break
-            ;;
-        esac
-    done
+# ---------------------------------------------------------------------------
+# Build the image
+# ---------------------------------------------------------------------------
+echo "Building ${IMAGE_NAME} docker image"
+export NO_COLOR=1
+docker build --network=host -t "${IMAGE_NAME}" .
+if [ ! $? -eq 0 ]; then
+    echo "Failed to build Docker image, stopping script"
+    exit 1
 fi
+echo "Successfully built docker image"
 
-if [ $METHOD_DETACH ] && [ ! $HAVE_SSID ]; then
-    echo "Detaching requires an SSID and Password, please enter each at the following prompt"
-    echo "In order to provide secure logging, the values you type for your password will not show on screen"
-    echo "If you make a mistake, you can run the detach process again"
-    echo "You can also pass credentials via the -s command line option, see '${0} -h' for more information'"
-    read -p "Please enter your SSID: " SSID
-    read -p "Please enter your Password: "$'\n' -s SSID_PASS
-fi
+# ---------------------------------------------------------------------------
+# Start an idle container with its OWN network namespace, then move the WiFi
+# adapter into it.  All work then happens via 'docker exec'.
+# ---------------------------------------------------------------------------
+cleanup() {
+    # Stopping/removing the container destroys its network namespace; the kernel
+    # automatically returns the physical wiphy to the host's default namespace.
+    docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1
 
-echo "Loading options, please wait..."
-
-source common_run.sh
-
-if [ $METHOD_DETACH ]; then
-    # Cutting device from cloud, allowing local-tuya access still
-    echo "Cutting device off from cloud..."
-    echo ""
-    echo "================================================================================"
-    echo "Wait for up to 10-120 seconds for the device to connect to 'cloudcutterflash'. This script will then show the activation requests sent by the device, and tell you whether local activation was successful."
-    echo "================================================================================"
-    echo ""
-
-    nmcli device set ${WIFI_ADAPTER} managed no; systemctl stop NetworkManager;
-    trap "systemctl start NetworkManager; nmcli device set ${WIFI_ADAPTER} managed yes" EXIT  # Set WiFi adapter back to managed when the script exits
-    INNER_SCRIPT=$(xargs -0 <<- EOF
-        # This janky looking string substitution is because of double evaluation.
-        # Once in the parent shell script, and once in this heredoc used as a shell script.
-        # First evaluate the value from the parent shell script while escaping ' chars
-        # with this janky substitutions so that it doesn't break this heredoc script.
-        SSID='${SSID/\'/\'\"\'\"\'}'
-        SSID_PASS='${SSID_PASS/\'/\'\"\'\"\'}'
-        bash /src/setup_apmode.sh ${WIFI_ADAPTER} ${VERBOSE_OUTPUT}
-        pipenv run python3 -m cloudcutter configure_local_device --ssid "\${SSID}" --password "\${SSID_PASS}" "${PROFILE}" "/work/device-profiles/schema" "${CONFIG_DIR}" ${FLASH_TIMEOUT} "${VERBOSE_OUTPUT}"
-EOF
-    )
-    run_in_docker bash -c "$INNER_SCRIPT"
-    if [ ! $? -eq 0 ]; then
-        echo "Oh no, something went wrong with detaching from the cloud! Try again I guess..."
-        if [ ! $VERBOSE_OUTPUT ]; then
-            echo "If you need to report an issue, please run with the -v flag and supply the full log of that attempt."
-        fi
-        exit 1
+    # Best-effort: let NetworkManager manage the adapter again if it is around.
+    if command -v nmcli >/dev/null 2>&1; then
+        nmcli device set "${WIFI_ADAPTER}" managed yes >/dev/null 2>&1
     fi
+}
+trap cleanup EXIT
+
+# Remove any stale container from a previous run.
+docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1
+
+# Best-effort: stop NetworkManager from grabbing the adapter during the move.
+if command -v nmcli >/dev/null 2>&1; then
+    nmcli device set "${WIFI_ADAPTER}" managed no >/dev/null 2>&1
+fi
+rfkill unblock wifi >/dev/null 2>&1
+
+echo "Starting container and moving adapter '${WIFI_ADAPTER}' (${PHY}) into it..."
+docker run -d \
+    --name "${CONTAINER_NAME}" \
+    --privileged \
+    --cap-add NET_ADMIN \
+    -v "$(pwd):/work" \
+    -e METHOD_DETACH="${METHOD_DETACH}" \
+    -e METHOD_FLASH="${METHOD_FLASH}" \
+    -e PROFILE="${PROFILE}" \
+    -e FIRMWARE="${FIRMWARE}" \
+    -e FLASH_TIMEOUT="${FLASH_TIMEOUT}" \
+    -e VERBOSE_OUTPUT="${VERBOSE_OUTPUT}" \
+    -e DEVICEID="${DEVICEID}" \
+    -e LOCALKEY="${LOCALKEY}" \
+    -e AUTHKEY="${AUTHKEY}" \
+    -e PSKKEY="${PSKKEY}" \
+    -e UUID="${UUID}" \
+    -e OVERRIDE_AP_SSID="${OVERRIDE_AP_SSID}" \
+    -e DISABLE_RESCAN="${DISABLE_RESCAN}" \
+    -e RESETNM="${RESETNM}" \
+    -e HAVE_SSID="${HAVE_SSID}" \
+    -e SSID="${SSID}" \
+    -e SSID_PASS="${SSID_PASS}" \
+    -e PHY="${PHY}" \
+    "${IMAGE_NAME}" \
+    tail -f /dev/null >/dev/null
+if [ ! $? -eq 0 ]; then
+    echo "Failed to start the container."
+    exit 1
 fi
 
-if [ $METHOD_FLASH ]; then
-    # Flash custom firmware to device
-    echo "Flashing custom firmware..."
-    echo ""
-    echo "================================================================================"
-    echo "Wait for up to 10-120 seconds for the device to connect to 'cloudcutterflash'. This script will then show the firmware upgrade requests sent by the device."
-    echo "================================================================================"
-    echo ""
-    nmcli device set "${WIFI_ADAPTER}" managed no
-    trap "nmcli device set ${WIFI_ADAPTER} managed yes" EXIT  # Set WiFi adapter back to managed when the script exits
-    run_in_docker bash -c "bash /src/setup_apmode.sh ${WIFI_ADAPTER} ${VERBOSE_OUTPUT} && pipenv run python3 -m cloudcutter update_firmware \"${PROFILE}\" \"/work/device-profiles/schema\" \"${CONFIG_DIR}\" \"/work/custom-firmware/\" \"${FIRMWARE}\" \"${FLASH_TIMEOUT}\" \"${VERBOSE_OUTPUT}\""
-    if [ ! $? -eq 0 ]; then
-        echo "Oh no, something went wrong with updating firmware! Try again I guess..."
-        if [ ! $VERBOSE_OUTPUT ]; then
-            echo "If you need to report an issue, please run with the -v flag and supply the full log of that attempt."
-        fi
-        exit 1
-    fi
+CONTAINER_PID=$(docker inspect -f '{{.State.Pid}}' "${CONTAINER_NAME}")
+if [ -z "${CONTAINER_PID}" ] || [ "${CONTAINER_PID}" == "0" ]; then
+    echo "Could not determine the container PID."
+    exit 1
 fi
+
+# Move the entire physical WiFi device into the container's network namespace.
+if ! iw phy "${PHY}" set netns "${CONTAINER_PID}"; then
+    echo "[!] Failed to move '${PHY}' into the container namespace."
+    echo "    You may need to run this script with sufficient privileges (e.g. sudo)."
+    exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# Run the actual workflow inside the container (interactive).
+# ---------------------------------------------------------------------------
+docker exec -ti "${CONTAINER_NAME}" bash /src/container/run.sh
+RESULT=$?
+
+# Bring the adapter back before running the post-flash helper (LAN may be needed).
+cleanup
+trap - EXIT
 
 run_helper_script "post-flash"
+
+exit ${RESULT}
