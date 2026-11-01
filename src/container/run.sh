@@ -464,7 +464,7 @@ if [ "${METHOD_DETACH}" ]; then
     echo "Wait for up to 10-120 seconds for the device to connect to 'cloudcutterflash'. This script will then show the activation requests sent by the device, and tell you whether local activation was successful."
     echo "================================================================================"
     echo ""
-    bash /src/setup_apmode.sh "${WIFI_ADAPTER}" "${VERBOSE_OUTPUT}"
+    bash /src/setup_apmode.sh "${WIFI_ADAPTER}" "${VERBOSE_OUTPUT}" || exit 1
     run_python -m cloudcutter configure_local_device --ssid "${SSID}" --password "${SSID_PASS}" "${PROFILE}" "/work/device-profiles/schema" "${CONFIG_DIR}" "${FLASH_TIMEOUT}" "${VERBOSE_OUTPUT}"
     if [ ! $? -eq 0 ]; then
         echo "Oh no, something went wrong with detaching from the cloud! Try again I guess..."
@@ -482,7 +482,7 @@ if [ "${METHOD_FLASH}" ]; then
     echo "Wait for up to 10-120 seconds for the device to connect to 'cloudcutterflash'. This script will then show the firmware upgrade requests sent by the device."
     echo "================================================================================"
     echo ""
-    bash /src/setup_apmode.sh "${WIFI_ADAPTER}" "${VERBOSE_OUTPUT}"
+    bash /src/setup_apmode.sh "${WIFI_ADAPTER}" "${VERBOSE_OUTPUT}" || exit 1
     run_python -m cloudcutter update_firmware "${PROFILE}" "/work/device-profiles/schema" "${CONFIG_DIR}" "/work/custom-firmware/" "${FIRMWARE}" "${FLASH_TIMEOUT}" "${VERBOSE_OUTPUT}"
     if [ ! $? -eq 0 ]; then
         echo "Oh no, something went wrong with updating firmware! Try again I guess..."

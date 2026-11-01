@@ -47,15 +47,28 @@ echo "Using WLAN adapter: ${WLAN}"
 
 rfkill unblock wifi
 
-# Switch the adapter out of client mode before starting hostapd. The exploit phase
-# associated with the device's AP via wpa_supplicant; if that station association and
-# its keys are still present, hostapd fails to initialise AP mode with
-# "nl80211: kernel reports: key not allowed" / "Could not connect to kernel driver".
-# Explicitly stop any supplicant, drop the association, and set the interface to AP type.
-pkill -f "wpa_supplicant.*${WLAN}" 2>/dev/null
+# SIGTERM is asynchronous. In particular, brcmfmac's supplicant cleanup can reset
+# wlan0 to managed mode AFTER hostapd starts. Wait for cleanup before changing
+# interface type; a process that is already a zombie has finished driver cleanup.
+CLIENT_PIDS=$(pgrep -f "[w]pa_supplicant.*${WLAN}([[:space:]]|$)|[d]hclient.*${WLAN}([[:space:]]|$)" || true)
+if [[ -n "$CLIENT_PIDS" ]]; then
+        kill $CLIENT_PIDS 2>/dev/null || true
+        for pid in $CLIENT_PIDS; do
+                for ((attempt=0; attempt<=50; attempt++)); do
+                        state=$(ps -o stat= -p "$pid" 2>/dev/null)
+                        [[ -z "$state" || "$state" == *Z* ]] && break
+                        ((attempt == 50)) && break
+                        sleep 0.1
+                done
+                if [[ -n "$state" && "$state" != *Z* ]]; then
+                        echo "Client process $pid has not stopped; refusing to race hostapd startup." >&2
+                        exit 1
+                fi
+        done
+fi
 iw dev "$WLAN" disconnect 2>/dev/null
-ip link set dev "$WLAN" down
-iw dev "$WLAN" set type __ap 2>/dev/null || true
+ip link set dev "$WLAN" down || exit 1
+iw dev "$WLAN" set type __ap || exit 1
 
 ip addr flush dev $WLAN
 ip link set dev $WLAN down
@@ -76,7 +89,7 @@ else
         AP_CHANNEL="6"
         echo "Unable to get channel from wlan info. Using $AP_CHANNEL as fallback."
 fi
-hostapd /dev/stdin -P $(pwd)/hostapd.pid -B <<- EOF
+if ! hostapd /dev/stdin -P "$(pwd)/hostapd.pid" -B <<- EOF
 ssid=cloudcutterflash
 channel=$AP_CHANNEL
 logger_stdout_level=4
@@ -89,6 +102,10 @@ wpa_key_mgmt=WPA-PSK
 wpa_passphrase=abcdabcd
 rsn_pairwise=CCMP
 EOF
+then
+        echo "hostapd failed to start on $WLAN; stopping AP setup." >&2
+        exit 1
+fi
 
 LOG_OPTIONS=""
 if [ "${VERBOSE_OUTPUT}" == "true" ]; then
