@@ -1,33 +1,16 @@
 import secrets
 import ssl
-import warnings
-
-import sslpsk3 as sslpsk
+from sslpsk3.sslpsk3 import _ssl_set_psk_client_callback, _ssl_set_psk_server_callback
 
 from Cryptodome.Cipher import AES
 from hashlib import md5, sha256
-
-# Silence two expected, by-design deprecation warnings (both present since Python 3.10):
-#   - ssl.PROTOCOL_TLSv1_2: the device speaks PSK over TLS 1.2 (cipher
-#     PSK-AES128-CBC-SHA256), so wrap_socket() must pin TLS 1.2 via this constant.
-#   - ssl.wrap_socket(): sslpsk3 1.x (required for binary PSK identities on Python <=3.11)
-#     uses the deprecated module-level ssl.wrap_socket() internally.
-# Both are required for the exploit to work, so suppress the noise rather than change the
-# handshake behaviour.
-warnings.filterwarnings(
-    'ignore',
-    message=r'ssl\.(PROTOCOL_TLSv1_2|wrap_socket\(\)) is deprecated',
-    category=DeprecationWarning,
-)
 
 class PSKContext(ssl.SSLContext):
     DEFAULT_HINT = b'1dHRsc2NjbHltbGx3eWh50000000000000000'
 
     def __new__(cls, authkey: bytes = None, uuid: bytes = None, psk: bytes = None):
-        # Construct the base ssl.SSLContext with an explicit, non-deprecated protocol.
-        # Without one, ssl.SSLContext() defaults to the deprecated ssl.PROTOCOL_TLS and
-        # emits DeprecationWarnings. The protocol here is only a placeholder - the real
-        # TLS parameters are applied per-socket in wrap_socket() via sslpsk3.
+        # Tornado requires an SSLContext. Each connection gets a separate transport
+        # below, since this compatibility class is also used in client mode.
         return super().__new__(cls, ssl.PROTOCOL_TLS_SERVER)
 
     def __init__(self, authkey: bytes = None, uuid: bytes = None, psk: bytes = None):
@@ -37,15 +20,36 @@ class PSKContext(ssl.SSLContext):
 
     def wrap_socket(self, sock, **kwargs):
         server_side = kwargs.get('server_side', False)
-        _ = kwargs.pop('server_hostname', None)
-        kwargs['psk'] = lambda identity_or_hint: self._psk_and_pskid(identity_or_hint, server_side)
-        kwargs['ssl_version'] = ssl.PROTOCOL_TLSv1_2
-        kwargs['ciphers'] = 'PSK-AES128-CBC-SHA256'
-        if server_side:
-            kwargs['hint'] = self.DEFAULT_HINT
-        return sslpsk.wrap_socket(sock, **kwargs)
+        kwargs.pop('server_hostname', None)
+        handshake = kwargs.pop('do_handshake_on_connect', True)
+        transport = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER if server_side else ssl.PROTOCOL_TLS_CLIENT)
+        if not server_side:
+            transport.check_hostname = False
+            transport.verify_mode = ssl.CERT_NONE  # PSK authenticates this connection.
+        transport.minimum_version = transport.maximum_version = ssl.TLSVersion.TLSv1_2
+        transport.set_ciphers('PSK-AES128-CBC-SHA256')
+        wrapped = transport.wrap_socket(sock, do_handshake_on_connect=False, **kwargs)
+        try:
+            # Tuya identities contain arbitrary non-NUL bytes. CPython 3.13's
+            # native PSK callback decodes them as UTF-8, which is not valid here.
+            # sslpsk3 1.1.1's OpenSSL callbacks preserve bytes; only its obsolete
+            # ssl.wrap_socket convenience wrapper must be avoided. Keep that exact
+            # dependency pin: 2.x changes these callbacks to text as well.
+            callback = lambda value: self._psk_and_pskid(value, server_side)
+            if server_side:
+                _ssl_set_psk_server_callback(wrapped, callback, self.DEFAULT_HINT)
+            else:
+                _ssl_set_psk_client_callback(wrapped, callback)
+            if handshake:
+                wrapped.do_handshake()
+            return wrapped
+        except BaseException:
+            wrapped.close()
+            raise
 
     def _psk_and_pskid(self, identity_or_hint: bytes, server_side: bool):
+        if not identity_or_hint:
+            return b'' if server_side else (b'', b'')
         psk_id_version = identity_or_hint[0]
         if not self.psk or psk_id_version == 1:
             print(f"Using PSK v1 - Received PSK ID version {psk_id_version:02x}")

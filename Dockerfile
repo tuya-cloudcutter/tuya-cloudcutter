@@ -1,9 +1,6 @@
-# Python is pinned to 3.11 (the newest slim available) ON PURPOSE. The exploit relies
-# on PSK TLS with a BINARY psk identity. Python 3.12 removed ssl.wrap_socket() and, more
-# fundamentally, CPython 3.12+ enforces UTF-8 psk identities in _ssl.c (native PSK
-# callbacks and sslpsk3 2.x both reject Tuya's binary identity before our code runs).
-# sslpsk3 1.1.1 on Python <=3.11 passes the identity as raw bytes, which is required.
-FROM python:3.11-slim AS base
+# Binary TLS-PSK identities are handled by PSKContext's byte-preserving OpenSSL
+# callbacks. It uses SSLContext rather than the removed ssl.wrap_socket helper.
+FROM python:3.13-slim AS base
 
 # All work now happens inside the container, including scanning for and joining the
 # device's WiFi AP, hosting the cloudcutter AP, DHCP/DNS/MQTT and the exploit itself.

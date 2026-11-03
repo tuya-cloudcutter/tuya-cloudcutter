@@ -22,6 +22,14 @@ If you're curious about the vulnerability and how the exploit chain works, here'
 
 ## Requirements
 
+The container runs Python 3.13. Tuya's TLS 1.2 PSK identities contain arbitrary binary
+bytes, so `PSKContext` uses `sslpsk3==1.1.1`'s byte-preserving OpenSSL callback
+installers with modern `SSLContext` transports. It does not call the removed
+`ssl.wrap_socket` function or Python 3.13's UTF-8-only native identity callback.
+Keep the `sslpsk3` 1.1.1 pin; upgrading to 2.x changes binary identity handling.
+CI checks real PSKv1/PSKv2 loopback handshakes, nonblocking TLS and a Tornado HTTPS
+request on Python 3.11 and 3.13. These tests do not establish device compatibility.
+
 - A stand-alone wifi adapter that supports AP mode (and is not your primary source of networking - ethernet is preferred for that). This adapter is moved *fully into the container* for the duration of the run. Select it with `-w` (defaults to `wlan0`); it is verified to exist before the run begins.
 - An account with sudo / elevated privileges - moving the wifi adapter into the container's network namespace requires elevated privileges.
 - `iw` on the host - used to move the physical wifi device into the container. All other wireless work (scanning, joining the Tuya AP, DHCP, DNS, MQTT, and hosting the CloudCutter AP) now happens **inside the container**; the host no longer uses NetworkManager for any of it.

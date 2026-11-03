@@ -23,8 +23,9 @@ pycryptodome==3.19.0
 tornado==6.4
 # sslpsk3 MUST stay on 1.x. The device uses a BINARY psk identity; sslpsk3 1.1.1 passes
 # it to our callback as raw bytes (via ssl.wrap_socket). sslpsk3 2.x decodes the identity
-# as UTF-8, which rejects Tuya's binary identity (PSK_IDENTITY_NOT_FOUND). 1.x requires
-# ssl.wrap_socket, which exists only on Python <=3.11 - hence the pinned base image.
+# as UTF-8, which rejects Tuya's binary identity (PSK_IDENTITY_NOT_FOUND).
+# PSKContext uses 1.1.1's byte-preserving callback installers directly, with modern
+# SSLContext transports, so the removed ssl.wrap_socket wrapper is never called.
 sslpsk3==1.1.1
 paho-mqtt==1.6.1
 requests==2.31.0
