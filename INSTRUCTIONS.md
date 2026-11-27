@@ -12,7 +12,7 @@ Here we describe how to use Tuya CloudCutter to jailbreak Tuya IoT devices by re
 
 - A laptop or computer with a stand-alone WiFi adapter that supports AP mode
 - Running (non-virtualized) Linux with `iw` installed. The adapter is moved into the container's own network namespace, so NetworkManager is no longer required. (VMs might work if you passthrough the WiFi adapter.)
-- Docker should be installed, and your user should be part of the "docker" group (reboot if you've just installed Docker, to reload the user groups.)
+- Either Docker or podman. Run the script as your regular user and podman is used rootless (the container gets full capabilities inside its own user namespace); `sudo` is then only needed to move the WiFi adapter into the container's namespace (and to `rfkill unblock` if the radio is blocked) - there is no sudoers group for that one, it is a kernel capability check. NetworkManager toggles run unprivileged where polkit allows, with a sudo fallback. Running the script as root uses the `docker` command as before.
 - The WiFi adapter can be specified with `-w <adapter>` (e.g. `-w wlan1`); it defaults to `wlan0` if omitted. The adapter must exist (it is verified before the run starts) because it is handed entirely to the container, and it will disappear from the host until the run finishes.
 
 **Note**: the script mentioned below can also be run in interactive mode, i.e. without any parameters, in which the user will be asked to choose one of available options.
@@ -35,8 +35,8 @@ Knowing this, you can run `sudo ./tuya-cloudcutter.sh` (optionally pass `-w <ada
 
 1. Download or git clone this repository
 2. Open a terminal and `cd` into the repository to make it your working directory
-3. Install the host requirements (docker and iw) by running `sudo ./install-requirements.sh`. This checks for each and installs anything missing via your system package manager. (If docker was just installed, log out and back in so your user picks up the `docker` group.)
-4. Run `sudo ./tuya-cloudcutter.sh -w <adapter> -s <SSID> <SSID password>`, where `<adapter>` is your stand-alone wifi adapter (e.g. `wlan1`) and SSID/password is the name of the access point you want the Tuya device to join.
+3. Install the host requirements (podman or docker, and `iw`) by running `sudo ./install-requirements.sh`. This checks for each and installs anything missing via your system package manager. (If docker was just installed, log out and back in so your user picks up the `docker` group.)
+4. Run `./tuya-cloudcutter.sh -w <adapter> -s <SSID> <SSID password>`, where `<adapter>` is your stand-alone wifi adapter (e.g. `wlan1`) and SSID/password is the name of the access point you want the Tuya device to join. (Run it as your regular user; sudo is invoked only for the WiFi adapter handoff. `sudo ./tuya-cloudcutter.sh ...` also still works.)
 
    - The `-w <adapter>` argument is optional and defaults to `wlan0`; the adapter is passed fully into the container and is verified to exist first.
    - You can specify the device profile name using `-p my-device-name`; otherwise an interactive menu will be shown.

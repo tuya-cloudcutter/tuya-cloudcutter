@@ -5,7 +5,7 @@
 # This script no longer performs any of the actual work (scanning, connecting,
 # safety checks, hosting the AP, or running the exploit).  Its only jobs are:
 #   1. Parse the command line options.
-#   2. Build the Docker image.
+#   2. Build the container image (rootless podman when unprivileged).
 #   3. Move the requested WiFi adapter *fully* into the container's own network
 #      namespace, so that everything wireless-related runs inside the container.
 #   4. Hand control to the in-container workflow (src/container/run.sh).
@@ -14,12 +14,40 @@
 # MUST be supplied with -w.  It should be a stand-alone adapter that is not your
 # primary source of networking (use ethernet for that), because it will disappear
 # from the host for the duration of the run.
+#
+# Privilege model: when run as a regular user the container runs under rootless
+# podman, which gives it full capabilities inside its own user namespace - enough
+# for hostapd and every wireless operation once the adapter is moved in.  Only
+# real host root can move a physical device between network namespaces, so the
+# namespace move (and rfkill unblock) go through sudo; NetworkManager toggles
+# run unprivileged where polkit allows it, with a sudo fallback.
 
 set -o pipefail
 
-IMAGE_NAME="cloudcutter"      # docker image tag (build / run)
+# Non-login shells (cron, 'ssh host command') often lack /usr/sbin in PATH,
+# which is where iw and rfkill live on Debian-family systems.
+PATH="${PATH}:/usr/sbin:/sbin"
+
+IMAGE_NAME="cloudcutter"      # container image tag (build / run)
 CONTAINER_NAME="cloudcutter"  # running container name (run --name / exec / inspect / rm)
 FLASH_TIMEOUT=15
+
+# ---------------------------------------------------------------------------
+# Container engine and privilege model
+# ---------------------------------------------------------------------------
+# Rootless podman is the default when unprivileged; when root we keep the
+# docker-compatible CLI, which may be real docker or the podman-docker shim.
+if [ "$(id -u)" -eq 0 ]; then
+    ENGINE="docker"
+    SUDO=""
+else
+    ENGINE="podman"
+    SUDO="sudo"
+    if ! command -v sudo >/dev/null 2>&1; then
+        echo "[!] Running unprivileged requires 'sudo' for the WiFi adapter handoff."
+        exit 1
+    fi
+fi
 
 function getopts-extra () {
     declare i=1
@@ -89,11 +117,14 @@ fi
 # ---------------------------------------------------------------------------
 # Basic host requirements
 # ---------------------------------------------------------------------------
-for cmd in docker iw; do
+for cmd in "${ENGINE}" iw; do
     if ! command -v "${cmd}" >/dev/null 2>&1; then
         echo "[!] Required host command '${cmd}' was not found."
         if [ "${cmd}" == "iw" ]; then
             echo "    Install it (e.g. 'sudo apt install iw') - it is used to move the WiFi adapter into the container."
+        fi
+        if [ "${cmd}" == "podman" ]; then
+            echo "    Install podman (e.g. 'sudo apt install podman'), or run this script as root to use docker."
         fi
         exit 1
     fi
@@ -136,42 +167,47 @@ run_helper_script "pre-setup"
 # ---------------------------------------------------------------------------
 # Build the image
 # ---------------------------------------------------------------------------
-echo "Building ${IMAGE_NAME} docker image"
+echo "Building ${IMAGE_NAME} container image"
 export NO_COLOR=1
-docker build --network=host -t "${IMAGE_NAME}" .
+"${ENGINE}" build --network=host -t "${IMAGE_NAME}" .
 if [ ! $? -eq 0 ]; then
-    echo "Failed to build Docker image, stopping script"
+    echo "Failed to build container image, stopping script"
     exit 1
 fi
-echo "Successfully built docker image"
+echo "Successfully built container image"
 
 # ---------------------------------------------------------------------------
 # Start an idle container with its OWN network namespace, then move the WiFi
-# adapter into it.  All work then happens via 'docker exec'.
+# adapter into it.  All work then happens via container exec.
 # ---------------------------------------------------------------------------
 cleanup() {
     # Stopping/removing the container destroys its network namespace; the kernel
     # automatically returns the physical wiphy to the host's default namespace.
-    docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1
+    "${ENGINE}" rm -f "${CONTAINER_NAME}" >/dev/null 2>&1
 
     # Best-effort: let NetworkManager manage the adapter again if it is around.
+    # Toggling managed state is polkit's network-control action, which many
+    # systems allow unprivileged; fall back to sudo for stricter policies.
     if command -v nmcli >/dev/null 2>&1; then
-        nmcli device set "${WIFI_ADAPTER}" managed yes >/dev/null 2>&1
+        nmcli device set "${WIFI_ADAPTER}" managed yes >/dev/null 2>&1 \
+            || ${SUDO} nmcli device set "${WIFI_ADAPTER}" managed yes >/dev/null 2>&1
     fi
 }
 trap cleanup EXIT
 
 # Remove any stale container from a previous run.
-docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1
+"${ENGINE}" rm -f "${CONTAINER_NAME}" >/dev/null 2>&1
 
 # Best-effort: stop NetworkManager from grabbing the adapter during the move.
+# Unprivileged first (polkit network-control), sudo only as a fallback.
 if command -v nmcli >/dev/null 2>&1; then
-    nmcli device set "${WIFI_ADAPTER}" managed no >/dev/null 2>&1
+    nmcli device set "${WIFI_ADAPTER}" managed no >/dev/null 2>&1 \
+        || ${SUDO} nmcli device set "${WIFI_ADAPTER}" managed no >/dev/null 2>&1
 fi
-rfkill unblock wifi >/dev/null 2>&1
+${SUDO} rfkill unblock wifi >/dev/null 2>&1
 
 echo "Starting container and moving adapter '${WIFI_ADAPTER}' (${PHY}) into it..."
-docker run -d \
+"${ENGINE}" run -d \
     --name "${CONTAINER_NAME}" \
     --privileged \
     --cap-add NET_ADMIN \
@@ -201,23 +237,27 @@ if [ ! $? -eq 0 ]; then
     exit 1
 fi
 
-CONTAINER_PID=$(docker inspect -f '{{.State.Pid}}' "${CONTAINER_NAME}")
+CONTAINER_PID=$("${ENGINE}" inspect -f '{{.State.Pid}}' "${CONTAINER_NAME}")
 if [ -z "${CONTAINER_PID}" ] || [ "${CONTAINER_PID}" == "0" ]; then
     echo "Could not determine the container PID."
     exit 1
 fi
 
 # Move the entire physical WiFi device into the container's network namespace.
-if ! iw phy "${PHY}" set netns "${CONTAINER_PID}"; then
+# This is the one operation that genuinely needs host root: a physical device
+# can only be moved between network namespaces by the user namespace that owns
+# the host's.  Inside the container no root is needed - it fully controls the
+# adapter from its own user namespace.
+if ! ${SUDO} iw phy "${PHY}" set netns "${CONTAINER_PID}"; then
     echo "[!] Failed to move '${PHY}' into the container namespace."
-    echo "    You may need to run this script with sufficient privileges (e.g. sudo)."
+    echo "    Check that 'sudo iw' works for this user (password prompt or NOPASSWD)."
     exit 1
 fi
 
 # ---------------------------------------------------------------------------
 # Run the actual workflow inside the container (interactive).
 # ---------------------------------------------------------------------------
-docker exec -ti "${CONTAINER_NAME}" bash /src/container/run.sh
+"${ENGINE}" exec -ti "${CONTAINER_NAME}" bash /src/container/run.sh
 RESULT=$?
 
 # Bring the adapter back before running the post-flash helper (LAN may be needed).
